@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="MIR CARS is a premium Los Angeles car rental service with manual approval booking requests, curated vehicles, and Stripe-ready checkout."
+    />
+    <title>MIR CARS | Los Angeles Rentals</title>
+    <link rel="preconnect" href="https://images.unsplash.com" />
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="script.js"></script>
+  </head>
+  <body id="top">
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="MIR CARS home">
+        <span>
+          <strong class="mir-lockup brand-name" aria-label="MIR CARS">
+            <span class="mir-lockup-top">MIR</span>
+            <span class="mir-lockup-bottom">CARS</span>
+          </strong>
+          <small>LA Rentals</small>
+        </span>
+      </a>
+
+      <nav class="main-nav" aria-label="Primary navigation">
+        <a href="#fleet">Fleet</a>
+        <a href="#booking">Request</a>
+        <a href="#policies">Policies</a>
+        <a href="#contact">Contact</a>
+      </nav>
+
+      <a class="header-cta" href="#booking">Book now</a>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-media" aria-hidden="true"></div>
+        <div class="hero-content">
+          <p class="eyebrow">Private LA fleet. Curated service. Premium daily rentals.</p>
+          <h1 class="hero-wordmark" id="hero-title" aria-label="MIR CARS">
+            <span class="wordmark-top">MIR</span>
+            <span class="wordmark-bottom">CARS</span>
+            <span class="wordmark-city">Los Angeles</span>
+          </h1>
+          <p class="hero-copy">
+            Reserve refined vehicles for business, travel, events, and everyday drives across Los Angeles.
+          </p>
+
+          <form class="quick-request" aria-label="Quick rental search">
+            <label>
+              Vehicle type
+              <select name="vehicleType">
+                <option value="all">Any vehicle</option>
+                <option value="SUV">SUV</option>
+                <option value="Coupe">Coupe</option>
+                <option value="Convertible">Convertible</option>
+                <option value="Sedan">Sedan</option>
+                <option value="Van">Van</option>
+              </select>
+            </label>
+            <a class="button primary" href="#fleet">Explore Vehicles</a>
+          </form>
+        </div>
+      </section>
+
+      <section class="trust-strip" aria-label="Rental highlights">
+        <div class="trust-intro">
+          <span>MIR CARS standard</span>
+          <strong>Curated rentals with a clear approval flow.</strong>
+        </div>
+        <article class="trust-item">
+          <strong>14</strong>
+          <span>Vehicles</span>
+          <p>A focused fleet for daily, weekly, and extended LA rentals.</p>
+        </article>
+        <article class="trust-item">
+          <strong>24h</strong>
+          <span>Approvals</span>
+          <p>Manual review before every rental is confirmed.</p>
+        </article>
+        <article class="trust-item">
+          <strong>Stripe/Zelle</strong>
+          <span>Payments</span>
+          <p>Flexible checkout options after availability is approved.</p>
+        </article>
+        <article class="trust-item">
+          <strong>Los Angeles</strong>
+          <span>Pickup/Delivery</span>
+          <p>Local pickup and delivery options around the LA area.</p>
+        </article>
+      </section>
+
+      <section class="section section-intro" id="fleet">
+        <div>
+          <p class="eyebrow">Choose the right drive</p>
+          <h2>Premium fleet for LA days, weekends, and longer stays.</h2>
+        </div>
+        <div class="fleet-tools">
+          <div class="fleet-controls" aria-label="Fleet categories">
+            <button class="filter-button active" type="button" data-filter="all">All</button>
+            <button class="filter-button" type="button" data-filter="SUV">SUV</button>
+            <button class="filter-button" type="button" data-filter="Sedan">Sedan</button>
+            <button class="filter-button" type="button" data-filter="Coupe">Coupe</button>
+            <button class="filter-button" type="button" data-filter="Convertible">Convertible</button>
+            <button class="filter-button" type="button" data-filter="Van">Van</button>
+          </div>
+          <label class="sort-control">
+            Sort
+            <select id="fleetSort" aria-label="Sort fleet">
+              <option value="az">A-Z</option>
+              <option value="price-asc">Price: low to high</option>
+              <option value="price-desc">Price: high to low</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section class="fleet-grid" id="fleetGrid" aria-live="polite"></section>
+
+      <section class="feature-band">
+        <div>
+          <p class="eyebrow">Approval-first checkout</p>
+          <h2>Built for real rental operations, not instant chaos.</h2>
+        </div>
+        <div class="feature-list">
+          <article>
+            <span>01</span>
+            <h3>Request dates</h3>
+            <p>Guests choose a vehicle, pickup window, return window, and optional delivery details.</p>
+          </article>
+          <article>
+            <span>02</span>
+            <h3>Review documents</h3>
+            <p>Admin confirms license, age, deposit requirements, insurance, and availability.</p>
+          </article>
+          <article>
+            <span>03</span>
+            <h3>Approve and pay</h3>
+            <p>Stripe can collect deposit holds, partial payment, or full payment after approval.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="booking-section" id="booking">
+        <div class="booking-copy">
+          <p class="eyebrow">Request a rental</p>
+          <h2>Tell us what you need. <span class="mir-lockup mir-lockup-inline" aria-label="MIR CARS"><span class="mir-lockup-top">MIR</span><span class="mir-lockup-bottom">CARS</span></span> will confirm availability before payment is finalized.</h2>
+          <p>
+            Share your preferred vehicle, dates, pickup needs, and driver details. A <span class="mir-lockup mir-lockup-inline" aria-label="MIR CARS"><span class="mir-lockup-top">MIR</span><span class="mir-lockup-bottom">CARS</span></span> team member will review
+            availability and send the next step for approval and payment.
+          </p>
+          <div class="payment-card">
+            <span>Stripe-ready</span>
+            <strong>Manual approval checkout</strong>
+            <small>Card authorization, deposit hold, invoice, or payment link after approval.</small>
+          </div>
+        </div>
+
+        <form
+          class="booking-form"
+          id="bookingForm"
+          name="rental-request"
+          method="POST"
+          action="/"
+          data-netlify="true"
+          netlify-honeypot="bot-field"
+          data-success="Thanks. Your rental request was sent to MIR CARS. We will review availability and reply with next steps."
+          data-error="Something went wrong. Please call or email MIR CARS and we will help right away."
+        >
+          <input type="hidden" name="form-name" value="rental-request" />
+          <input type="hidden" name="request_type" value="Rental request" />
+          <input type="hidden" name="business_email" value="ruslan@mircars.com" />
+          <p class="hidden-field">
+            <label>Leave this field empty <input name="bot-field" autocomplete="off" tabindex="-1" /></label>
+          </p>
+          <div class="form-row">
+            <label>
+              Full name
+              <input name="full_name" autocomplete="name" required />
+            </label>
+            <label>
+              Phone
+              <input name="phone" autocomplete="tel" required />
+            </label>
+          </div>
+
+          <div class="form-row">
+            <label>
+              Email
+              <input type="email" name="email" autocomplete="email" required />
+            </label>
+            <label>
+              Preferred vehicle
+              <select name="vehicle" id="vehicleSelect" required></select>
+            </label>
+          </div>
+
+          <div class="form-row">
+            <label>
+              Pick-up date
+              <input type="text" name="pickup_date" placeholder="MM/DD/YYYY" inputmode="numeric" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" required />
+            </label>
+            <label>
+              Return date
+              <input type="text" name="return_date" placeholder="MM/DD/YYYY" inputmode="numeric" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" required />
+            </label>
+          </div>
+
+          <div class="form-row">
+            <label>
+              Pick-up time
+              <select name="pickup_time" required>
+                <option>Morning, 9 AM - 12 PM</option>
+                <option>Afternoon, 12 PM - 4 PM</option>
+                <option>Evening, 4 PM - 7 PM</option>
+                <option>Custom Time Request</option>
+              </select>
+            </label>
+            <label>
+              Drop-off time
+              <select name="dropoff_time" required>
+                <option>Morning, 9 AM - 12 PM</option>
+                <option>Afternoon, 12 PM - 4 PM</option>
+                <option>Evening, 4 PM - 7 PM</option>
+                <option>Custom Time Request</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="form-row">
+            <label>
+              Pickup location
+              <select name="pickup_location">
+                <option>LAX Airport</option>
+                <option>Custom Delivery Request</option>
+              </select>
+            </label>
+            <label>
+              Driver age
+              <input type="number" name="driver_age" min="21" placeholder="25" required />
+            </label>
+          </div>
+
+          <label>
+            Message
+            <textarea name="message" rows="5" placeholder="Tell us about timing, delivery needs, or questions."></textarea>
+          </label>
+
+          <label class="checkbox-row">
+            <input type="checkbox" name="approval_acknowledged" value="Yes" required />
+            I understand this is a request and <span class="mir-lockup mir-lockup-inline" aria-label="MIR CARS"><span class="mir-lockup-top">MIR</span><span class="mir-lockup-bottom">CARS</span></span> will approve availability before payment is finalized.
+          </label>
+
+          <button class="button primary" type="submit">Send request</button>
+          <p class="form-status" id="formStatus" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="section policy-section" id="policies">
+        <div>
+          <p class="eyebrow">Editable rental rules</p>
+          <h2>Starter policies for launch.</h2>
+        </div>
+        <div class="policy-grid">
+          <article>
+            <h3>Age and documents</h3>
+            <p>Minimum driver age 25. Valid driver license, proof of insurance, and matching payment method required.</p>
+          </article>
+          <article>
+            <h3>Deposit</h3>
+            <p>Refundable deposit or card authorization required. Amount varies by vehicle class and rental length.</p>
+          </article>
+          <article>
+            <h3>Mileage</h3>
+            <p>Daily rentals include 150 miles. Additional mileage is billed after return at the listed overage rate.</p>
+          </article>
+          <article>
+            <h3>Care standards</h3>
+            <p>No smoking, racing, off-road use, or unauthorized drivers. Cleaning, late return, and damage fees may apply.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="contact-section" id="contact">
+        <div class="contact-card">
+          <p class="eyebrow"><span class="mir-lockup mir-lockup-inline" aria-label="MIR CARS"><span class="mir-lockup-top">MIR</span><span class="mir-lockup-bottom">CARS</span></span></p>
+          <h2>Los Angeles car rental, built around approval and trust.</h2>
+          <address>
+            8520 Sunset Blvd, Los Angeles, CA 90069<br />
+            <a href="tel:+13235550198">(323) 555-0198</a><br />
+            <a href="mailto:ruslan@mircars.com">ruslan@mircars.com</a>
+          </address>
+          <p>Daily hours: 9:00 AM - 7:00 PM</p>
+        </div>
+
+        <form
+          class="contact-form"
+          id="contactForm"
+          name="contact-request"
+          method="POST"
+          action="/"
+          data-netlify="true"
+          netlify-honeypot="bot-field"
+          data-success="Thanks. Your message was sent to MIR CARS."
+          data-error="Something went wrong. Please call or email MIR CARS and we will help right away."
+        >
+          <input type="hidden" name="form-name" value="contact-request" />
+          <input type="hidden" name="request_type" value="Contact request" />
+          <input type="hidden" name="business_email" value="ruslan@mircars.com" />
+          <p class="hidden-field">
+            <label>Leave this field empty <input name="bot-field" autocomplete="off" tabindex="-1" /></label>
+          </p>
+          <label>
+            Name
+            <input name="name" autocomplete="name" required />
+          </label>
+          <label>
+            Email
+            <input type="email" name="email" autocomplete="email" required />
+          </label>
+          <label>
+            How can we help?
+            <textarea name="message" rows="5" required></textarea>
+          </label>
+          <button class="button secondary" type="submit">Contact <span class="mir-lockup mir-lockup-button" aria-label="MIR CARS"><span class="mir-lockup-top">MIR</span><span class="mir-lockup-bottom">CARS</span></span></button>
+          <p class="form-status" id="contactStatus" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span class="mir-lockup mir-lockup-inline" aria-label="MIR CARS"><span class="mir-lockup-top">MIR</span><span class="mir-lockup-bottom">CARS</span></span>
+      <span>Los Angeles, California</span>
+      <span>Manual approval rentals with Stripe-ready checkout.</span>
+    </footer>
+  </body>
+</html>
