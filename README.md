@@ -1,55 +1,80 @@
 # MIR CARS
 
-Premium Los Angeles car rental landing page and request flow.
+Premium Los Angeles car rental website and request flow.
+
+Live site: https://mircars.netlify.app/
 
 ## What This Is
 
-This is a static front-end prototype for MIR CARS, a curated LA car rental service. The site presents a premium fleet, lets customers filter and sort vehicles, previews each vehicle with a small image carousel, and collects rental/contact requests for a manual approval workflow.
+This is the launch version of the MIR CARS website. It presents the premium fleet, lets customers filter and sort vehicles, previews each vehicle with an image carousel, and collects rental/contact requests through Netlify Forms.
 
-The business flow is approval-first: a customer submits dates, vehicle preference, pickup details, and driver information; the MIR CARS team reviews documents, availability, deposit requirements, and insurance; payment can then happen through Stripe, Zelle, invoice, card authorization, deposit hold, or payment link.
+The current business flow is intentionally simple:
+
+- Customer submits a rental request.
+- MIR CARS receives the request by email through Netlify form notifications.
+- MIR CARS reviews availability and follows up manually.
+- No payment, backend, admin dashboard, calendar, document upload, or automated booking approval is included yet.
 
 ## Current Structure
 
 - `index.html` contains the full page structure: header, hero, trust strip, fleet section, booking form, policies, contact form, and footer.
-- `styles.css` contains the visual system: dark premium palette, metallic MIR CARS lockup styling, responsive layout, hero imagery, vehicle cards, forms, and mobile breakpoints.
+- `styles.css` contains the visual system: dark premium palette, metallic MIR CARS lockup styling, responsive layout, hero imagery, vehicle cards, forms, liquid-glass card treatments, hover states, and mobile breakpoints.
 - `script.js` contains the fleet data and UI behavior: 14 vehicles, category filters, price/name sorting, image carousel controls, vehicle select population, and form submission messages.
-- `assets/cars/` contains vehicle imagery. Each listed vehicle uses front, side, and interior images; there are also base vehicle images preserved from the Drive folder.
+- `netlify.toml` tells Netlify to publish the static site from the project root.
+- `server.js` is only a small local static-file helper. It is not required for Netlify.
+- `assets/cars/` contains vehicle imagery.
 - `assets/backgrounds/` contains the Mercedes hero and headlight treatment used by the hero area.
-- `audit/` contains visual audit/reference images for the headlight treatment and vehicle-image review.
+- `audit/` contains visual audit/reference images from the design review process.
+
+## Netlify Deployment
+
+Netlify site:
+
+https://mircars.netlify.app/
+
+Recommended Netlify settings:
+
+- Branch: `main`
+- Build command: leave blank
+- Publish directory: `.`
+- Form detection: enabled
+
+The site is static, so there is no build step. When changes are committed and pushed to the connected GitHub repository, Netlify should redeploy the site automatically.
+
+## Fast Launch Forms
+
+The booking and contact forms are wired for Netlify Forms:
+
+- Booking form name: `rental-request`
+- Contact form name: `contact-request`
+- Spam protection: Netlify honeypot field named `bot-field`
+- Email delivery: configure Netlify form notifications for `rental-request` and `contact-request`
+- Current business email shown in the site/forms: `ruslan@mircars.com`
+
+After each form-related deploy, submit one test request from the live site and confirm it appears in Netlify Forms and arrives in the business inbox.
 
 ## Fleet Snapshot
 
 - 14 vehicles total.
 - Types: 7 sedans, 4 SUVs, 1 coupe, 1 convertible, 1 van.
 - Daily rates range from `$75/day` to `$249/day`.
-- Every local image referenced by the app currently resolves.
+- Fleet data currently lives in `script.js`.
 
-## How To View
+## Items To Confirm Before Wider Launch
 
-Run:
+- Replace placeholder phone number if needed.
+- Confirm the displayed address is final.
+- Confirm the business email for form notifications.
+- Review rental policies for legal/business accuracy.
+- Confirm vehicle pricing, mileage, deposit, and age requirements.
+- Test both forms on the live Netlify site after each deployment.
 
-```bash
-node server.js
-```
+## Future Build Direction
 
-Then open `http://localhost:5173`.
-
-You can still open `index.html` directly in a browser because there is no build step.
-
-## Fast Launch Forms
-
-The booking and contact forms are wired for Netlify Forms:
-
-- Form names: `rental-request` and `contact-request`.
-- Spam protection: Netlify honeypot field named `bot-field`.
-- Delivery target: configure Netlify form notifications to send to `ruslan@mircars.com`, or replace that email with the final business inbox.
-- Payment, dashboard, document upload, and booking approvals are intentionally not included yet.
-
-After deploy, submit one test request from the live site and confirm it arrives in the business inbox.
-
-## Next Build Direction
-
-- Add Stripe payment-link/deposit flow after manual approval.
-- Add backend/database, admin dashboard, calendar availability, customer notifications, document upload, and agreement flow.
-- Move fleet data out of `script.js` into a structured data file or CMS when the inventory changes often.
-- Replace placeholder business contact details and policies with final launch copy.
+- Add backend/database and admin dashboard.
+- Add Stripe payment-link, deposit, or card authorization flow after manual approval.
+- Add calendar availability and booking status updates.
+- Add email/SMS notifications.
+- Add license/insurance document upload.
+- Add rental agreement e-sign or checkbox approval.
+- Move fleet data out of `script.js` into a structured data file, CMS, or admin-managed backend when inventory changes often.
