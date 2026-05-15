@@ -700,7 +700,7 @@ textarea:focus {
 .trust-strip {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(240px, 1.1fr) repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: stretch;
   gap: 0;
   margin: 0;
@@ -720,9 +720,10 @@ textarea:focus {
   position: relative;
   isolation: isolate;
   display: grid;
-  min-height: 158px;
+  min-height: 176px;
+  align-content: start;
   overflow: hidden;
-  padding: clamp(18px, 3vw, 30px);
+  padding: clamp(20px, 2.4vw, 28px);
   border: 0;
   border-right: 1px solid rgba(226, 234, 242, 0.1);
   background:
@@ -740,8 +741,8 @@ textarea:focus {
 }
 
 .trust-intro {
-  align-content: center;
-  gap: 12px;
+  grid-template-rows: auto 1fr;
+  gap: 14px;
 }
 
 .trust-intro::before,
@@ -813,20 +814,20 @@ textarea:focus {
 }
 
 .trust-intro strong {
-  max-width: 250px;
+  max-width: 230px;
   color: var(--text);
-  font-size: clamp(1.05rem, 1.5vw, 1.35rem);
+  font-size: clamp(1.08rem, 1.35vw, 1.28rem);
   line-height: 1.2;
 }
 
 .trust-item {
-  align-content: center;
+  grid-template-rows: auto auto 1fr;
   gap: 10px;
 }
 
 .trust-item strong {
   color: var(--gold-strong);
-  font-size: clamp(1.35rem, 2.15vw, 2rem);
+  font-size: clamp(1.4rem, 1.85vw, 1.9rem);
   letter-spacing: 0;
   line-height: 1;
 }
@@ -840,10 +841,10 @@ textarea:focus {
 }
 
 .trust-item p {
-  max-width: 210px;
+  max-width: 230px;
   margin: 4px 0 0;
   color: rgba(238, 243, 247, 0.56);
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   line-height: 1.45;
 }
 
@@ -1381,6 +1382,9 @@ address {
 
 .payment-card {
   margin-top: 28px;
+  min-height: 154px;
+  align-content: center;
+  padding: 28px 30px;
   background:
     linear-gradient(128deg, rgba(255, 255, 255, 0.075), rgba(139, 157, 173, 0.052) 31%, rgba(76, 90, 103, 0.08) 64%, rgba(255, 255, 255, 0.045)),
     linear-gradient(180deg, rgba(21, 25, 29, 0.78), rgba(7, 9, 11, 0.7));
@@ -1394,19 +1398,22 @@ address {
 
 .payment-card span {
   color: var(--gold-strong);
-  font-size: 0.8rem;
+  font-size: clamp(0.82rem, 0.9vw, 0.95rem);
   font-weight: 800;
+  letter-spacing: 0.075em;
   text-transform: uppercase;
 }
 
 .payment-card strong {
-  margin: 8px 0;
-  font-size: 1.35rem;
+  margin: 10px 0 8px;
+  font-size: clamp(1.65rem, 2.35vw, 2.2rem);
+  line-height: 1.08;
 }
 
 .payment-card small {
   color: var(--muted);
-  line-height: 1.5;
+  font-size: clamp(1rem, 1.15vw, 1.12rem);
+  line-height: 1.55;
 }
 
 .booking-form,
@@ -1707,11 +1714,14 @@ address a:hover {
   }
 
   .quick-request,
-  .trust-strip,
   .feature-band,
   .booking-section,
   .contact-section {
     grid-template-columns: 1fr;
+  }
+
+  .trust-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .quick-request {
@@ -1748,8 +1758,14 @@ address a:hover {
     left: -42px;
   }
 
+  .payment-card {
+    min-height: 140px;
+    padding: 24px 22px;
+  }
+
   .trust-intro,
   .trust-item {
+    min-height: 154px;
     border-right: 1px solid rgba(226, 234, 242, 0.1);
     border-bottom: 1px solid rgba(226, 234, 242, 0.1);
     border-left: 1px solid rgba(226, 234, 242, 0.1);
@@ -1842,7 +1858,16 @@ address a:hover {
 
   .trust-intro,
   .trust-item {
-    min-height: 0;
+    min-height: 136px;
+  }
+
+  .trust-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .trust-intro strong,
+  .trust-item p {
+    max-width: none;
   }
 
   .site-footer,
