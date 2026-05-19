@@ -1,10 +1,11 @@
-import { readdirSync, statSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, statSync } from "node:fs";
 import { resolve, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 const ignoredDirs = new Set(["assets", "audit", "dist", "node_modules", "supabase"]);
+const staticAssetDirs = ["assets/fleet", "assets/backgrounds"];
 const adminRoutes = new Set([
   "/admin/login",
   "/admin/bookings",
@@ -40,21 +41,47 @@ function rewriteAdminRoute(request, _response, next) {
   next();
 }
 
-export default defineConfig({
-  plugins: [
-    {
-      name: "mir-admin-route-rewrites",
-      configureServer(server) {
-        server.middlewares.use(rewriteAdminRoute);
+function copyStaticAssetDirs(outDir) {
+  for (const staticDir of staticAssetDirs) {
+    const source = resolve(root, staticDir);
+    const destination = resolve(outDir, staticDir);
+
+    if (!existsSync(source)) continue;
+
+    rmSync(destination, { force: true, recursive: true });
+    mkdirSync(resolve(destination, ".."), { recursive: true });
+    cpSync(source, destination, { recursive: true });
+  }
+}
+
+export default defineConfig(() => {
+  let buildOutDir = resolve(root, "dist");
+
+  return {
+    plugins: [
+      {
+        name: "mir-admin-route-rewrites",
+        configureServer(server) {
+          server.middlewares.use(rewriteAdminRoute);
+        },
+        configurePreviewServer(server) {
+          server.middlewares.use(rewriteAdminRoute);
+        },
       },
-      configurePreviewServer(server) {
-        server.middlewares.use(rewriteAdminRoute);
+      {
+        name: "mir-static-image-copy",
+        configResolved(config) {
+          buildOutDir = resolve(config.root, config.build.outDir);
+        },
+        writeBundle() {
+          copyStaticAssetDirs(buildOutDir);
+        },
+      },
+    ],
+    build: {
+      rollupOptions: {
+        input: Object.fromEntries(htmlEntries(root)),
       },
     },
-  ],
-  build: {
-    rollupOptions: {
-      input: Object.fromEntries(htmlEntries(root)),
-    },
-  },
+  };
 });
