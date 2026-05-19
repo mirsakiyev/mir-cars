@@ -1,2 +1,28 @@
 [build]
-  publish = "."
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/admin/login"
+  to = "/admin/login/"
+  status = 301
+
+[[redirects]]
+  from = "/admin/bookings"
+  to = "/admin/bookings/"
+  status = 301
+
+[[redirects]]
+  from = "/admin/vehicles"
+  to = "/admin/vehicles/"
+  status = 301
+
+[[redirects]]
+  from = "/admin/contacts"
+  to = "/admin/contacts/"
+  status = 301
+
+[[redirects]]
+  from = "/admin/payments"
+  to = "/admin/payments/"
+  status = 301

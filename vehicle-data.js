@@ -50,8 +50,118 @@
     return fromSiteRoot(`booking.html${suffix}`);
   }
 
+  function paymentUrl(suffix = "") {
+    return fromSiteRoot(`payment.html${suffix}`);
+  }
+
   function fleetUrl(suffix = "") {
     return fromSiteRoot(`fleet.html${suffix}`);
+  }
+
+  const rentalClasses = {
+    economy: {
+      label: "Economy",
+      weeklyRate: 445,
+      monthlyRate: 1650,
+      securityDeposit: 500,
+    },
+    compactHybrid: {
+      label: "Compact hybrid",
+      weeklyRate: 545,
+      monthlyRate: 1950,
+      securityDeposit: 650,
+    },
+    midsizeHybrid: {
+      label: "Midsize hybrid",
+      weeklyRate: 625,
+      monthlyRate: 2250,
+      securityDeposit: 750,
+    },
+    compactSuv: {
+      label: "Compact SUV",
+      weeklyRate: 695,
+      monthlyRate: 2550,
+      securityDeposit: 900,
+    },
+    luxurySedan: {
+      label: "Luxury sedan",
+      weeklyRate: 895,
+      monthlyRate: 3350,
+      securityDeposit: 1200,
+    },
+    executiveSedan: {
+      label: "Executive sedan",
+      weeklyRate: 1075,
+      monthlyRate: 3950,
+      securityDeposit: 1300,
+    },
+    adventureSuv: {
+      label: "Adventure SUV",
+      weeklyRate: 995,
+      monthlyRate: 3650,
+      securityDeposit: 1250,
+    },
+    performanceCoupe: {
+      label: "Performance coupe",
+      weeklyRate: 1125,
+      monthlyRate: 4150,
+      securityDeposit: 1500,
+    },
+    luxuryConvertible: {
+      label: "Luxury convertible",
+      weeklyRate: 1195,
+      monthlyRate: 4450,
+      securityDeposit: 1600,
+    },
+    premiumEv: {
+      label: "Premium EV",
+      weeklyRate: 1295,
+      monthlyRate: 4800,
+      securityDeposit: 1750,
+    },
+    flagshipSuv: {
+      label: "Flagship SUV",
+      weeklyRate: 1595,
+      monthlyRate: 5900,
+      securityDeposit: 2500,
+    },
+  };
+
+  function formatCurrency(amount) {
+    return `$${Number(amount).toLocaleString("en-US")}`;
+  }
+
+  function getVehicleRentalTerms(vehicle) {
+    const terms = rentalClasses[vehicle.rentalClass] || rentalClasses.economy;
+
+    return {
+      classLabel: terms.label,
+      dailyRate: vehicle.rate,
+      weeklyRate: terms.weeklyRate,
+      monthlyRate: terms.monthlyRate,
+      securityDeposit: Number(vehicle.depositAmount ?? terms.securityDeposit),
+    };
+  }
+
+  let activeVehicles = null;
+
+  function getActiveVehicles() {
+    return Array.isArray(activeVehicles) ? activeVehicles : vehicles;
+  }
+
+  function getRelatedVehicles(vehicle) {
+    return getActiveVehicles()
+      .filter((candidate) => candidate.slug !== vehicle.slug)
+      .sort((first, second) => {
+        const firstMatchesType = first.type === vehicle.type;
+        const secondMatchesType = second.type === vehicle.type;
+
+        if (firstMatchesType !== secondMatchesType) {
+          return firstMatchesType ? -1 : 1;
+        }
+
+        return compareVehicleLabels(first, second);
+      });
   }
 
   const vehicles = [
@@ -61,6 +171,7 @@
       year: "2025",
       color: "White",
       type: "SUV",
+      rentalClass: "premiumEv",
       rate: 199,
       images: fleetImages("acura-zdx-2025-white", 5),
       description: "EV luxury crossover styling with quiet electric power and a refined cabin feel.",
@@ -87,6 +198,7 @@
       year: "2026",
       color: "White",
       type: "Sedan",
+      rentalClass: "luxurySedan",
       rate: 139,
       images: fleetImages("bmw-3-series-2026-white", 6),
       description: "A sharp premium sedan that balances comfort, handling, and business-ready polish.",
@@ -113,6 +225,7 @@
       year: "2026",
       color: "Grey",
       type: "Convertible",
+      rentalClass: "luxuryConvertible",
       rate: 189,
       images: fleetImages("bmw-4-series-convertible-2026-grey", 6),
       description: "Open-air coupe energy with premium comfort for coastal drives and nights in Beverly Hills.",
@@ -139,6 +252,7 @@
       year: "2026",
       color: "White",
       type: "Coupe",
+      rentalClass: "performanceCoupe",
       rate: 179,
       images: fleetImages("ford-mustang-2026-white", 6),
       description: "Classic performance attitude for sunset routes, date nights, and statement arrivals.",
@@ -165,6 +279,7 @@
       year: "2026",
       color: "Dark Grey",
       type: "Sedan",
+      rentalClass: "compactHybrid",
       rate: 89,
       images: fleetImages("honda-civic-hybrid-2026-dark-grey", 6),
       description: "Efficient, reliable, and easy to park, built for practical daily driving around LA.",
@@ -191,6 +306,7 @@
       year: "2026",
       color: "Light Grey",
       type: "Sedan",
+      rentalClass: "compactHybrid",
       rate: 89,
       images: fleetImages("honda-civic-hybrid-2026-light-grey", 6),
       description: "Efficient hybrid sedan with a bright modern finish for practical daily drives around LA.",
@@ -217,6 +333,7 @@
       year: "2026",
       color: "Grey",
       type: "Sedan",
+      rentalClass: "economy",
       rate: 79,
       images: fleetImages("hyundai-elantra-2026-grey", 6),
       description: "A clean economy sedan with modern tech and strong value for longer reservations.",
@@ -243,6 +360,7 @@
       year: "2026",
       color: "Blue",
       type: "SUV",
+      rentalClass: "adventureSuv",
       rate: 159,
       images: fleetImages("jeep-wrangler-willys-2026-blue", 6),
       description: "A rugged LA weekend option for beach routes, city cruising, and open-sky drives.",
@@ -269,6 +387,7 @@
       year: "2025",
       color: "White",
       type: "SUV",
+      rentalClass: "flagshipSuv",
       rate: 249,
       images: fleetImages("lexus-lx-600-2025-white", 6),
       description: "Full-size luxury SUV with executive space, smooth road manners, and serious presence.",
@@ -295,6 +414,7 @@
       year: "2026",
       color: "White",
       type: "Sedan",
+      rentalClass: "executiveSedan",
       rate: 169,
       images: fleetImages("mercedes-benz-c300-2026-white", 5),
       description: "Modern luxury sedan with executive style, quiet comfort, and premium details.",
@@ -321,6 +441,7 @@
       year: "2026",
       color: "White",
       type: "Sedan",
+      rentalClass: "economy",
       rate: 75,
       images: fleetImages("nissan-sentra-2026-white", 4),
       description: "Comfortable daily sedan for guests who want simple, dependable transportation.",
@@ -347,6 +468,7 @@
       year: "2026",
       color: "Blue",
       type: "Sedan",
+      rentalClass: "midsizeHybrid",
       rate: 99,
       images: fleetImages("toyota-camry-hybrid-2026-blue", 6),
       description: "A smooth midsize hybrid sedan for business trips, family visits, and comfortable commutes.",
@@ -373,6 +495,7 @@
       year: "2026",
       color: "Grey",
       type: "Sedan",
+      rentalClass: "economy",
       rate: 79,
       images: fleetImages("toyota-corolla-2026-grey", 6),
       description: "A trusted compact sedan with low fuel use and easy city handling.",
@@ -399,6 +522,7 @@
       year: "2025",
       color: "White",
       type: "SUV",
+      rentalClass: "compactSuv",
       rate: 109,
       images: fleetImages("volkswagen-tiguan-2025-white", 6),
       description: "Clean, practical compact SUV for family plans, errands, and longer LA stays.",
@@ -423,14 +547,23 @@
 
   global.MIR_CARS = {
     vehicles,
+    fallbackVehicles: vehicles,
+    setVehicles(nextVehicles) {
+      activeVehicles = Array.isArray(nextVehicles) ? nextVehicles : vehicles;
+      global.MIR_CARS.vehicles = activeVehicles;
+    },
     getVehicleBySlug(slug) {
-      return vehicles.find((vehicle) => vehicle.slug === slug);
+      return getActiveVehicles().find((vehicle) => vehicle.slug === slug) || vehicles.find((vehicle) => vehicle.slug === slug);
     },
     getVehicleRequestLabel,
     compareVehicleLabels,
+    formatCurrency,
+    getVehicleRentalTerms,
+    getRelatedVehicles,
     vehicleUrl,
     homeUrl,
     bookingUrl,
+    paymentUrl,
     fleetUrl,
   };
 })(typeof window !== "undefined" ? window : globalThis);

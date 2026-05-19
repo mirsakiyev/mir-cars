@@ -1,14 +1,16 @@
-const http = require("http");
-const fs = require("fs");
-const path = require("path");
+import fs from "node:fs";
+import http from "node:http";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const port = Number(process.env.PORT || 5173);
-const root = __dirname;
+const root = path.dirname(fileURLToPath(import.meta.url));
 
 const types = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
+  ".mjs": "text/javascript; charset=utf-8",
   ".png": "image/png",
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
@@ -29,6 +31,15 @@ function resolveRequestPath(urlPath) {
 
   if (path.relative(root, filePath).startsWith("..")) {
     return null;
+  }
+
+  if (path.extname(filePath)) {
+    return filePath;
+  }
+
+  const directoryIndexPath = path.join(filePath, "index.html");
+  if (!path.relative(root, directoryIndexPath).startsWith("..") && fs.existsSync(directoryIndexPath)) {
+    return directoryIndexPath;
   }
 
   return filePath;

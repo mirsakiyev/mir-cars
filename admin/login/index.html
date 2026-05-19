@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Admin Login | MIR CARS</title>
+    <link rel="stylesheet" href="../../styles.css" />
+    <script type="module" src="../../src/admin/admin-login.js"></script>
+  </head>
+  <body class="admin-login-page">
+    <main class="admin-login-main">
+      <section class="admin-login-card">
+        <p class="eyebrow">MIR CARS admin</p>
+        <h1>Sign in</h1>
+        <form class="booking-form admin-login-form" id="adminLoginForm">
+          <label>
+            Email
+            <input type="email" name="email" autocomplete="email" required />
+          </label>
+          <label>
+            Password
+            <input type="password" name="password" autocomplete="current-password" required />
+          </label>
+          <button class="button primary" type="submit">Sign in</button>
+          <p class="form-status" id="adminLoginStatus" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>

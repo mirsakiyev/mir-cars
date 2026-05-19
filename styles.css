@@ -1280,6 +1280,77 @@ textarea:focus {
   font-weight: 900;
 }
 
+.rental-rates,
+.related-vehicles {
+  padding-right: clamp(18px, 5vw, 72px);
+  padding-left: clamp(18px, 5vw, 72px);
+}
+
+.rental-rates {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.42fr) minmax(0, 1fr);
+  gap: clamp(22px, 4vw, 52px);
+  padding-bottom: clamp(42px, 6vw, 74px);
+}
+
+.rental-rates-heading {
+  max-width: 430px;
+}
+
+.rental-rates-heading h2,
+.related-vehicles-header h2 {
+  margin: 0;
+  font-size: clamp(1.85rem, 3.4vw, 3.5rem);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.rental-rates-heading p:not(.eyebrow) {
+  color: var(--muted);
+  line-height: 1.62;
+}
+
+.rental-rates-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.rental-rate-card {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  min-height: 150px;
+  align-content: center;
+  gap: 9px;
+  padding: clamp(18px, 2vw, 24px);
+  border: 1px solid rgba(226, 234, 242, 0.1);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.048), rgba(255, 255, 255, 0.016) 52%, rgba(142, 160, 176, 0.052)),
+    rgba(13, 15, 17, 0.34);
+}
+
+.rental-rate-card span {
+  color: rgba(238, 243, 247, 0.56);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rental-rate-card strong {
+  color: var(--gold-strong);
+  font-size: clamp(1.18rem, 1.7vw, 1.55rem);
+  line-height: 1.12;
+}
+
+.rental-rate-card small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
 .detail-carousel {
   position: relative;
   min-width: 0;
@@ -1449,6 +1520,73 @@ textarea:focus {
   border-radius: 999px;
   background: var(--gold);
   content: "";
+}
+
+.related-vehicles {
+  padding-bottom: clamp(76px, 9vw, 132px);
+}
+
+.related-vehicles-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.related-vehicles-header > div:first-child {
+  max-width: 760px;
+}
+
+.related-vehicles-row {
+  display: grid;
+  grid-auto-columns: calc((100% - 36px) / 3);
+  grid-auto-flow: column;
+  gap: 18px;
+  overflow-x: auto;
+  padding-bottom: 16px;
+  scroll-padding-inline: 2px;
+  scroll-snap-type: x mandatory;
+  scrollbar-color: rgba(226, 234, 242, 0.34) rgba(255, 255, 255, 0.07);
+}
+
+.related-vehicles-row::-webkit-scrollbar {
+  height: 10px;
+}
+
+.related-vehicles-row::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.related-vehicles-row::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(226, 234, 242, 0.34);
+}
+
+.related-vehicle-card {
+  min-width: 0;
+  scroll-snap-align: start;
+}
+
+.related-vehicle-card .vehicle-body p {
+  min-height: 72px;
+}
+
+.related-price-stack {
+  display: grid;
+  gap: 3px;
+}
+
+.related-price-stack strong {
+  color: var(--gold-strong);
+  line-height: 1;
+}
+
+.related-price-stack small {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
 }
 
 .feature-band {
@@ -1937,6 +2075,46 @@ address {
   text-transform: uppercase;
 }
 
+.availability-panel {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  min-height: 62px;
+  align-content: center;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(18, 20, 22, 0.2);
+}
+
+.availability-panel span,
+.file-field small {
+  color: rgba(238, 243, 247, 0.62);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.availability-panel strong {
+  color: var(--muted);
+  font-size: 0.94rem;
+  line-height: 1.25;
+}
+
+.availability-panel.available strong {
+  color: #9ff0b8;
+}
+
+.availability-panel.unavailable strong {
+  color: var(--danger);
+}
+
+.availability-panel.checking strong,
+.availability-panel.fallback strong {
+  color: var(--gold-strong);
+}
+
 .booking-form label:has(textarea) {
   min-height: 170px;
   align-content: start;
@@ -1966,6 +2144,24 @@ address {
   font-weight: 700;
 }
 
+.booking-form input[type="file"] {
+  height: auto;
+  min-height: 36px;
+  padding: 6px 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.file-field {
+  align-content: start;
+}
+
+.file-field small {
+  letter-spacing: 0;
+  line-height: 1.35;
+  text-transform: none;
+}
+
 .booking-form select,
 .contact-form select {
   border-color: rgba(226, 234, 242, 0.16);
@@ -1979,6 +2175,53 @@ address {
   min-height: 142px;
   padding-top: 4px;
   line-height: 1.55;
+}
+
+.booking-estimate {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid rgba(226, 234, 242, 0.14);
+  border-radius: 6px;
+  background: rgba(18, 20, 22, 0.2);
+}
+
+.booking-estimate-empty,
+.estimate-row {
+  padding: 12px;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.estimate-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border-bottom: 1px solid rgba(226, 234, 242, 0.08);
+}
+
+.estimate-row:last-child {
+  border-bottom: 0;
+}
+
+.estimate-row span {
+  color: rgba(238, 243, 247, 0.62);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.estimate-row strong {
+  color: var(--gold-strong);
+}
+
+.estimate-row.total {
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .contact-form textarea {
@@ -2136,6 +2379,7 @@ address {
 }
 
 .booking-info-grid article,
+.rental-rate-card,
 .vehicle-detail-grid article,
 .detail-panels article,
 .testimonial-grid article {
@@ -2154,6 +2398,7 @@ address {
 }
 
 .booking-info-grid article::before,
+.rental-rate-card::before,
 .vehicle-detail-grid article::before,
 .detail-panels article::before,
 .testimonial-grid article::before {
@@ -2171,6 +2416,7 @@ address {
 }
 
 .booking-info-grid article::after,
+.rental-rate-card::after,
 .vehicle-detail-grid article::after,
 .detail-panels article::after,
 .testimonial-grid article::after {
@@ -2193,6 +2439,7 @@ address {
 }
 
 .booking-info-grid article:hover,
+.rental-rate-card:hover,
 .vehicle-detail-grid article:hover,
 .detail-panels article:hover,
 .testimonial-grid article:hover {
@@ -2207,6 +2454,7 @@ address {
 }
 
 .booking-info-grid article:hover::before,
+.rental-rate-card:hover::before,
 .vehicle-detail-grid article:hover::before,
 .detail-panels article:hover::before,
 .testimonial-grid article:hover::before {
@@ -2215,6 +2463,7 @@ address {
 }
 
 .booking-info-grid article:hover::after,
+.rental-rate-card:hover::after,
 .vehicle-detail-grid article:hover::after,
 .detail-panels article:hover::after,
 .testimonial-grid article:hover::after {
@@ -2223,6 +2472,7 @@ address {
 }
 
 .booking-info-grid article > *,
+.rental-rate-card > *,
 .vehicle-detail-grid article > *,
 .detail-panels article > *,
 .testimonial-grid article > * {
@@ -2266,6 +2516,351 @@ address a:hover {
   color: var(--gold-strong);
 }
 
+.admin-login-main,
+.admin-page-main {
+  min-height: 100vh;
+  padding: clamp(28px, 5vw, 72px);
+}
+
+.admin-login-main {
+  display: grid;
+  place-items: center;
+}
+
+.admin-login-card {
+  width: min(100%, 460px);
+}
+
+.admin-login-card h1,
+.admin-page-title h1 {
+  margin-bottom: 20px;
+  font-size: clamp(2.35rem, 5vw, 4.8rem);
+  line-height: 0.95;
+  letter-spacing: 0;
+}
+
+.admin-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px clamp(18px, 4vw, 48px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(13, 14, 15, 0.92);
+  backdrop-filter: blur(18px);
+}
+
+.admin-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-nav a {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  padding: 0 12px;
+  border: 1px solid rgba(226, 234, 242, 0.12);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.admin-nav a:hover,
+.admin-nav a:focus-visible {
+  border-color: rgba(226, 234, 242, 0.3);
+  color: var(--gold-strong);
+}
+
+.admin-sign-out {
+  min-height: 38px;
+  padding: 0 12px;
+}
+
+.admin-page-title {
+  max-width: 900px;
+  margin-bottom: 28px;
+}
+
+.admin-panel,
+.admin-card-list {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-card,
+.admin-empty,
+.admin-table-wrap {
+  border: 1px solid rgba(226, 234, 242, 0.14);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.018) 52%, rgba(142, 160, 176, 0.045)),
+    rgba(13, 15, 17, 0.48);
+}
+
+.admin-card,
+.admin-empty {
+  padding: clamp(18px, 2.4vw, 28px);
+}
+
+.admin-card-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.admin-card-head span,
+.admin-detail-grid strong {
+  color: rgba(238, 243, 247, 0.58);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.admin-card h2 {
+  margin: 6px 0 0;
+  font-size: clamp(1.45rem, 2.6vw, 2.4rem);
+  line-height: 1;
+}
+
+.status-pill {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid rgba(226, 234, 242, 0.18);
+  border-radius: var(--radius);
+  color: var(--gold-strong);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.admin-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin-bottom: 16px;
+}
+
+.admin-detail-grid span {
+  display: grid;
+  gap: 5px;
+  min-height: 72px;
+  padding: 12px;
+  border: 1px solid rgba(226, 234, 242, 0.08);
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.admin-notes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.admin-notes label {
+  display: grid;
+  gap: 8px;
+  color: rgba(238, 243, 247, 0.62);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.admin-notes textarea,
+.admin-card select,
+.admin-table select {
+  border: 1px solid rgba(226, 234, 242, 0.16);
+  border-radius: 6px;
+  background: rgba(5, 6, 7, 0.72);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.admin-notes textarea {
+  min-height: 92px;
+  padding: 10px;
+  line-height: 1.5;
+}
+
+.admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-documents {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid rgba(226, 234, 242, 0.08);
+}
+
+.admin-documents > strong {
+  color: rgba(238, 243, 247, 0.62);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.admin-documents div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-documents a,
+.admin-documents span,
+.admin-documents p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.admin-documents a {
+  padding: 7px 9px;
+  border: 1px solid rgba(226, 234, 242, 0.14);
+  border-radius: 999px;
+}
+
+.admin-documents a:hover {
+  color: var(--gold-strong);
+}
+
+.admin-actions .button {
+  min-height: 38px;
+  padding: 0 12px;
+  font-size: 0.72rem;
+}
+
+.admin-message {
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  min-width: 940px;
+  border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 14px;
+  border-bottom: 1px solid rgba(226, 234, 242, 0.08);
+  color: var(--muted);
+  text-align: left;
+  vertical-align: top;
+}
+
+.admin-table th {
+  color: rgba(238, 243, 247, 0.62);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.payment-page-main {
+  min-height: calc(100vh - 82px);
+}
+
+.payment-page-section {
+  max-width: 920px;
+  padding: clamp(28px, 5vw, 72px);
+}
+
+.payment-page-section h1 {
+  margin-bottom: 18px;
+  font-size: clamp(2.8rem, 7vw, 6rem);
+  line-height: 0.95;
+  letter-spacing: 0;
+}
+
+.payment-page-section > p:not(.eyebrow) {
+  max-width: 720px;
+  color: var(--muted);
+  font-size: clamp(1rem, 1.3vw, 1.16rem);
+  line-height: 1.65;
+}
+
+.payment-summary {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+  margin-top: 28px;
+  border: 1px solid rgba(226, 234, 242, 0.16);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.018) 52%, rgba(142, 160, 176, 0.045)),
+    rgba(13, 15, 17, 0.48);
+}
+
+.payment-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px;
+  border-bottom: 1px solid rgba(226, 234, 242, 0.08);
+}
+
+.payment-summary-row span {
+  color: rgba(238, 243, 247, 0.62);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.payment-summary-row strong {
+  color: var(--gold-strong);
+  font-size: clamp(1.08rem, 2vw, 1.45rem);
+}
+
+.payment-gateway-placeholder {
+  display: grid;
+  gap: 12px;
+  padding: clamp(20px, 3vw, 34px);
+}
+
+.payment-gateway-placeholder h2 {
+  margin: 0;
+  font-size: clamp(1.8rem, 3.2vw, 3rem);
+  line-height: 1;
+}
+
+.payment-gateway-placeholder p:not(.eyebrow) {
+  max-width: 680px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.payment-gateway-placeholder .button {
+  width: fit-content;
+  padding: 0 18px;
+}
+
 .site-footer {
   display: flex;
   flex-wrap: wrap;
@@ -2296,6 +2891,7 @@ address a:hover {
   }
 
   .vehicle-detail-hero,
+  .rental-rates,
   .vehicle-story {
     grid-template-columns: 1fr;
   }
@@ -2305,9 +2901,14 @@ address a:hover {
   }
 
   .vehicle-detail-grid,
+  .rental-rates-grid,
   .detail-panels,
   .testimonial-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .related-vehicles-row {
+    grid-auto-columns: calc((100% - 18px) / 2);
   }
 
   .booking-info-grid {
@@ -2362,6 +2963,16 @@ address a:hover {
     padding-bottom: 0;
   }
 
+  .admin-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-detail-grid,
+  .admin-notes {
+    grid-template-columns: 1fr;
+  }
+
   .main-nav a {
     min-height: 34px;
     padding: 0 10px;
@@ -2380,6 +2991,11 @@ address a:hover {
 
   .vehicle-detail-hero {
     padding-top: 24px;
+  }
+
+  .related-vehicles-header {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .vehicle-detail-link {
@@ -2542,6 +3158,7 @@ address a:hover {
 
   .fleet-grid,
   .vehicle-detail-grid,
+  .rental-rates-grid,
   .detail-panels,
   .testimonial-grid,
   .selected-vehicle-card,
@@ -2557,6 +3174,16 @@ address a:hover {
   .vehicle-detail-hero {
     padding-right: 24px;
     padding-left: 24px;
+  }
+
+  .rental-rates,
+  .related-vehicles {
+    padding-right: 24px;
+    padding-left: 24px;
+  }
+
+  .related-vehicles-row {
+    grid-auto-columns: minmax(260px, 88%);
   }
 
   .booking-page-section {

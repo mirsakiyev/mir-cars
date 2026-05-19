@@ -1,0 +1,18 @@
+{
+  "name": "mir-cars",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "seed:vehicles": "node scripts/generate-vehicle-seed.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.76.1"
+  },
+  "devDependencies": {
+    "vite": "^6.4.1"
+  }
+}

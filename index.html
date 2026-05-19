@@ -5,13 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="MIR CARS is a premium Los Angeles car rental service with manual approval booking requests, curated vehicles, and Stripe-ready checkout."
+      content="MIR CARS is a premium Los Angeles car rental service with live availability, document upload, curated vehicles, and Stripe-ready checkout."
     />
     <title>MIR CARS | LA Rentals </title>
     <link rel="preconnect" href="https://images.unsplash.com" />
     <link rel="stylesheet" href="styles.css" />
-    <script defer src="vehicle-data.js"></script>
-    <script defer src="script.js"></script>
+    <script type="module" src="script.js"></script>
   </head>
   <body id="top">
     <header class="site-header">
@@ -39,7 +38,7 @@
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-media" aria-hidden="true"></div>
         <div class="hero-content">
-          <p class="eyebrow">Private fleet. Curated service. Premium daily rentals.</p>
+          <p class="eyebrow">Private fleet. Live availability. Premium daily rentals.</p>
           <h1 class="hero-wordmark" id="hero-title" aria-label="MIR CARS">
             <span class="wordmark-top">MIR</span>
             <span class="wordmark-bottom">CARS</span>
@@ -56,7 +55,7 @@
       <section class="trust-strip" aria-label="Rental highlights">
         <div class="trust-intro">
           <span>MIR CARS standard</span>
-          <strong>Curated rentals with a clear approval flow.</strong>
+          <strong>Curated rentals with a complete checkout flow.</strong>
         </div>
         <article class="trust-item">
           <strong>14</strong>
@@ -65,13 +64,13 @@
         </article>
         <article class="trust-item">
           <strong>24h</strong>
-          <span>Approvals</span>
-          <p>Manual review before every rental is confirmed.</p>
+          <span>Live flow</span>
+          <p>Vehicle, dates, documents, deposit, and payment step in one booking path.</p>
         </article>
         <article class="trust-item">
           <strong>Stripe/Zelle</strong>
           <span>Payments</span>
-          <p>Flexible checkout options after availability is approved.</p>
+          <p>Flexible checkout options after availability is checked.</p>
         </article>
         <article class="trust-item">
           <strong>Los Angeles</strong>
@@ -92,21 +91,21 @@
 
       <section class="feature-band">
         <div>
-          <p class="eyebrow">Manual booking review</p>
-          <h2>Built for real rental operations, not instant chaos.</h2>
+          <p class="eyebrow">Booking workflow</p>
+          <h2>Built for real rental operations and customer checkout.</h2>
         </div>
         <div class="feature-list">
           <article>
-            <h3>Request dates</h3>
-            <p>Guests choose a vehicle, pickup window, return window, and optional delivery details.</p>
+            <h3>Select details</h3>
+            <p>Guests choose a vehicle, pickup window, return window, and delivery details.</p>
           </article>
           <article>
-            <h3>Review documents</h3>
-            <p>Admin confirms license, age, deposit requirements, insurance, and availability.</p>
+            <h3>Upload documents</h3>
+            <p>Driver license and supporting documents are stored with the booking record.</p>
           </article>
           <article>
-            <h3>Approve and pay</h3>
-            <p>Stripe can collect deposit holds, partial payment, or full payment after approval.</p>
+            <h3>Proceed to payment</h3>
+            <p>The checkout step is ready for Stripe deposit holds, partial payment, or full payment.</p>
           </article>
         </div>
       </section>
@@ -147,7 +146,7 @@
             <span>Business rental / Glendale</span>
           </article>
           <article>
-            <p>“The approval process felt personal and easy. We knew exactly what to bring before we arrived.”</p>
+          <p>“The booking process felt personal and easy. We knew exactly what to bring before we arrived.”</p>
             <span>Weekend rental / Los Angeles</span>
           </article>
           <article>
@@ -160,7 +159,7 @@
       <section class="contact-section" id="contact">
         <div class="contact-card">
           <p class="eyebrow"><span class="mir-lockup mir-lockup-inline" aria-label="MIR CARS"><span class="mir-lockup-top">MIR</span><span class="mir-lockup-bottom">CARS</span></span></p>
-          <h2>Los Angeles car rental, built around approval and trust.</h2>
+          <h2>Los Angeles car rental, built around checkout and trust.</h2>
           <address>
             1137 N Central Ave, Glendale, CA 91202<br />
             <a href="tel:+17477449777">(747) 744-9777</a><br />
@@ -172,21 +171,9 @@
         <form
           class="contact-form"
           id="contactForm"
-          name="contact-request"
-          method="POST"
-          action="/"
-          netlify
-          data-netlify="true"
-          netlify-honeypot="bot-field"
           data-success="Thanks. Your message was sent to MIR CARS."
           data-error="Something went wrong. Please call or email MIR CARS and we will help right away."
         >
-          <input type="hidden" name="form-name" value="contact-request" />
-          <input type="hidden" name="request_type" value="Contact request" />
-          <input type="hidden" name="business_email" value="ruslan@mircars.com" />
-          <p class="hidden-field">
-            <label>Leave this field empty <input name="bot-field" autocomplete="off" tabindex="-1" /></label>
-          </p>
           <label>
             Name
             <input name="name" autocomplete="name" required />
@@ -194,6 +181,10 @@
           <label>
             Email
             <input type="email" name="email" autocomplete="email" required />
+          </label>
+          <label>
+            Phone
+            <input name="phone" autocomplete="tel" />
           </label>
           <label>
             How can we help?
