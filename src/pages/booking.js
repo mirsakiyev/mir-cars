@@ -92,7 +92,7 @@ async function refreshAvailability() {
 
   if (!rentalDays) {
     availabilityState = { status: "unavailable", key };
-    renderAvailability("unavailable", "Return date must be after pickup");
+    renderAvailability("unavailable", "Drop-off date must be after pickup");
     return availabilityState;
   }
 
@@ -170,8 +170,8 @@ function validateBooking() {
   if (!String(data.get("customer_email") || "").trim()) return "Email is required.";
   if (!String(data.get("customer_phone") || "").trim()) return "Phone is required.";
   if (!pickupDate) return "Pick-up date is required.";
-  if (!returnDate) return "Return date is required.";
-  if (!rentalDays) return "Return date must be after or the same as the pick-up date.";
+  if (!returnDate) return "Drop-off date is required.";
+  if (!rentalDays) return "Drop-off date must be after or the same as the pick-up date.";
   if (!String(data.get("date_of_birth") || "").trim()) return "Date of birth is required.";
   if (age !== null && age < 21) return "Drivers must be at least 21 years old.";
   if (!String(data.get("driver_license_number") || "").trim()) return "Driver license number is required.";

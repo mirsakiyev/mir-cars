@@ -47,6 +47,32 @@
           <div class="booking-support-row">
             <div class="selected-vehicle-card" id="selectedVehicleCard" aria-live="polite"></div>
           </div>
+
+          <section class="booking-requirements" id="booking-policies" aria-labelledby="booking-requirements-heading">
+            <p class="eyebrow">Before you book</p>
+            <h2 id="booking-requirements-heading">Rental requirements.</h2>
+            <div class="booking-requirements-grid">
+              <article>
+                <h3>Driver</h3>
+                <p>Age 25+, valid license, proof of insurance, and matching payment method required.</p>
+              </article>
+              <article>
+                <h3>Payment</h3>
+                <p>Deposit or card authorization is prepared for the Stripe checkout step.</p>
+              </article>
+              <article>
+                <h3>Mileage</h3>
+                <p>Daily rentals include 150 miles. Overage is billed after return.</p>
+              </article>
+              <article>
+                <h3>Vehicle care</h3>
+                <p>No smoking, racing, off-road use, or unauthorized drivers.</p>
+              </article>
+            </div>
+            <p class="booking-requirements-note">
+              Bring your physical license, insurance, and payment method at pickup.
+            </p>
+          </section>
         </div>
 
         <form
@@ -90,6 +116,28 @@
 
           <div class="form-row">
             <label>
+              Pick-up date
+              <input type="date" name="pickup_date" required />
+            </label>
+            <label>
+              Pick-up time
+              <input type="time" name="pickup_time" required />
+            </label>
+          </div>
+
+          <div class="form-row">
+            <label>
+              Drop-off date
+              <input type="date" name="return_date" required />
+            </label>
+            <label>
+              Drop-off time
+              <input type="time" name="return_time" required />
+            </label>
+          </div>
+
+          <div class="form-row">
+            <label>
               Date of birth
               <input type="date" name="date_of_birth" autocomplete="bday" required />
             </label>
@@ -99,28 +147,6 @@
                 <option value="stripe_card">Credit/debit card via Stripe</option>
                 <option value="stripe_deposit">Deposit authorization via Stripe</option>
               </select>
-            </label>
-          </div>
-
-          <div class="form-row">
-            <label>
-              Pick-up date
-              <input type="date" name="pickup_date" required />
-            </label>
-            <label>
-              Return date
-              <input type="date" name="return_date" required />
-            </label>
-          </div>
-
-          <div class="form-row">
-            <label>
-              Pick-up time
-              <input type="time" name="pickup_time" required />
-            </label>
-            <label>
-              Return time
-              <input type="time" name="return_time" required />
             </label>
           </div>
 
@@ -217,64 +243,6 @@
         </form>
       </section>
 
-      <section class="booking-info-grid" aria-label="Booking steps and requirements">
-        <article>
-          <span>01</span>
-          <h2>Details</h2>
-          <p>Choose your vehicle, dates, pickup and return details, driver information, and documents.</p>
-        </article>
-        <article>
-          <span>02</span>
-          <h2>Availability</h2>
-          <p>The selected vehicle is checked for availability before the booking is sent to payment.</p>
-        </article>
-        <article>
-          <span>03</span>
-          <h2>Payment</h2>
-          <p>Continue to the payment gateway placeholder. Stripe checkout will be connected in the next payment phase.</p>
-        </article>
-      </section>
-
-      <section class="section policy-section booking-policy-section" id="booking-policies">
-        <div>
-          <p class="eyebrow">Before you book</p>
-          <h2>Booking requirements and rental rules.</h2>
-        </div>
-        <div class="policy-grid">
-          <article>
-            <h3>Driver requirements</h3>
-            <p>Minimum driver age 25. Valid driver license, proof of insurance, and matching payment method are required.</p>
-          </article>
-          <article>
-            <h3>Deposit and payment</h3>
-            <p>Refundable deposit or card authorization is prepared for Stripe checkout after booking details are submitted.</p>
-          </article>
-          <article>
-            <h3>Mileage</h3>
-            <p>Daily rentals include 150 miles. Additional mileage is billed after return at the listed overage rate.</p>
-          </article>
-          <article>
-            <h3>Pickup and delivery</h3>
-            <p>LAX, Glendale pickup, and custom delivery requests are stored with your booking for the rental team.</p>
-          </article>
-          <article>
-            <h3>Vehicle care</h3>
-            <p>No smoking, racing, off-road use, pets without confirmation, or unauthorized drivers. Fees may apply.</p>
-          </article>
-          <article>
-            <h3>Changes</h3>
-            <p>Extensions, late returns, delivery changes, and vehicle swaps must be confirmed by MIR CARS before the trip changes.</p>
-          </article>
-          <article>
-            <h3>At pickup</h3>
-            <p>Bring your physical license, proof of insurance, payment method, and any required deposit confirmation.</p>
-          </article>
-          <article>
-            <h3>Support</h3>
-            <p>For urgent booking help, call <a href="tel:+17477449777">(747) 744-9777</a> or email <a href="mailto:ruslan@mircars.com">ruslan@mircars.com</a>.</p>
-          </article>
-        </div>
-      </section>
     </main>
 
     <footer class="site-footer">
