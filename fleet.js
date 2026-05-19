@@ -1,23 +1,64 @@
 const { vehicles, getVehicleRequestLabel, compareVehicleLabels, vehicleUrl, bookingUrl } = window.MIR_CARS;
 
 const fleetGrid = document.querySelector("#fleetGrid");
-const sortedVehicles = [...vehicles].sort(compareVehicleLabels);
+const fleetFilters = document.querySelector("#fleetFilters");
+const fleetSort = document.querySelector("#fleetSort");
+const typeOrder = ["SUV", "Sedan", "Convertible", "Coupe", "Van"];
+const vehicleTypes = [...new Set(vehicles.map((vehicle) => vehicle.type))].sort((first, second) => {
+  const firstIndex = typeOrder.indexOf(first);
+  const secondIndex = typeOrder.indexOf(second);
 
-function getRandomVehicles(vehicleList, count) {
-  const shuffled = [...vehicleList];
-
-  for (let index = shuffled.length - 1; index > 0; index -= 1) {
-    const randomIndex = Math.floor(Math.random() * (index + 1));
-    [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+  if (firstIndex !== -1 || secondIndex !== -1) {
+    return (firstIndex === -1 ? Number.MAX_SAFE_INTEGER : firstIndex) - (secondIndex === -1 ? Number.MAX_SAFE_INTEGER : secondIndex);
   }
 
-  return shuffled.slice(0, count);
+  return first.localeCompare(second);
+});
+
+let activeType = "all";
+let activeSort = "az";
+
+function sortVehicles(fleet) {
+  return [...fleet].sort((first, second) => {
+    if (activeSort === "price-asc") {
+      return first.rate - second.rate || compareVehicleLabels(first, second);
+    }
+
+    if (activeSort === "price-desc") {
+      return second.rate - first.rate || compareVehicleLabels(first, second);
+    }
+
+    return compareVehicleLabels(first, second);
+  });
 }
 
-const featuredVehicles = getRandomVehicles(sortedVehicles, 6);
+function getVisibleVehicles() {
+  const filteredVehicles = activeType === "all" ? vehicles : vehicles.filter((vehicle) => vehicle.type === activeType);
+
+  return sortVehicles(filteredVehicles);
+}
+
+function renderFilters() {
+  fleetFilters.innerHTML = ["all", ...vehicleTypes]
+    .map((type) => {
+      const label = type === "all" ? "All" : type;
+
+      return `
+        <button
+          class="filter-button${type === activeType ? " active" : ""}"
+          type="button"
+          data-filter="${type}"
+          aria-pressed="${type === activeType ? "true" : "false"}"
+        >${label}</button>
+      `;
+    })
+    .join("");
+}
 
 function renderFleet() {
-  fleetGrid.innerHTML = featuredVehicles
+  const visibleVehicles = getVisibleVehicles();
+
+  fleetGrid.innerHTML = visibleVehicles
     .map(
       (vehicle) => `
         <article class="vehicle-card">
@@ -65,22 +106,6 @@ function renderFleet() {
     .join("");
 }
 
-document.addEventListener("click", (event) => {
-  const carouselStep = event.target.closest("[data-carousel-step]");
-  const carouselGo = event.target.closest("[data-carousel-go]");
-
-  if (carouselStep || carouselGo) {
-    const carousel = event.target.closest("[data-carousel]");
-    const count = Number(carousel.dataset.count);
-    const current = Number(carousel.dataset.current);
-    const next = carouselGo
-      ? Number(carouselGo.dataset.carouselGo)
-      : (current + Number(carouselStep.dataset.carouselStep) + count) % count;
-
-    updateCarousel(carousel, next);
-  }
-});
-
 function updateCarousel(carousel, index) {
   const image = carousel.querySelector("[data-carousel-image]");
   const dots = carousel.querySelectorAll("[data-carousel-go]");
@@ -94,59 +119,34 @@ function updateCarousel(carousel, index) {
   activeDot.classList.add("active");
 }
 
-function setFormStatus(status, state, message) {
-  status.classList.remove("success", "error", "loading");
-  status.classList.add(state);
-  status.innerHTML = message;
-}
+document.addEventListener("click", (event) => {
+  const filterButton = event.target.closest("[data-filter]");
+  const carouselStep = event.target.closest("[data-carousel-step]");
+  const carouselGo = event.target.closest("[data-carousel-go]");
 
-function encodeFormData(formData) {
-  return new URLSearchParams(formData).toString();
-}
-
-async function submitStaticForm(form) {
-  const formData = new FormData(form);
-
-  if (formData.get("bot-field")) {
-    return true;
+  if (filterButton) {
+    activeType = filterButton.dataset.filter;
+    renderFilters();
+    renderFleet();
+    return;
   }
 
-  const response = await fetch("/", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: encodeFormData(formData),
-  });
+  if (!carouselStep && !carouselGo) return;
 
-  return response.ok;
-}
+  const carousel = event.target.closest("[data-carousel]");
+  const count = Number(carousel.dataset.count);
+  const current = Number(carousel.dataset.current);
+  const next = carouselGo
+    ? Number(carouselGo.dataset.carouselGo)
+    : (current + Number(carouselStep.dataset.carouselStep) + count) % count;
 
-function handleForm(formId, statusId) {
-  const form = document.querySelector(formId);
-  const status = document.querySelector(statusId);
-  const submitButton = form.querySelector('button[type="submit"]');
+  updateCarousel(carousel, next);
+});
 
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    submitButton.disabled = true;
-    setFormStatus(status, "loading", "Sending request...");
+fleetSort.addEventListener("change", () => {
+  activeSort = fleetSort.value;
+  renderFleet();
+});
 
-    try {
-      const ok = await submitStaticForm(form);
-
-      if (!ok) {
-        throw new Error("Form submission failed");
-      }
-
-      form.reset();
-      setFormStatus(status, "success", form.dataset.success);
-    } catch {
-      setFormStatus(status, "error", form.dataset.error);
-    } finally {
-      submitButton.disabled = false;
-    }
-  });
-}
-
+renderFilters();
 renderFleet();
-
-handleForm("#contactForm", "#contactStatus");

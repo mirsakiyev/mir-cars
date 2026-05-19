@@ -24,7 +24,7 @@ function resolveRequestPath(urlPath) {
     return null;
   }
 
-  const requested = cleanPath === "/" ? "/index.html" : cleanPath;
+  const requested = cleanPath === "/" ? "/index.html" : cleanPath.endsWith("/") ? `${cleanPath}index.html` : cleanPath;
   const filePath = path.normalize(path.join(root, requested));
 
   if (path.relative(root, filePath).startsWith("..")) {

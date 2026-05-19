@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Explore the full MIR CARS Los Angeles rental fleet with vehicle carousels, daily rates, specs, and booking links."
+    />
+    <title>Full Fleet | MIR CARS</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="vehicle-data.js"></script>
+    <script defer src="fleet.js"></script>
+  </head>
+  <body id="top">
+    <header class="site-header">
+      <a class="brand" href="index.html#top" aria-label="MIR CARS home">
+        <span>
+          <strong class="mir-lockup brand-name" aria-label="MIR CARS">
+            <span class="mir-lockup-top">MIR</span>
+            <span class="mir-lockup-bottom">CARS</span>
+          </strong>
+          <small>LA Rentals</small>
+        </span>
+      </a>
+
+      <nav class="main-nav" aria-label="Primary navigation">
+        <a href="#fleet">Fleet</a>
+        <a href="index.html#policies">Policies</a>
+        <a href="index.html#testimonials">Testimonials</a>
+        <a href="index.html#contact">Contact</a>
+      </nav>
+
+      <a class="header-cta" href="booking.html">Book now</a>
+    </header>
+
+    <main class="fleet-page-main">
+      <section class="section fleet-page-hero" id="fleet">
+        <a class="back-link" href="index.html#top">Back to home</a>
+        <p class="eyebrow">Complete fleet</p>
+        <h1>Browse every MIR CARS rental.</h1>
+        <p>
+          Review the full Los Angeles fleet with vehicle photos, daily rates, key specs, and booking request links.
+        </p>
+      </section>
+
+      <section class="fleet-page-controls" aria-label="Fleet filters and sorting">
+        <div class="fleet-tools">
+          <div class="fleet-controls" id="fleetFilters" aria-label="Vehicle types"></div>
+          <label class="sort-control">
+            Sort
+            <select id="fleetSort" aria-label="Sort fleet">
+              <option value="az">A-Z</option>
+              <option value="price-asc">Price: low to high</option>
+              <option value="price-desc">Price: high to low</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section class="fleet-grid fleet-grid-full" id="fleetGrid" aria-live="polite"></section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-brand">
+        <span class="mir-lockup mir-lockup-inline" aria-label="MIR CARS"><span class="mir-lockup-top">MIR</span><span class="mir-lockup-bottom">CARS</span></span>
+        <span>Los Angeles, California</span>
+      </div>
+      <span class="footer-copyright">&copy; 2026 MIR CARS. All rights reserved.</span>
+    </footer>
+  </body>
+</html>

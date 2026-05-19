@@ -6,7 +6,7 @@ Live site: https://mircars.netlify.app/
 
 ## What This Is
 
-This is the launch version of the MIR CARS website. It presents the premium fleet, lets customers filter and sort vehicles, previews each vehicle with an image carousel, and collects rental/contact requests through Netlify Forms.
+This is the launch version of the MIR CARS website. It presents a refreshed random set of featured vehicles, previews each vehicle with an image carousel, links every vehicle to its own detail page, and collects rental/contact requests through Netlify Forms.
 
 The current business flow is intentionally simple:
 
@@ -17,12 +17,19 @@ The current business flow is intentionally simple:
 
 ## Current Structure
 
-- `index.html` contains the full page structure: header, hero, trust strip, fleet section, booking form, policies, contact form, and footer.
+- `index.html` contains the home page structure: header, hero, trust strip, rotating featured vehicles, policies, testimonials, contact form, and footer.
+- `fleet.html` contains the complete fleet page with all vehicle carousels, specs, detail links, and request links.
+- `booking.html` contains the dedicated booking page with rental request form, selected vehicle summary, approval steps, requirements, mileage, deposit, payment, pickup, and support details.
 - `styles.css` contains the visual system: dark premium palette, metallic MIR CARS lockup styling, responsive layout, hero imagery, vehicle cards, forms, liquid-glass card treatments, hover states, and mobile breakpoints.
-- `script.js` contains the fleet data and UI behavior: 14 vehicles, category filters, price/name sorting, image carousel controls, vehicle select population, and form submission messages.
+- `vehicle-data.js` contains the shared fleet inventory, image paths, rates, and vehicle detail-page copy.
+- `script.js` contains the home page UI behavior: random six-vehicle featured selection, image carousel controls, booking-page request links, and contact form submission messages.
+- `fleet.js` contains the full fleet page behavior: type filters, price/name sorting, all vehicle carousels, detail links, and booking-page request links.
+- `booking.js` contains the booking page UI behavior: vehicle select population, deep-linked booking selection, selected vehicle summary, and rental request form submission messages.
+- `car-page.js` renders each individual vehicle page from the shared fleet data.
+- `cars/` contains one static route per vehicle, for example `/cars/bmw-3-series-2026-white/`.
 - `netlify.toml` tells Netlify to publish the static site from the project root.
 - `server.js` is only a small local static-file helper. It is not required for Netlify.
-- `assets/cars/` contains vehicle imagery.
+- `assets/fleet/` contains vehicle imagery.
 - `assets/backgrounds/` contains the Mercedes hero and headlight treatment used by the hero area.
 - `audit/` contains visual audit/reference images from the design review process.
 
@@ -56,9 +63,9 @@ After each form-related deploy, submit one test request from the live site and c
 ## Fleet Snapshot
 
 - 14 vehicles total.
-- Types: 7 sedans, 4 SUVs, 1 coupe, 1 convertible, 1 van.
+- Types: 8 sedans, 4 SUVs, 1 coupe, 1 convertible.
 - Daily rates range from `$75/day` to `$249/day`.
-- Fleet data currently lives in `script.js`.
+- Fleet data currently lives in `vehicle-data.js`.
 
 ## Items To Confirm Before Wider Launch
 
