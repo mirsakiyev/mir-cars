@@ -26,3 +26,13 @@
   from = "/admin/payments"
   to = "/admin/payments/"
   status = 301
+
+[[redirects]]
+  from = "/payment-success"
+  to = "/payment-success.html"
+  status = 200
+
+[[redirects]]
+  from = "/payment-cancelled"
+  to = "/payment-cancelled.html"
+  status = 200

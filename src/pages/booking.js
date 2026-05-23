@@ -185,6 +185,16 @@ function generateId() {
   return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
+function generatePaymentAccessToken() {
+  if (crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+
+  const values = new Uint32Array(4);
+  crypto.getRandomValues(values);
+  return [...values].map((value) => value.toString(16).padStart(8, "0")).join("");
+}
+
 function documentUploads() {
   const licenseFile = form.elements.driver_license_file.files[0];
   const supportingFiles = [...form.elements.supporting_documents.files];
@@ -201,7 +211,7 @@ function documentUploads() {
   return documents;
 }
 
-function bookingPayload(bookingId, bookingNumber) {
+function bookingPayload(bookingId, bookingNumber, paymentAccessToken) {
   const data = new FormData(form);
   const vehicle = selectedVehicle();
   const estimate = calculateEstimate(vehicle, String(data.get("pickup_date") || ""), String(data.get("return_date") || ""));
@@ -211,6 +221,8 @@ function bookingPayload(bookingId, bookingNumber) {
     booking_number: bookingNumber,
     vehicle_id: vehicle?.supabaseId || null,
     status: "awaiting_payment",
+    booking_status: "awaiting_payment",
+    payment_access_token: paymentAccessToken,
     pickup_date: data.get("pickup_date") || null,
     return_date: data.get("return_date") || null,
     pickup_time: data.get("pickup_time") || null,
@@ -241,11 +253,12 @@ function bookingPayload(bookingId, bookingNumber) {
   };
 }
 
-function paymentRedirectUrl(bookingNumber) {
+function paymentRedirectUrl(bookingNumber, paymentAccessToken) {
   const vehicle = selectedVehicle();
   const estimate = calculateEstimate(vehicle, form.elements.pickup_date.value, form.elements.return_date.value);
   const params = new URLSearchParams({
     booking: bookingNumber,
+    token: paymentAccessToken,
     currency: estimate.currency || "USD",
   });
 
@@ -289,12 +302,13 @@ function bindBookingForm() {
 
     const bookingId = generateId();
     const bookingNumber = generateBookingNumber();
+    const paymentAccessToken = generatePaymentAccessToken();
 
     submitButton.disabled = true;
     setFormStatus(status, "loading", "Creating booking and preparing payment...");
 
     try {
-      await createBookingRequest(bookingPayload(bookingId, bookingNumber));
+      await createBookingRequest(bookingPayload(bookingId, bookingNumber, paymentAccessToken));
       await uploadBookingDocuments({
         bookingId,
         bookingNumber,
@@ -305,7 +319,7 @@ function bindBookingForm() {
         "success",
         `Booking created. Your booking number is <strong>${bookingNumber}</strong>. Redirecting to payment...`,
       );
-      window.location.href = paymentRedirectUrl(bookingNumber);
+      window.location.href = paymentRedirectUrl(bookingNumber, paymentAccessToken);
     } catch (error) {
       console.warn("Booking request submission failed.", error);
       setFormStatus(status, "error", form.dataset.error);

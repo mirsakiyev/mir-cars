@@ -6,12 +6,14 @@ import { defineConfig } from "vite";
 const root = fileURLToPath(new URL(".", import.meta.url));
 const ignoredDirs = new Set(["assets", "audit", "dist", "node_modules", "supabase"]);
 const staticAssetDirs = ["assets/fleet", "assets/backgrounds"];
-const adminRoutes = new Set([
-  "/admin/login",
-  "/admin/bookings",
-  "/admin/vehicles",
-  "/admin/contacts",
-  "/admin/payments",
+const extensionlessRoutes = new Map([
+  ["/admin/login", "/admin/login/index.html"],
+  ["/admin/bookings", "/admin/bookings/index.html"],
+  ["/admin/vehicles", "/admin/vehicles/index.html"],
+  ["/admin/contacts", "/admin/contacts/index.html"],
+  ["/admin/payments", "/admin/payments/index.html"],
+  ["/payment-success", "/payment-success.html"],
+  ["/payment-cancelled", "/payment-cancelled.html"],
 ]);
 
 function htmlEntries(dir) {
@@ -29,13 +31,14 @@ function htmlEntries(dir) {
   });
 }
 
-function rewriteAdminRoute(request, _response, next) {
+function rewriteExtensionlessRoute(request, _response, next) {
   const originalUrl = request.url || "/";
   const [, pathname = "/", suffix = ""] = originalUrl.match(/^([^?#]*)(.*)$/) || [];
   const normalizedPath = pathname.replace(/\/+$/, "");
+  const routeTarget = extensionlessRoutes.get(normalizedPath);
 
-  if (adminRoutes.has(normalizedPath)) {
-    request.url = `${normalizedPath}/index.html${suffix}`;
+  if (routeTarget) {
+    request.url = `${routeTarget}${suffix}`;
   }
 
   next();
@@ -60,12 +63,12 @@ export default defineConfig(() => {
   return {
     plugins: [
       {
-        name: "mir-admin-route-rewrites",
+        name: "mir-extensionless-route-rewrites",
         configureServer(server) {
-          server.middlewares.use(rewriteAdminRoute);
+          server.middlewares.use(rewriteExtensionlessRoute);
         },
         configurePreviewServer(server) {
-          server.middlewares.use(rewriteAdminRoute);
+          server.middlewares.use(rewriteExtensionlessRoute);
         },
       },
       {

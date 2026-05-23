@@ -14,13 +14,100 @@ document.body.innerHTML = adminShell(titles[page] || "Dashboard");
 
 const app = document.querySelector("#adminApp");
 
+const bookingStatuses = [
+  ["approved", "Approve"],
+  ["declined", "Reject"],
+  ["awaiting_payment", "Awaiting payment"],
+  ["payment_pending", "Payment pending"],
+  ["paid_pending_approval", "Paid pending approval"],
+  ["confirmed", "Confirmed"],
+  ["paid", "Paid"],
+  ["active", "Active"],
+  ["completed", "Completed"],
+];
+
+const paymentStatuses = ["payment_pending", "requires_action", "paid", "failed", "cancelled", "refunded", "partially_refunded"];
+const securityDepositStatuses = ["pending", "authorized", "captured", "released", "refunded", "not_required"];
+const refundStatuses = ["none", "pending", "refunded", "partially_refunded", "failed"];
+
 function statusBadge(status) {
   return `<span class="status-pill">${escapeHtml(status || "unknown")}</span>`;
+}
+
+function statusOptions(statuses, selectedStatus) {
+  return statuses.map((status) => `<option value="${status}"${selectedStatus === status ? " selected" : ""}>${status}</option>`).join("");
 }
 
 function vehicleLabel(vehicle) {
   if (!vehicle) return "Vehicle not selected";
   return [vehicle.year, vehicle.color, vehicle.make, vehicle.model, vehicle.trim].filter(Boolean).join(" ");
+}
+
+function latestPayment(payments = []) {
+  return [...payments].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))[0] || null;
+}
+
+function stripeReferences(payment) {
+  if (!payment) return "";
+
+  return [
+    payment.stripe_customer_id,
+    payment.stripe_checkout_session_id,
+    payment.stripe_payment_intent_id,
+    payment.stripe_payment_method_id,
+    payment.stripe_charge_id,
+  ]
+    .filter(Boolean)
+    .join(" / ");
+}
+
+function renderBookingPaymentPanel(payment, booking) {
+  if (!payment) {
+    return `
+      <div class="admin-payment-panel">
+        <div class="admin-card-head compact">
+          <div>
+            <span>Payment</span>
+            <h3>No payment record yet</h3>
+          </div>
+          ${statusBadge(booking.booking_status || booking.status)}
+        </div>
+        <p>Payment placeholder will be created after the customer clicks Continue to Secure Payment.</p>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="admin-payment-panel">
+      <div class="admin-card-head compact">
+        <div>
+          <span>Payment</span>
+          <h3>${escapeHtml(payment.payment_provider || payment.provider || "stripe")}</h3>
+        </div>
+        ${statusBadge(payment.payment_status || payment.status)}
+      </div>
+      <div class="admin-detail-grid payment-grid">
+        <span><strong>Booking status</strong>${escapeHtml(booking.booking_status || booking.status || "")}</span>
+        <span><strong>Payment status</strong>${escapeHtml(payment.payment_status || payment.status || "")}</span>
+        <span><strong>Amount due</strong>${formatMoney(payment.amount_due ?? payment.amount, payment.currency)}</span>
+        <span><strong>Amount paid</strong>${formatMoney(payment.amount_paid, payment.currency)}</span>
+        <span><strong>Deposit amount</strong>${formatMoney(payment.security_deposit_amount, payment.currency)}</span>
+        <span><strong>Deposit status</strong>${escapeHtml(payment.security_deposit_status || "")}</span>
+        <span><strong>Refund status</strong>${escapeHtml(payment.refund_status || "")}</span>
+        <span><strong>Refund amount</strong>${formatMoney(payment.refund_amount, payment.currency)}</span>
+        <span><strong>Completed</strong>${payment.payment_completed_at ? escapeHtml(new Date(payment.payment_completed_at).toLocaleString()) : "Not completed"}</span>
+        <span><strong>Failure reason</strong>${escapeHtml(payment.payment_failed_reason || "None")}</span>
+      </div>
+      ${
+        stripeReferences(payment) || payment.stripe_receipt_url
+          ? `<div class="admin-stripe-refs">
+              ${stripeReferences(payment) ? `<span>${escapeHtml(stripeReferences(payment))}</span>` : ""}
+              ${payment.stripe_receipt_url ? `<a href="${escapeHtml(payment.stripe_receipt_url)}" target="_blank" rel="noopener">Stripe receipt</a>` : ""}
+            </div>`
+          : `<p>No Stripe references yet.</p>`
+      }
+    </div>
+  `;
 }
 
 function renderError(message) {
@@ -35,7 +122,7 @@ async function updateRecord(client, table, id, values) {
 async function renderBookings(client) {
   const { data, error } = await client
     .from("booking_requests")
-    .select("*,vehicles(slug,make,model,year,trim,color,category),booking_documents(id,document_type,file_name,file_path,mime_type,size_bytes)")
+    .select("*,vehicles(slug,make,model,year,trim,color,category),booking_documents(id,document_type,file_name,file_path,mime_type,size_bytes),payments(*)")
     .order("created_at", { ascending: false });
 
   if (error) throw error;
@@ -61,18 +148,21 @@ async function renderBookings(client) {
   app.innerHTML = `
     <div class="admin-card-list">
       ${data
-        .map(
-          (booking) => `
+        .map((booking) => {
+          const payment = latestPayment(booking.payments || []);
+
+          return `
             <article class="admin-card" data-booking-id="${booking.id}">
               <div class="admin-card-head">
                 <div>
                   <span>${escapeHtml(booking.booking_number || "No booking number")}</span>
                   <h2>${escapeHtml(`${booking.customer_first_name || ""} ${booking.customer_last_name || ""}`.trim() || "Customer")}</h2>
                 </div>
-                ${statusBadge(booking.status)}
+                ${statusBadge(booking.booking_status || booking.status)}
               </div>
               <div class="admin-detail-grid">
                 <span><strong>Vehicle</strong>${escapeHtml(vehicleLabel(booking.vehicles))}</span>
+                <span><strong>Booking status</strong>${escapeHtml(booking.booking_status || booking.status || "")}</span>
                 <span><strong>Email</strong>${escapeHtml(booking.customer_email || "")}</span>
                 <span><strong>Phone</strong>${escapeHtml(booking.customer_phone || "")}</span>
                 <span><strong>Pickup</strong>${escapeHtml(`${booking.pickup_date || ""} ${booking.pickup_time || ""}`.trim())}</span>
@@ -84,6 +174,7 @@ async function renderBookings(client) {
                 <span><strong>Subtotal</strong>${formatMoney(booking.estimated_subtotal, booking.currency)}</span>
                 <span><strong>Total</strong>${formatMoney(booking.estimated_total, booking.currency)}</span>
               </div>
+              ${renderBookingPaymentPanel(payment, booking)}
               <div class="admin-notes">
                 <label>
                   Customer notes
@@ -111,17 +202,12 @@ async function renderBookings(client) {
                 }
               </div>
               <div class="admin-actions">
-                <button type="button" class="button secondary" data-booking-status="approved">Approve</button>
-                <button type="button" class="button secondary" data-booking-status="declined">Reject</button>
-                <button type="button" class="button secondary" data-booking-status="awaiting_payment">Awaiting payment</button>
-                <button type="button" class="button secondary" data-booking-status="paid">Paid</button>
-                <button type="button" class="button secondary" data-booking-status="active">Active</button>
-                <button type="button" class="button secondary" data-booking-status="completed">Completed</button>
+                ${bookingStatuses.map(([status, label]) => `<button type="button" class="button secondary" data-booking-status="${status}">${label}</button>`).join("")}
                 <button type="button" class="button primary" data-save-notes>Save notes</button>
               </div>
             </article>
-          `,
-        )
+          `;
+        })
         .join("")}
     </div>
   `;
@@ -135,7 +221,7 @@ async function renderBookings(client) {
 
     try {
       if (status) {
-        await updateRecord(client, "booking_requests", card.dataset.bookingId, { status });
+        await updateRecord(client, "booking_requests", card.dataset.bookingId, { status, booking_status: status });
         await renderBookings(client);
       }
 
@@ -247,27 +333,81 @@ async function renderContacts(client) {
 async function renderPayments(client) {
   const { data, error } = await client
     .from("payments")
-    .select("*,booking_requests(booking_number,customer_email,status)")
+    .select("*,booking_requests(booking_number,customer_email,customer_first_name,customer_last_name,status,booking_status,estimated_total,deposit_snapshot)")
     .order("created_at", { ascending: false });
 
   if (error) throw error;
 
+  if (!data?.length) {
+    app.innerHTML = `<div class="admin-empty">No payment records yet. A placeholder payment row is created when a customer continues to the payment step.</div>`;
+    return;
+  }
+
   app.innerHTML = `
     <div class="admin-table-wrap">
       <table class="admin-table">
-        <thead><tr><th>Booking</th><th>Customer</th><th>Type</th><th>Provider</th><th>Amount</th><th>Status</th><th>Stripe refs</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Booking</th>
+            <th>Customer</th>
+            <th>Provider / type</th>
+            <th>Due</th>
+            <th>Paid</th>
+            <th>Payment status</th>
+            <th>Deposit</th>
+            <th>Refund</th>
+            <th>Stripe refs</th>
+            <th>Failure / receipt</th>
+          </tr>
+        </thead>
         <tbody>
           ${(data || [])
             .map(
               (payment) => `
-                <tr>
-                  <td>${escapeHtml(payment.booking_requests?.booking_number || "")}</td>
-                  <td>${escapeHtml(payment.booking_requests?.customer_email || "")}</td>
-                  <td>${escapeHtml(payment.payment_type || "")}</td>
-                  <td>${escapeHtml(payment.provider || "")}</td>
-                  <td>${formatMoney(payment.amount, payment.currency)}</td>
-                  <td>${statusBadge(payment.status)}</td>
-                  <td>${escapeHtml([payment.stripe_checkout_session_id, payment.stripe_payment_intent_id].filter(Boolean).join(" / "))}</td>
+                <tr data-payment-id="${payment.id}" data-amount-due="${escapeHtml(String(payment.amount_due ?? payment.amount ?? ""))}">
+                  <td>
+                    <strong>${escapeHtml(payment.booking_requests?.booking_number || "")}</strong>
+                    <small>${escapeHtml(payment.booking_requests?.booking_status || payment.booking_requests?.status || "")}</small>
+                  </td>
+                  <td>
+                    <strong>${escapeHtml(
+                      `${payment.booking_requests?.customer_first_name || ""} ${payment.booking_requests?.customer_last_name || ""}`.trim() ||
+                        "Customer",
+                    )}</strong>
+                    <small>${escapeHtml(payment.booking_requests?.customer_email || "")}</small>
+                  </td>
+                  <td>
+                    <strong>${escapeHtml(payment.payment_provider || payment.provider || "stripe")}</strong>
+                    <small>${escapeHtml(payment.payment_type || "")}</small>
+                  </td>
+                  <td>${formatMoney(payment.amount_due ?? payment.amount, payment.currency)}</td>
+                  <td>${formatMoney(payment.amount_paid, payment.currency)}</td>
+                  <td>
+                    <select data-payment-status="${payment.id}">
+                      ${statusOptions(paymentStatuses, payment.payment_status || payment.status)}
+                    </select>
+                  </td>
+                  <td>
+                    <strong>${formatMoney(payment.security_deposit_amount, payment.currency)}</strong>
+                    <select data-deposit-status="${payment.id}">
+                      ${statusOptions(securityDepositStatuses, payment.security_deposit_status)}
+                    </select>
+                  </td>
+                  <td>
+                    <strong>${formatMoney(payment.refund_amount, payment.currency)}</strong>
+                    <select data-refund-status="${payment.id}">
+                      ${statusOptions(refundStatuses, payment.refund_status)}
+                    </select>
+                  </td>
+                  <td>${escapeHtml(stripeReferences(payment) || "No Stripe refs yet")}</td>
+                  <td>
+                    <span>${escapeHtml(payment.payment_failed_reason || "No failure reason")}</span>
+                    ${
+                      payment.stripe_receipt_url
+                        ? `<a href="${escapeHtml(payment.stripe_receipt_url)}" target="_blank" rel="noopener">Receipt</a>`
+                        : `<small>No receipt yet</small>`
+                    }
+                  </td>
                 </tr>
               `,
             )
@@ -276,6 +416,39 @@ async function renderPayments(client) {
       </table>
     </div>
   `;
+
+  app.onchange = async (event) => {
+    const paymentStatusId = event.target.dataset.paymentStatus;
+    const depositStatusId = event.target.dataset.depositStatus;
+    const refundStatusId = event.target.dataset.refundStatus;
+    const paymentId = paymentStatusId || depositStatusId || refundStatusId;
+
+    if (!paymentId) return;
+
+    const values = {};
+    if (paymentStatusId) {
+      const amountDue = Number(event.target.closest("[data-payment-id]")?.dataset.amountDue);
+
+      values.payment_status = event.target.value;
+      values.status = event.target.value === "payment_pending" ? "pending" : event.target.value;
+      values.payment_failed_reason = event.target.value === "failed" ? "Marked failed by admin." : null;
+      values.payment_completed_at = event.target.value === "paid" ? new Date().toISOString() : null;
+      values.paid_at = event.target.value === "paid" ? new Date().toISOString() : null;
+      if (event.target.value === "paid" && Number.isFinite(amountDue)) {
+        values.amount_paid = amountDue;
+      }
+    }
+    if (depositStatusId) values.security_deposit_status = event.target.value;
+    if (refundStatusId) values.refund_status = event.target.value;
+
+    try {
+      await updateRecord(client, "payments", paymentId, values);
+      await renderPayments(client);
+    } catch (error) {
+      console.warn("Payment admin update failed.", error);
+      renderError("Could not update payment. Check admin permissions and try again.");
+    }
+  };
 }
 
 async function initAdminPage() {

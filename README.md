@@ -12,9 +12,10 @@ The current booking flow is:
 
 - Customer selects vehicle, dates, locations, payment method, driver details, and uploads documents.
 - The site checks database availability when Supabase is configured.
-- The booking is stored in Supabase as `awaiting_payment`.
-- Customer is redirected to a placeholder payment page.
-- Stripe payment collection is not implemented yet; the schema and payment page are prepared for a later checkout/payment-intent flow.
+- The booking is stored in Supabase as `awaiting_payment` with a private payment access token.
+- Customer is redirected to a Stripe-ready payment page with a token-protected booking summary.
+- Clicking the payment button stores/updates a payment placeholder as `payment_pending`.
+- Stripe payment collection is not implemented yet; the schema, payment page, and Netlify function are prepared for a later checkout/webhook flow.
 
 ## Current Structure
 
@@ -27,6 +28,8 @@ The current booking flow is:
 - `script.js`, `fleet.js`, `booking.js`, and `car-page.js` are Vite module entrypoints that load page logic from `src/`.
 - `src/lib/` contains Supabase client setup, vehicle mapping/fallback loading, booking calculations, request inserts, and shared UI helpers.
 - `src/admin/` contains admin auth and dashboard logic.
+- `netlify/functions/create-checkout-session.mjs` is the placeholder backend endpoint for future Stripe Checkout Session creation.
+- `docs/stripe-checkout.md` explains where to add Stripe publishable/secret keys, webhook secret, success/cancel URLs, and webhook logic later.
 - `supabase/schema.sql` contains tables, constraints, triggers, grants, and RLS policies.
 - `supabase/seed-vehicles.sql` seeds the existing hardcoded fleet into Supabase.
 - `scripts/generate-vehicle-seed.mjs` regenerates the seed SQL from `vehicle-data.js`.
@@ -51,6 +54,11 @@ Recommended Netlify settings:
 - Environment variables:
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
+  - `VITE_STRIPE_PUBLISHABLE_KEY` when Stripe frontend setup starts
+  - `STRIPE_SECRET_KEY` when backend Stripe checkout is implemented
+  - `STRIPE_WEBHOOK_SECRET` when the Stripe webhook is implemented
+  - `STRIPE_SUCCESS_URL`
+  - `STRIPE_CANCEL_URL`
 
 When changes are committed and pushed to the connected GitHub repository, Netlify should install dependencies, build with Vite, and redeploy the generated `dist` output automatically.
 
@@ -84,7 +92,8 @@ After each deploy, submit one booking and one contact request from the live site
 
 ## Future Build Direction
 
-- Add Stripe payment-link, deposit, or card authorization flow on the placeholder payment page.
+- Replace the placeholder Netlify checkout function with live Stripe Checkout Session creation.
+- Add a Stripe webhook function to update payment and booking statuses.
 - Add calendar availability and booking status updates.
 - Add email/SMS notifications.
 - Add rental agreement e-sign or checkbox approval.

@@ -3,12 +3,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="MIR CARS secure payment checkout step prepared for future Stripe integration." />
-    <title>Secure Checkout | MIR CARS</title>
+    <meta name="description" content="MIR CARS payment success placeholder for future Stripe checkout." />
+    <title>Payment Success | MIR CARS</title>
     <link rel="stylesheet" href="styles.css" />
-    <script type="module" src="payment.js"></script>
+    <script type="module" src="payment-result.js"></script>
   </head>
-  <body id="top">
+  <body id="top" data-payment-result="success">
     <header class="site-header">
       <a class="brand" href="index.html#top" aria-label="MIR CARS home">
         <span>
@@ -27,21 +27,10 @@
         <a href="index.html#contact">Contact</a>
       </nav>
 
-      <a class="header-cta" href="booking.html">Back to booking</a>
+      <a class="header-cta" href="booking.html">Book now</a>
     </header>
 
-    <main class="payment-page-main">
-      <section class="payment-page-section">
-        <a class="back-link" href="booking.html">Back to booking</a>
-        <p class="eyebrow">Secure checkout step</p>
-        <h1>Review and continue to secure payment.</h1>
-        <p>
-          Review your booking summary before continuing. MIR CARS will use secure third-party checkout for payment,
-          and this website will never collect raw card numbers, expiry dates, or CVV codes.
-        </p>
-        <div class="payment-summary" id="paymentSummary" aria-live="polite"></div>
-      </section>
-    </main>
+    <main class="payment-page-main" id="paymentResult"></main>
 
     <footer class="site-footer">
       <div class="footer-brand">

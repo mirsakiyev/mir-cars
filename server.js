@@ -42,6 +42,11 @@ function resolveRequestPath(urlPath) {
     return directoryIndexPath;
   }
 
+  const htmlFilePath = `${filePath}.html`;
+  if (!path.relative(root, htmlFilePath).startsWith("..") && fs.existsSync(htmlFilePath)) {
+    return htmlFilePath;
+  }
+
   return filePath;
 }
 
