@@ -14,7 +14,7 @@ function renderMissingVehicle() {
   vehiclePage.innerHTML = `
     <section class="vehicle-detail-hero">
       <div class="vehicle-detail-copy">
-        <a class="back-link" href="${window.MIR_CARS.fleetUrl()}">Back to fleet</a>
+        <a class="back-link" href="${escapeHtml(window.MIR_CARS.fleetUrl())}">Back to fleet</a>
         <p class="eyebrow">Vehicle not found</p>
         <h1>This MIR CARS page is not available.</h1>
         <p class="hero-copy">Return to the fleet to choose an available rental.</p>
@@ -49,7 +49,7 @@ function renderCarousel(vehicleData) {
                   class="carousel-dot${index === 0 ? " active" : ""}"
                   type="button"
                   data-carousel-go="${index}"
-                  data-image="${image.src}"
+                  data-image="${escapeHtml(image.src)}"
                   data-label="${escapeHtml(image.label)}"
                   aria-label="Show ${escapeHtml(image.label.toLowerCase())}"
                 ></button>
@@ -103,7 +103,7 @@ function renderRelatedVehicleCard(relatedVehicle) {
     <article class="vehicle-card related-vehicle-card">
       <div class="vehicle-carousel" data-carousel data-current="0" data-count="${relatedVehicle.images.length}" data-vehicle="${escapeHtml(label)}">
         <div class="vehicle-image" data-carousel-image role="img" style="background-image: url('${relatedVehicle.images[0].src}')" aria-label="${escapeHtml(label)}, ${escapeHtml(relatedVehicle.images[0].label)}">
-          <a class="vehicle-detail-link" href="${window.MIR_CARS.vehicleUrl(relatedVehicle)}" aria-label="View ${escapeHtml(label)} details">View details</a>
+          <a class="vehicle-detail-link" href="${escapeHtml(window.MIR_CARS.vehicleUrl(relatedVehicle))}" aria-label="View ${escapeHtml(label)} details">View details</a>
           <button class="carousel-arrow carousel-arrow-left" type="button" data-carousel-step="-1" aria-label="Previous ${escapeHtml(relatedVehicle.title)} image"></button>
           <button class="carousel-arrow carousel-arrow-right" type="button" data-carousel-step="1" aria-label="Next ${escapeHtml(relatedVehicle.title)} image"></button>
           <div class="carousel-dots" aria-label="${escapeHtml(relatedVehicle.title)} image slides">
@@ -114,7 +114,7 @@ function renderRelatedVehicleCard(relatedVehicle) {
                     class="carousel-dot${index === 0 ? " active" : ""}"
                     type="button"
                     data-carousel-go="${index}"
-                    data-image="${image.src}"
+                    data-image="${escapeHtml(image.src)}"
                     data-label="${escapeHtml(image.label)}"
                     aria-label="Show ${escapeHtml(image.label.toLowerCase())}"
                   ></button>
@@ -139,7 +139,7 @@ function renderRelatedVehicleCard(relatedVehicle) {
             <strong>${formatMoney(relatedVehicle.rate, relatedVehicle.currency)}/day</strong>
             <small>${formatMoney(terms.weeklyRate, relatedVehicle.currency)}/week</small>
           </span>
-          <a class="button secondary" href="${window.MIR_CARS.vehicleUrl(relatedVehicle)}">Details</a>
+          <a class="button secondary" href="${escapeHtml(window.MIR_CARS.vehicleUrl(relatedVehicle))}">Details</a>
         </div>
       </div>
     </article>
@@ -177,7 +177,7 @@ function renderVehiclePage(vehicleData) {
   vehiclePage.innerHTML = `
     <section class="vehicle-detail-hero">
       <div class="vehicle-detail-copy">
-        <a class="back-link" href="${window.MIR_CARS.fleetUrl()}">Back to fleet</a>
+        <a class="back-link" href="${escapeHtml(window.MIR_CARS.fleetUrl())}">Back to fleet</a>
         <p class="eyebrow">${escapeHtml(vehicleData.type)} rental</p>
         <h1>
           <span class="vehicle-title-kicker">${escapeHtml(`${vehicleData.year} ${vehicleData.color}`)}</span>
@@ -185,7 +185,7 @@ function renderVehiclePage(vehicleData) {
         </h1>
         <p class="hero-copy">${escapeHtml(vehicleData.detail.tagline)}</p>
         <div class="vehicle-detail-actions">
-          <a class="button primary" href="${requestUrl(vehicleData)}">Book this vehicle</a>
+          <a class="button primary" href="${escapeHtml(requestUrl(vehicleData))}">Book this vehicle</a>
           <span class="detail-price">${formatMoney(vehicleData.rate, vehicleData.currency)}/day</span>
         </div>
       </div>

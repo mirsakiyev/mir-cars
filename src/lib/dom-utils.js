@@ -7,8 +7,17 @@ export function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-export function setFormStatus(status, state, message) {
+function setFormStatusState(status, state) {
   status.classList.remove("success", "error", "loading");
   status.classList.add(state);
+}
+
+export function setFormStatus(status, state, message) {
+  setFormStatusState(status, state);
+  status.textContent = message;
+}
+
+export function setFormStatusHtml(status, state, message) {
+  setFormStatusState(status, state);
   status.innerHTML = message;
 }

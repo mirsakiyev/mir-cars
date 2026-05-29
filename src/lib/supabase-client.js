@@ -1,3 +1,5 @@
+import { logClientWarning } from "./logging.js";
+
 const viteEnv = import.meta.env || {};
 const supabaseUrl = viteEnv.VITE_SUPABASE_URL;
 const supabaseAnonKey = viteEnv.VITE_SUPABASE_ANON_KEY;
@@ -38,7 +40,7 @@ export async function getSupabaseClient() {
     client = await clientPromise;
   } catch (error) {
     clientPromise = null;
-    console.warn("Supabase client could not be loaded.", error);
+    logClientWarning("Supabase client could not be loaded.", error);
     return null;
   }
 

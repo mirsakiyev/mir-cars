@@ -1,5 +1,6 @@
 import { escapeHtml } from "../lib/dom-utils.js";
 import { formatMoney } from "../lib/booking-utils.js";
+import { logClientWarning } from "../lib/logging.js";
 import { adminShell, bindSignOut, requireAdmin } from "./admin-auth.js";
 
 const page = document.body.dataset.adminPage;
@@ -194,7 +195,7 @@ async function renderBookings(client) {
                           const href = documentLinks.get(document.id);
 
                           return href
-                            ? `<a href="${href}" target="_blank" rel="noopener">${escapeHtml(document.document_type)}: ${escapeHtml(document.file_name || "Document")}</a>`
+                            ? `<a href="${escapeHtml(href)}" target="_blank" rel="noopener">${escapeHtml(document.document_type)}: ${escapeHtml(document.file_name || "Document")}</a>`
                             : `<span>${escapeHtml(document.document_type)}: ${escapeHtml(document.file_name || "Document unavailable")}</span>`;
                         })
                         .join("")}</div>`
@@ -232,7 +233,7 @@ async function renderBookings(client) {
         await renderBookings(client);
       }
     } catch (error) {
-      console.warn("Booking admin update failed.", error);
+      logClientWarning("Booking admin update failed.", error);
       renderError("Could not update booking. Check admin permissions and try again.");
     }
   };
@@ -279,7 +280,7 @@ async function renderVehicles(client) {
     try {
       await updateRecord(client, "vehicles", vehicleId, { status: event.target.value });
     } catch (error) {
-      console.warn("Vehicle status update failed.", error);
+      logClientWarning("Vehicle status update failed.", error);
       renderError("Could not update vehicle status. Check admin permissions and try again.");
     }
   };
@@ -324,7 +325,7 @@ async function renderContacts(client) {
     try {
       await updateRecord(client, "contact_requests", contactId, { status: event.target.value });
     } catch (error) {
-      console.warn("Contact status update failed.", error);
+      logClientWarning("Contact status update failed.", error);
       renderError("Could not update contact status. Check admin permissions and try again.");
     }
   };
@@ -445,7 +446,7 @@ async function renderPayments(client) {
       await updateRecord(client, "payments", paymentId, values);
       await renderPayments(client);
     } catch (error) {
-      console.warn("Payment admin update failed.", error);
+      logClientWarning("Payment admin update failed.", error);
       renderError("Could not update payment. Check admin permissions and try again.");
     }
   };
@@ -467,7 +468,7 @@ async function initAdminPage() {
     if (page === "contacts") await renderContacts(client);
     if (page === "payments") await renderPayments(client);
   } catch (error) {
-    console.warn("Admin page failed to load.", error);
+    logClientWarning("Admin page failed to load.", error);
     renderError("Could not load this admin page. Check Supabase setup and admin permissions.");
   }
 }

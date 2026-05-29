@@ -5,6 +5,12 @@ import { fileURLToPath } from "node:url";
 
 const port = Number(process.env.PORT || 5173);
 const root = path.dirname(fileURLToPath(import.meta.url));
+const securityHeaders = {
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+};
 
 const types = {
   ".html": "text/html; charset=utf-8",
@@ -19,7 +25,18 @@ const types = {
 };
 
 function resolveRequestPath(urlPath) {
-  const cleanPath = decodeURIComponent(urlPath.split("?")[0]);
+  let cleanPath = "/";
+
+  try {
+    cleanPath = decodeURIComponent(urlPath.split("?")[0]);
+  } catch (_error) {
+    return null;
+  }
+
+  if (cleanPath.includes("\0")) {
+    return null;
+  }
+
   const segments = cleanPath.split("/").filter(Boolean);
 
   if (segments.some((segment) => segment.startsWith("."))) {
@@ -28,8 +45,9 @@ function resolveRequestPath(urlPath) {
 
   const requested = cleanPath === "/" ? "/index.html" : cleanPath.endsWith("/") ? `${cleanPath}index.html` : cleanPath;
   const filePath = path.normalize(path.join(root, requested));
+  const relativeFilePath = path.relative(root, filePath);
 
-  if (path.relative(root, filePath).startsWith("..")) {
+  if (relativeFilePath.startsWith("..") || path.isAbsolute(relativeFilePath)) {
     return null;
   }
 
@@ -54,20 +72,20 @@ const server = http.createServer((request, response) => {
   const filePath = resolveRequestPath(request.url || "/");
 
   if (!filePath) {
-    response.writeHead(403);
+    response.writeHead(403, securityHeaders);
     response.end("Forbidden");
     return;
   }
 
   fs.readFile(filePath, (error, data) => {
     if (error) {
-      response.writeHead(404);
+      response.writeHead(404, securityHeaders);
       response.end("Not found");
       return;
     }
 
     const type = types[path.extname(filePath).toLowerCase()] || "application/octet-stream";
-    response.writeHead(200, { "Content-Type": type });
+    response.writeHead(200, { ...securityHeaders, "Content-Type": type });
     response.end(data);
   });
 });

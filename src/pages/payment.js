@@ -1,5 +1,6 @@
 import { formatMoney } from "../lib/booking-utils.js";
 import { escapeHtml, setFormStatus } from "../lib/dom-utils.js";
+import { logClientWarning } from "../lib/logging.js";
 import {
   loadPaymentCheckoutSummary,
   markBookingPaymentPending,
@@ -143,7 +144,7 @@ async function handleContinueToPayment() {
 
   try {
     const pendingResult = await markBookingPaymentPending({ bookingNumber, paymentToken });
-    const checkoutPlaceholder = await requestCheckoutSessionPlaceholder({
+    await requestCheckoutSessionPlaceholder({
       bookingNumber,
       bookingId: checkoutSummary?.booking_id,
       paymentId: pendingResult?.payment_id,
@@ -151,14 +152,13 @@ async function handleContinueToPayment() {
       currency: checkoutSummary?.currency || "USD",
     });
 
-    console.info("Stripe checkout placeholder response.", checkoutPlaceholder);
     setFormStatus(
       status,
       "success",
       "Stripe payment integration is not active yet. This booking is saved as payment pending.",
     );
   } catch (error) {
-    console.warn("Payment placeholder update failed.", error);
+    logClientWarning("Payment placeholder update failed.", error);
     setFormStatus(status, "error", "Could not save this booking as payment pending. Please contact MIR CARS for help.");
   } finally {
     button.disabled = false;
@@ -203,7 +203,7 @@ async function initPaymentPage() {
 
     renderCheckout(checkoutSummary);
   } catch (error) {
-    console.warn("Payment summary loading failed.", error);
+    logClientWarning("Payment summary loading failed.", error);
     renderFallbackCheckout("The secure booking summary could not be loaded. Please try again or contact MIR CARS.");
   }
 }

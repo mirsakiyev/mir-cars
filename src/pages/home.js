@@ -1,5 +1,6 @@
 import "../../vehicle-data.js";
 import { setFormStatus } from "../lib/dom-utils.js";
+import { logClientWarning } from "../lib/logging.js";
 import { createContactRequest } from "../lib/request-service.js";
 import { bindCarouselControls, renderVehicleCard } from "../lib/vehicle-card.js";
 import { loadAvailableVehicles } from "../lib/vehicle-service.js";
@@ -51,7 +52,7 @@ function handleContactForm() {
       form.reset();
       setFormStatus(status, "success", form.dataset.success);
     } catch (error) {
-      console.warn("Contact request submission failed.", error);
+      logClientWarning("Contact request submission failed.", error);
       setFormStatus(status, "error", form.dataset.error);
     } finally {
       submitButton.disabled = false;

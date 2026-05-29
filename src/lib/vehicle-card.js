@@ -16,7 +16,7 @@ export function renderVehicleCard(vehicle, options = {}) {
     <article class="vehicle-card${options.className ? ` ${escapeHtml(options.className)}` : ""}">
       <div class="vehicle-carousel" data-carousel data-current="0" data-count="${vehicle.images.length}" data-vehicle="${escapeHtml(label)}">
         <div class="vehicle-image" data-carousel-image role="img" style="background-image: url('${vehicle.images[0].src}')" aria-label="${escapeHtml(label)}, ${escapeHtml(vehicle.images[0].label)}">
-          <a class="vehicle-detail-link" href="${window.MIR_CARS.vehicleUrl(vehicle)}" aria-label="View ${escapeHtml(label)} details">View details</a>
+          <a class="vehicle-detail-link" href="${escapeHtml(window.MIR_CARS.vehicleUrl(vehicle))}" aria-label="View ${escapeHtml(label)} details">View details</a>
           <button class="carousel-arrow carousel-arrow-left" type="button" data-carousel-step="-1" aria-label="Previous ${escapeHtml(vehicle.title)} image"></button>
           <button class="carousel-arrow carousel-arrow-right" type="button" data-carousel-step="1" aria-label="Next ${escapeHtml(vehicle.title)} image"></button>
           <div class="carousel-dots" aria-label="${escapeHtml(vehicle.title)} image slides">
@@ -27,7 +27,7 @@ export function renderVehicleCard(vehicle, options = {}) {
                     class="carousel-dot${index === 0 ? " active" : ""}"
                     type="button"
                     data-carousel-go="${index}"
-                    data-image="${image.src}"
+                    data-image="${escapeHtml(image.src)}"
                     data-label="${escapeHtml(image.label)}"
                     aria-label="Show ${escapeHtml(image.label.toLowerCase())}"
                   ></button>
@@ -49,7 +49,7 @@ export function renderVehicleCard(vehicle, options = {}) {
         </div>
         <div class="card-actions">
           <span class="price">${formatMoney(vehicle.rate, vehicle.currency)}/day</span>
-          <a class="button secondary" href="${actionHref}">${escapeHtml(actionLabel)}</a>
+          <a class="button secondary" href="${escapeHtml(actionHref)}">${escapeHtml(actionLabel)}</a>
         </div>
       </div>
     </article>
@@ -79,8 +79,12 @@ export function bindCarouselControls(root = document) {
     if (!carouselStep && !carouselGo) return;
 
     const carousel = event.target.closest("[data-carousel]");
+    if (!carousel) return;
+
     const count = Number(carousel.dataset.count);
     const current = Number(carousel.dataset.current);
+    if (!Number.isFinite(count) || count < 1 || !Number.isFinite(current)) return;
+
     const next = carouselGo
       ? Number(carouselGo.dataset.carouselGo)
       : (current + Number(carouselStep.dataset.carouselStep) + count) % count;

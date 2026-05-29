@@ -1,5 +1,6 @@
 import { getSupabaseClient, getSupabaseConfigError } from "../lib/supabase-client.js";
 import { setFormStatus } from "../lib/dom-utils.js";
+import { logClientWarning } from "../lib/logging.js";
 
 const form = document.querySelector("#adminLoginForm");
 const status = document.querySelector("#adminLoginStatus");
@@ -51,7 +52,7 @@ form.addEventListener("submit", async (event) => {
     const redirect = new URLSearchParams(window.location.search).get("redirect") || "/admin/bookings/";
     window.location.href = redirect.startsWith("/admin/") ? redirect : "/admin/bookings/";
   } catch (error) {
-    console.warn("Admin login failed.", error);
+    logClientWarning("Admin login failed.", error);
     setFormStatus(status, "error", "Could not sign in. Check your email, password, and admin access.");
   } finally {
     submitButton.disabled = false;

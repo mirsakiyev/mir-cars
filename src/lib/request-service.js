@@ -1,5 +1,9 @@
 import { getSupabaseClient, getSupabaseConfigError } from "./supabase-client.js";
 
+const allowedDocumentTypes = new Set(["driver_license", "supporting_document", "insurance", "identity", "other"]);
+const allowedMimeTypes = new Set(["image/jpeg", "image/png", "application/pdf"]);
+const maxDocumentSizeBytes = 10 * 1024 * 1024;
+
 async function requireClient() {
   const client = await getSupabaseClient();
 
@@ -18,12 +22,36 @@ export async function createBookingRequest(payload) {
 }
 
 function safeFileName(fileName) {
-  return fileName
+  const safeName = fileName
     .normalize("NFKD")
     .replace(/[^\w.\-]+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "")
     .toLowerCase();
+
+  return safeName || "document";
+}
+
+function uniquePathPart() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+
+  const values = new Uint32Array(2);
+  crypto.getRandomValues(values);
+  return [...values].map((value) => value.toString(16).padStart(8, "0")).join("");
+}
+
+function validateBookingDocument(document) {
+  if (!allowedDocumentTypes.has(document.type)) {
+    throw new Error("Unsupported booking document type.");
+  }
+
+  if (!allowedMimeTypes.has(document.file.type)) {
+    throw new Error("Booking documents must be JPG, PNG, or PDF files.");
+  }
+
+  if (document.file.size > maxDocumentSizeBytes) {
+    throw new Error("Booking documents must be 10 MB or smaller.");
+  }
 }
 
 export async function uploadBookingDocuments({ bookingId, bookingNumber, documents }) {
@@ -31,8 +59,10 @@ export async function uploadBookingDocuments({ bookingId, bookingNumber, documen
   const uploadedDocuments = [];
 
   for (const document of documents) {
+    validateBookingDocument(document);
+
     const fileName = safeFileName(document.file.name);
-    const filePath = `bookings/${bookingId}/${document.type}-${Date.now()}-${fileName}`;
+    const filePath = `bookings/${bookingId}/${document.type}-${uniquePathPart()}-${fileName}`;
     const { error: uploadError } = await client.storage.from("booking-documents").upload(filePath, document.file, {
       cacheControl: "3600",
       upsert: false,

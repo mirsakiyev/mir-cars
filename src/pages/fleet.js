@@ -1,4 +1,5 @@
 import "../../vehicle-data.js";
+import { escapeHtml } from "../lib/dom-utils.js";
 import { bindCarouselControls, renderVehicleCard } from "../lib/vehicle-card.js";
 import { loadAvailableVehicles } from "../lib/vehicle-service.js";
 
@@ -52,9 +53,9 @@ function renderFilters() {
         <button
           class="filter-button${type === activeType ? " active" : ""}"
           type="button"
-          data-filter="${type}"
+          data-filter="${escapeHtml(type)}"
           aria-pressed="${type === activeType ? "true" : "false"}"
-        >${label}</button>
+        >${escapeHtml(label)}</button>
       `;
     })
     .join("");

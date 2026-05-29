@@ -1,4 +1,5 @@
 import { getSupabaseClient, getSupabaseConfigError } from "./supabase-client.js";
+import { logClientInfo, logClientWarning } from "./logging.js";
 
 const vehicleColumns = [
   "id",
@@ -32,15 +33,38 @@ function fallbackBySlug(slug) {
   return fallbackVehicles().find((vehicle) => vehicle.slug === slug) || null;
 }
 
+function safeImageSource(src) {
+  const value = String(src || "").trim();
+
+  if (!value || /[\u0000-\u001F\u007F"'<>\\]/.test(value)) return "";
+  if (value.startsWith("//")) return "";
+  if (value.startsWith("/")) return value;
+
+  try {
+    const url = new URL(value, globalThis.location?.origin || "https://mircars.local");
+    return url.protocol === "http:" || url.protocol === "https:" ? value : "";
+  } catch (_error) {
+    return "";
+  }
+}
+
 function imageObjects(imageUrls, fallbackImages = []) {
   if (!Array.isArray(imageUrls) || !imageUrls.length) {
     return fallbackImages.length ? fallbackImages : [{ src: "/assets/backgrounds/mercedes-s-class-hero.png", label: "Vehicle photo" }];
   }
 
-  return imageUrls.map((src, index) => ({
-    src,
-    label: fallbackImages[index]?.label || `Vehicle photo ${index + 1}`,
-  }));
+  const safeImages = imageUrls
+    .map((src, index) => ({
+      src: safeImageSource(src),
+      label: fallbackImages[index]?.label || `Vehicle photo ${index + 1}`,
+    }))
+    .filter((image) => image.src);
+
+  return safeImages.length
+    ? safeImages
+    : fallbackImages.length
+      ? fallbackImages
+      : [{ src: "/assets/backgrounds/mercedes-s-class-hero.png", label: "Vehicle photo" }];
 }
 
 function buildVehicleTitle(row, fallback) {
@@ -113,7 +137,7 @@ export async function loadAvailableVehicles() {
   const client = await getSupabaseClient();
 
   if (!client) {
-    console.info(getSupabaseConfigError());
+    logClientInfo(getSupabaseConfigError());
     return fallbackVehicles();
   }
 
@@ -127,7 +151,7 @@ export async function loadAvailableVehicles() {
 
     return vehicles;
   } catch (error) {
-    console.warn("Falling back to hardcoded fleet after Supabase vehicle load failed.", error);
+    logClientWarning("Falling back to hardcoded fleet after Supabase vehicle load failed.", error);
     return fallbackVehicles();
   }
 }
@@ -150,7 +174,7 @@ export async function checkVehicleAvailability(vehicleId, pickupDate, returnDate
 
     return { available: Boolean(data), error: "" };
   } catch (error) {
-    console.warn("Vehicle availability check failed.", error);
+    logClientWarning("Vehicle availability check failed.", error);
     return { available: null, error: "Could not check live availability." };
   }
 }
@@ -165,7 +189,7 @@ export async function loadVehicleBySlug(slug) {
       if (error) throw error;
       if (data?.status === "available") return mapDatabaseVehicle(data);
     } catch (error) {
-      console.warn("Falling back to hardcoded vehicle after Supabase detail load failed.", error);
+      logClientWarning("Falling back to hardcoded vehicle after Supabase detail load failed.", error);
     }
   }
 

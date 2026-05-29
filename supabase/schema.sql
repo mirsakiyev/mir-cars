@@ -302,6 +302,16 @@ create trigger payments_set_updated_at
 before update on public.payments
 for each row execute function public.set_updated_at();
 
+create index if not exists booking_requests_vehicle_dates_status_idx
+on public.booking_requests (vehicle_id, status, pickup_date, return_date)
+where pickup_date is not null and return_date is not null;
+
+create index if not exists booking_requests_payment_lookup_idx
+on public.booking_requests (booking_number, payment_access_token);
+
+create index if not exists payments_booking_created_idx
+on public.payments (booking_request_id, created_at desc);
+
 create or replace function public.check_vehicle_availability(
   vehicle_id_input uuid,
   pickup_date_input date,
@@ -562,6 +572,38 @@ as $$
   );
 $$;
 
+create or replace function public.can_manage_admin_data()
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select exists (
+    select 1
+    from public.admin_users
+    where user_id = auth.uid()
+      and is_active = true
+      and role in ('admin', 'manager')
+  );
+$$;
+
+create or replace function public.can_manage_admin_users()
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select exists (
+    select 1
+    from public.admin_users
+    where user_id = auth.uid()
+      and is_active = true
+      and role = 'admin'
+  );
+$$;
+
 alter table public.vehicles enable row level security;
 alter table public.booking_requests enable row level security;
 alter table public.booking_documents enable row level security;
@@ -585,15 +627,30 @@ drop policy if exists "Admins can update vehicles" on public.vehicles;
 create policy "Admins can update vehicles"
 on public.vehicles for update
 to authenticated
-using (public.is_active_admin())
-with check (public.is_active_admin());
+using (public.can_manage_admin_data())
+with check (public.can_manage_admin_data());
 
 drop policy if exists "Public can create pending booking requests" on public.booking_requests;
 drop policy if exists "Public can create customer booking requests" on public.booking_requests;
 create policy "Public can create customer booking requests"
 on public.booking_requests for insert
 to anon, authenticated
-with check (status in ('pending', 'awaiting_payment'));
+with check (
+  status in ('pending', 'awaiting_payment')
+  and coalesce(booking_status, status) = status
+  and nullif(trim(payment_access_token), '') is not null
+  and nullif(trim(customer_first_name), '') is not null
+  and nullif(trim(customer_last_name), '') is not null
+  and nullif(trim(customer_email), '') is not null
+  and nullif(trim(customer_phone), '') is not null
+  and pickup_date is not null
+  and return_date is not null
+  and return_date >= pickup_date
+  and rental_days is not null
+  and rental_days >= 1
+  and nullif(trim(driver_license_number), '') is not null
+  and nullif(trim(driver_license_region), '') is not null
+);
 
 drop policy if exists "Admins can read booking requests" on public.booking_requests;
 create policy "Admins can read booking requests"
@@ -605,8 +662,8 @@ drop policy if exists "Admins can update booking requests" on public.booking_req
 create policy "Admins can update booking requests"
 on public.booking_requests for update
 to authenticated
-using (public.is_active_admin())
-with check (public.is_active_admin());
+using (public.can_manage_admin_data())
+with check (public.can_manage_admin_data());
 
 drop policy if exists "Public can create booking documents" on public.booking_documents;
 create policy "Public can create booking documents"
@@ -615,6 +672,11 @@ to anon, authenticated
 with check (
   booking_request_id is not null
   and document_type in ('driver_license', 'supporting_document', 'insurance', 'identity', 'other')
+  and file_path like 'bookings/' || booking_request_id::text || '/%'
+  and mime_type in ('image/jpeg', 'image/png', 'application/pdf')
+  and size_bytes is not null
+  and size_bytes > 0
+  and size_bytes <= 10485760
 );
 
 drop policy if exists "Admins can read booking documents" on public.booking_documents;
@@ -627,8 +689,8 @@ drop policy if exists "Admins can update booking documents" on public.booking_do
 create policy "Admins can update booking documents"
 on public.booking_documents for update
 to authenticated
-using (public.is_active_admin())
-with check (public.is_active_admin());
+using (public.can_manage_admin_data())
+with check (public.can_manage_admin_data());
 
 drop policy if exists "Admins can read payments" on public.payments;
 create policy "Admins can read payments"
@@ -640,14 +702,19 @@ drop policy if exists "Admins can update payments" on public.payments;
 create policy "Admins can update payments"
 on public.payments for update
 to authenticated
-using (public.is_active_admin())
-with check (public.is_active_admin());
+using (public.can_manage_admin_data())
+with check (public.can_manage_admin_data());
 
 drop policy if exists "Public can create new contact requests" on public.contact_requests;
 create policy "Public can create new contact requests"
 on public.contact_requests for insert
 to anon, authenticated
-with check (status = 'new');
+with check (
+  status = 'new'
+  and nullif(trim(name), '') is not null
+  and nullif(trim(email), '') is not null
+  and nullif(trim(message), '') is not null
+);
 
 drop policy if exists "Admins can read contact requests" on public.contact_requests;
 create policy "Admins can read contact requests"
@@ -659,8 +726,8 @@ drop policy if exists "Admins can update contact requests" on public.contact_req
 create policy "Admins can update contact requests"
 on public.contact_requests for update
 to authenticated
-using (public.is_active_admin())
-with check (public.is_active_admin());
+using (public.can_manage_admin_data())
+with check (public.can_manage_admin_data());
 
 drop policy if exists "Admins can read admin users" on public.admin_users;
 create policy "Admins can read admin users"
@@ -672,8 +739,8 @@ drop policy if exists "Admins can update admin users" on public.admin_users;
 create policy "Admins can update admin users"
 on public.admin_users for update
 to authenticated
-using (public.is_active_admin())
-with check (public.is_active_admin());
+using (public.can_manage_admin_users())
+with check (public.can_manage_admin_users());
 
 grant usage on schema public to anon, authenticated;
 grant select on public.vehicles to anon, authenticated;
@@ -707,7 +774,10 @@ drop policy if exists "Public can upload booking documents" on storage.objects;
 create policy "Public can upload booking documents"
 on storage.objects for insert
 to anon, authenticated
-with check (bucket_id = 'booking-documents');
+with check (
+  bucket_id = 'booking-documents'
+  and (storage.foldername(name))[1] = 'bookings'
+);
 
 drop policy if exists "Admins can read booking document files" on storage.objects;
 create policy "Admins can read booking document files"
@@ -719,5 +789,5 @@ drop policy if exists "Admins can manage booking document files" on storage.obje
 create policy "Admins can manage booking document files"
 on storage.objects for update
 to authenticated
-using (bucket_id = 'booking-documents' and public.is_active_admin())
-with check (bucket_id = 'booking-documents' and public.is_active_admin());
+using (bucket_id = 'booking-documents' and public.can_manage_admin_data())
+with check (bucket_id = 'booking-documents' and public.can_manage_admin_data());

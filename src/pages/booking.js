@@ -1,6 +1,7 @@
 import "../../vehicle-data.js";
 import { calculateEstimate, calculateRentalDays, formatMoney, generateBookingNumber, getAge } from "../lib/booking-utils.js";
-import { escapeHtml, setFormStatus } from "../lib/dom-utils.js";
+import { escapeHtml, setFormStatus, setFormStatusHtml } from "../lib/dom-utils.js";
+import { logClientWarning } from "../lib/logging.js";
 import { createBookingRequest, uploadBookingDocuments } from "../lib/request-service.js";
 import { checkVehicleAvailability, findVehicleByRequestValue, loadAvailableVehicles } from "../lib/vehicle-service.js";
 
@@ -57,7 +58,7 @@ function renderSelectedVehicle() {
         <span>${formatMoney(vehicle.rate, vehicle.currency)}/day</span>
         <span>${formatMoney(terms.securityDeposit, vehicle.currency)} deposit</span>
         <span>${vehicle.supabaseId ? "Database vehicle" : "Fallback vehicle"}</span>
-        <a href="${window.MIR_CARS.vehicleUrl(vehicle)}">View details</a>
+        <a href="${escapeHtml(window.MIR_CARS.vehicleUrl(vehicle))}">View details</a>
       </div>
     </div>
   `;
@@ -314,14 +315,14 @@ function bindBookingForm() {
         bookingNumber,
         documents: documentUploads(),
       });
-      setFormStatus(
+      setFormStatusHtml(
         status,
         "success",
-        `Booking created. Your booking number is <strong>${bookingNumber}</strong>. Redirecting to payment...`,
+        `Booking created. Your booking number is <strong>${escapeHtml(bookingNumber)}</strong>. Redirecting to payment...`,
       );
       window.location.href = paymentRedirectUrl(bookingNumber, paymentAccessToken);
     } catch (error) {
-      console.warn("Booking request submission failed.", error);
+      logClientWarning("Booking request submission failed.", error);
       setFormStatus(status, "error", form.dataset.error);
     } finally {
       submitButton.disabled = false;
