@@ -2494,12 +2494,44 @@ address {
   box-shadow: none;
 }
 
-.booking-summary-panel .selected-vehicle-image {
-  min-height: 212px;
+.booking-summary-panel .selected-vehicle-carousel {
+  position: relative;
   overflow: hidden;
   border: 1px solid rgba(226, 234, 242, 0.14);
   border-radius: var(--radius);
+  background: #101214;
+}
+
+.booking-summary-panel .selected-vehicle-image {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  min-height: 212px;
+  overflow: hidden;
+  background-color: #101214;
+  background-position: center;
+  background-repeat: no-repeat;
   background-size: cover;
+}
+
+.booking-summary-panel .selected-vehicle-image::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 45%, rgba(0, 0, 0, 0.42));
+  content: "";
+}
+
+.booking-summary-panel .carousel-arrow {
+  z-index: 3;
+  width: 36px;
+  height: 36px;
+  background: rgba(5, 6, 7, 0.66);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+  backdrop-filter: blur(8px) saturate(140%);
+}
+
+.booking-summary-panel .carousel-dots {
+  z-index: 3;
 }
 
 .booking-summary-panel .selected-vehicle-copy {
@@ -2547,12 +2579,19 @@ address {
 }
 
 .booking-summary-availability {
-  display: grid;
-  gap: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   padding: 14px;
   border: 1px solid rgba(226, 234, 242, 0.12);
   border-radius: var(--radius);
   background: rgba(5, 6, 7, 0.42);
+}
+
+.booking-summary-availability span,
+.booking-summary-availability strong {
+  line-height: 1.25;
 }
 
 .booking-summary-availability.available strong {
@@ -2705,6 +2744,61 @@ address {
   padding-top: 0;
 }
 
+.vehicle-picker-field {
+  position: relative;
+  z-index: 6;
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 8px;
+  min-width: 0;
+}
+
+.vehicle-picker-label {
+  color: rgba(238, 243, 247, 0.76);
+  font-size: 0.88rem;
+  font-weight: 750;
+}
+
+.native-vehicle-select {
+  position: absolute !important;
+  width: 1px !important;
+  min-width: 1px !important;
+  height: 1px !important;
+  min-height: 1px !important;
+  overflow: hidden;
+  padding: 0 !important;
+  border: 0 !important;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.time-picker-field {
+  position: relative;
+  z-index: 5;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.time-picker-label {
+  color: rgba(238, 243, 247, 0.76);
+  font-size: 0.88rem;
+  font-weight: 750;
+}
+
+.native-time-input {
+  position: absolute !important;
+  width: 1px !important;
+  min-width: 1px !important;
+  height: 1px !important;
+  min-height: 1px !important;
+  overflow: hidden;
+  padding: 0 !important;
+  border: 0 !important;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .booking-checkout-form input,
 .booking-checkout-form select,
 .booking-checkout-form textarea {
@@ -2742,6 +2836,385 @@ address {
   height: 128px;
   min-height: 128px;
   padding-top: 12px;
+}
+
+.vehicle-picker-trigger {
+  position: relative;
+  display: grid;
+  width: 100%;
+  min-height: 58px;
+  align-content: center;
+  gap: 3px;
+  padding: 11px 48px 11px 14px;
+  border: 1px solid rgba(226, 234, 242, 0.16);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(142, 160, 176, 0.025)),
+    rgba(5, 6, 7, 0.6);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.vehicle-picker-trigger::after {
+  position: absolute;
+  top: 50%;
+  right: 18px;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  content: "";
+  transform: translateY(-65%) rotate(45deg);
+}
+
+.vehicle-picker-trigger[aria-expanded="true"] {
+  border-color: rgba(244, 248, 251, 0.42);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(142, 160, 176, 0.035)),
+    rgba(8, 10, 12, 0.82);
+  box-shadow: 0 0 0 3px rgba(244, 248, 251, 0.08);
+}
+
+.vehicle-picker-trigger span {
+  color: var(--gold-strong);
+  font-size: 0.98rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.vehicle-picker-trigger small {
+  color: rgba(238, 243, 247, 0.58);
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.vehicle-picker-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  left: 0;
+  z-index: 20;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(226, 234, 242, 0.18);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.07), rgba(148, 166, 181, 0.025)),
+    rgba(10, 12, 14, 0.98);
+  box-shadow:
+    0 22px 52px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09);
+}
+
+.vehicle-picker-panel[hidden] {
+  display: none;
+}
+
+.vehicle-search-field {
+  display: grid;
+  gap: 8px;
+  color: rgba(238, 243, 247, 0.72);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.booking-checkout-form .vehicle-search-field input {
+  height: 42px;
+  min-height: 42px;
+}
+
+.vehicle-picker-results {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 2px 2px 8px;
+  scroll-snap-type: x proximity;
+}
+
+.vehicle-picker-option {
+  display: grid;
+  flex: 0 0 178px;
+  gap: 8px;
+  min-height: 158px;
+  padding: 8px;
+  border: 1px solid rgba(226, 234, 242, 0.12);
+  border-radius: var(--radius);
+  background: rgba(5, 6, 7, 0.62);
+  color: var(--text);
+  cursor: pointer;
+  scroll-snap-align: start;
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.vehicle-picker-option:hover,
+.vehicle-picker-option:focus-visible,
+.vehicle-picker-option.active {
+  border-color: rgba(244, 248, 251, 0.4);
+  background: rgba(226, 234, 242, 0.09);
+}
+
+.vehicle-picker-option:hover {
+  transform: translateY(-1px);
+}
+
+.vehicle-picker-thumb {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  min-height: 96px;
+  border-radius: 6px;
+  background-color: #101214;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.vehicle-picker-option-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.vehicle-picker-option-copy strong {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--gold-strong);
+  font-size: 0.82rem;
+  font-weight: 850;
+  line-height: 1.25;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.vehicle-picker-option-copy small {
+  color: rgba(238, 243, 247, 0.6);
+  font-size: 0.74rem;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+.vehicle-picker-empty {
+  min-width: 100%;
+  padding: 16px;
+  border: 1px solid rgba(226, 234, 242, 0.12);
+  border-radius: var(--radius);
+  color: rgba(238, 243, 247, 0.68);
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.time-picker-trigger {
+  position: relative;
+  display: grid;
+  width: 100%;
+  min-height: 46px;
+  align-content: center;
+  gap: 2px;
+  padding: 8px 42px 8px 14px;
+  border: 1px solid rgba(226, 234, 242, 0.16);
+  border-radius: var(--radius);
+  background-color: rgba(5, 6, 7, 0.6);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.time-picker-trigger::after {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  width: 15px;
+  height: 15px;
+  border: 1.8px solid currentColor;
+  border-radius: 999px;
+  content: "";
+  opacity: 0.82;
+  transform: translateY(-50%);
+}
+
+.time-picker-trigger::before {
+  position: absolute;
+  top: calc(50% - 5px);
+  right: 21px;
+  z-index: 1;
+  width: 5px;
+  height: 7px;
+  border-bottom: 1.8px solid currentColor;
+  border-left: 1.8px solid currentColor;
+  content: "";
+  opacity: 0.82;
+}
+
+.time-picker-trigger[aria-expanded="true"] {
+  border-color: rgba(244, 248, 251, 0.42);
+  background-color: rgba(8, 10, 12, 0.82);
+  box-shadow: 0 0 0 3px rgba(244, 248, 251, 0.08);
+}
+
+.time-picker-trigger span {
+  color: var(--gold-strong);
+  font-size: 0.98rem;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.time-picker-trigger small {
+  color: rgba(238, 243, 247, 0.58);
+  font-size: 0.74rem;
+  font-weight: 750;
+}
+
+.time-picker-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 30;
+  display: grid;
+  width: min(280px, calc(100vw - 48px));
+  justify-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid rgba(226, 234, 242, 0.18);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.07), rgba(148, 166, 181, 0.025)),
+    rgba(10, 12, 14, 0.98);
+  box-shadow:
+    0 22px 52px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09);
+}
+
+.time-picker-panel[hidden] {
+  display: none;
+}
+
+.time-clock-face {
+  position: relative;
+  width: 210px;
+  height: 210px;
+  border: 1px solid rgba(226, 234, 242, 0.14);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at center, rgba(244, 248, 251, 0.08) 0 4px, transparent 5px),
+    radial-gradient(circle at center, rgba(226, 234, 242, 0.08), rgba(5, 6, 7, 0.84) 72%);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.time-clock-face:active {
+  cursor: grabbing;
+}
+
+.time-clock-mark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  color: rgba(238, 243, 247, 0.72);
+  font-size: 0.8rem;
+  font-weight: 850;
+  transform:
+    translate(-50%, -50%)
+    rotate(var(--mark-angle))
+    translateY(-80px)
+    rotate(calc(-1 * var(--mark-angle)));
+}
+
+.time-clock-hand {
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  width: 3px;
+  height: 74px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--gold-strong), rgba(174, 184, 194, 0.62));
+  box-shadow: 0 0 18px rgba(244, 248, 251, 0.16);
+  transform: translateX(-50%) rotate(var(--hand-angle, 0deg));
+  transform-origin: bottom center;
+}
+
+.time-clock-hand::after {
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(5, 6, 7, 0.82);
+  border-radius: 999px;
+  background: var(--gold-strong);
+  content: "";
+  transform: translateX(-50%);
+}
+
+.time-clock-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--gold-strong);
+  box-shadow: 0 0 0 4px rgba(244, 248, 251, 0.12);
+  transform: translate(-50%, -50%);
+}
+
+.time-picker-mode,
+.time-picker-period {
+  display: grid;
+  width: 100%;
+  gap: 6px;
+}
+
+.time-picker-mode {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.time-picker-period {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.time-picker-mode button,
+.time-picker-period button {
+  min-height: 34px;
+  border: 1px solid rgba(226, 234, 242, 0.14);
+  border-radius: 6px;
+  background: rgba(5, 6, 7, 0.42);
+  color: rgba(238, 243, 247, 0.72);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.time-picker-mode button.active,
+.time-picker-period button.active {
+  border-color: rgba(244, 248, 251, 0.42);
+  background: rgba(226, 234, 242, 0.12);
+  color: var(--gold-strong);
+}
+
+.time-picker-numeric {
+  margin: -2px 0 0;
+  color: rgba(238, 243, 247, 0.55);
+  font-size: 0.88rem;
+  font-weight: 750;
+  line-height: 1.3;
 }
 
 .booking-checkout-form input[type="file"] {
@@ -2827,6 +3300,16 @@ address {
   border-color: rgba(226, 234, 242, 0.13);
   border-radius: var(--radius);
   background: rgba(5, 6, 7, 0.48);
+}
+
+.booking-checkout-form .checkbox-row input {
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
+  min-height: 20px;
+  padding: 0;
+  border-radius: 4px;
+  accent-color: var(--gold);
 }
 
 .checkout-helper {
@@ -4025,6 +4508,41 @@ address a:hover {
 
   .summary-detail-row strong {
     text-align: left;
+  }
+
+  .booking-summary-availability {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .booking-summary-availability strong {
+    text-align: left;
+  }
+
+  .vehicle-picker-panel {
+    position: static;
+    margin-top: 2px;
+  }
+
+  .time-picker-panel {
+    position: static;
+    width: 100%;
+    margin-top: 2px;
+  }
+
+  .time-clock-face {
+    width: min(210px, 100%);
+    height: auto;
+    aspect-ratio: 1;
+  }
+
+  .vehicle-picker-option {
+    flex-basis: 154px;
+  }
+
+  .vehicle-picker-thumb {
+    min-height: 86px;
   }
 
   .booking-step-actions.split {

@@ -96,10 +96,28 @@
                   </div>
 
                   <div class="form-row">
-                    <label>
-                      Preferred vehicle
-                      <select name="vehicle" id="vehicleSelect" required></select>
-                    </label>
+                    <div class="vehicle-picker-field">
+                      <span class="vehicle-picker-label">Preferred vehicle</span>
+                      <select class="native-vehicle-select" name="vehicle" id="vehicleSelect" required aria-hidden="true" tabindex="-1"></select>
+                      <button
+                        class="vehicle-picker-trigger"
+                        id="vehiclePickerTrigger"
+                        type="button"
+                        aria-haspopup="dialog"
+                        aria-expanded="false"
+                        aria-controls="vehiclePickerPanel"
+                      >
+                        <span data-vehicle-picker-label>Select a vehicle</span>
+                        <small>Search and browse the MIR CARS fleet</small>
+                      </button>
+                      <div class="vehicle-picker-panel" id="vehiclePickerPanel" hidden>
+                        <label class="vehicle-search-field" for="vehiclePickerSearch">
+                          Search vehicles
+                          <input id="vehiclePickerSearch" type="search" autocomplete="off" placeholder="Search by model, color, year, or type" />
+                        </label>
+                        <div class="vehicle-picker-results" id="vehiclePickerResults" role="listbox" aria-label="Available vehicles"></div>
+                      </div>
+                    </div>
                   </div>
 
                   <div class="form-row">
@@ -107,10 +125,49 @@
                       Pickup date
                       <input type="date" name="pickup_date" required />
                     </label>
-                    <label>
-                      Pickup time
-                      <input type="time" name="pickup_time" required />
-                    </label>
+                    <div class="time-picker-field" data-time-picker>
+                      <span class="time-picker-label" id="pickupTimeLabel">Pickup time</span>
+                      <input class="native-time-input" id="pickupTimeInput" type="time" name="pickup_time" required aria-hidden="true" tabindex="-1" />
+                      <button
+                        class="time-picker-trigger"
+                        id="pickupTimeTrigger"
+                        type="button"
+                        aria-haspopup="dialog"
+                        aria-expanded="false"
+                        aria-controls="pickupTimePanel"
+                        aria-labelledby="pickupTimeLabel pickupTimeDisplay"
+                      >
+                        <span id="pickupTimeDisplay" data-time-display>--:--</span>
+                        <small data-time-period>Choose time</small>
+                      </button>
+                      <div class="time-picker-panel" id="pickupTimePanel" hidden>
+                        <div class="time-clock-face" data-time-face role="application" aria-label="Analog pickup time picker">
+                          <span class="time-clock-mark" style="--mark-angle: 0deg">12</span>
+                          <span class="time-clock-mark" style="--mark-angle: 30deg">1</span>
+                          <span class="time-clock-mark" style="--mark-angle: 60deg">2</span>
+                          <span class="time-clock-mark" style="--mark-angle: 90deg">3</span>
+                          <span class="time-clock-mark" style="--mark-angle: 120deg">4</span>
+                          <span class="time-clock-mark" style="--mark-angle: 150deg">5</span>
+                          <span class="time-clock-mark" style="--mark-angle: 180deg">6</span>
+                          <span class="time-clock-mark" style="--mark-angle: 210deg">7</span>
+                          <span class="time-clock-mark" style="--mark-angle: 240deg">8</span>
+                          <span class="time-clock-mark" style="--mark-angle: 270deg">9</span>
+                          <span class="time-clock-mark" style="--mark-angle: 300deg">10</span>
+                          <span class="time-clock-mark" style="--mark-angle: 330deg">11</span>
+                          <span class="time-clock-hand" data-time-hand></span>
+                          <span class="time-clock-center"></span>
+                        </div>
+                        <div class="time-picker-mode" aria-label="Time picker mode">
+                          <button class="active" type="button" data-time-mode="hour">Hour</button>
+                          <button type="button" data-time-mode="minute">Minute</button>
+                        </div>
+                        <div class="time-picker-period" aria-label="Time period">
+                          <button class="active" type="button" data-time-period-option="AM">AM</button>
+                          <button type="button" data-time-period-option="PM">PM</button>
+                        </div>
+                        <p class="time-picker-numeric" data-time-numeric>--:--</p>
+                      </div>
+                    </div>
                   </div>
 
                   <div class="form-row">
@@ -118,10 +175,49 @@
                       Return date
                       <input type="date" name="return_date" required />
                     </label>
-                    <label>
-                      Return time
-                      <input type="time" name="return_time" required />
-                    </label>
+                    <div class="time-picker-field" data-time-picker>
+                      <span class="time-picker-label" id="returnTimeLabel">Return time</span>
+                      <input class="native-time-input" id="returnTimeInput" type="time" name="return_time" required aria-hidden="true" tabindex="-1" />
+                      <button
+                        class="time-picker-trigger"
+                        id="returnTimeTrigger"
+                        type="button"
+                        aria-haspopup="dialog"
+                        aria-expanded="false"
+                        aria-controls="returnTimePanel"
+                        aria-labelledby="returnTimeLabel returnTimeDisplay"
+                      >
+                        <span id="returnTimeDisplay" data-time-display>--:--</span>
+                        <small data-time-period>Choose time</small>
+                      </button>
+                      <div class="time-picker-panel" id="returnTimePanel" hidden>
+                        <div class="time-clock-face" data-time-face role="application" aria-label="Analog return time picker">
+                          <span class="time-clock-mark" style="--mark-angle: 0deg">12</span>
+                          <span class="time-clock-mark" style="--mark-angle: 30deg">1</span>
+                          <span class="time-clock-mark" style="--mark-angle: 60deg">2</span>
+                          <span class="time-clock-mark" style="--mark-angle: 90deg">3</span>
+                          <span class="time-clock-mark" style="--mark-angle: 120deg">4</span>
+                          <span class="time-clock-mark" style="--mark-angle: 150deg">5</span>
+                          <span class="time-clock-mark" style="--mark-angle: 180deg">6</span>
+                          <span class="time-clock-mark" style="--mark-angle: 210deg">7</span>
+                          <span class="time-clock-mark" style="--mark-angle: 240deg">8</span>
+                          <span class="time-clock-mark" style="--mark-angle: 270deg">9</span>
+                          <span class="time-clock-mark" style="--mark-angle: 300deg">10</span>
+                          <span class="time-clock-mark" style="--mark-angle: 330deg">11</span>
+                          <span class="time-clock-hand" data-time-hand></span>
+                          <span class="time-clock-center"></span>
+                        </div>
+                        <div class="time-picker-mode" aria-label="Time picker mode">
+                          <button class="active" type="button" data-time-mode="hour">Hour</button>
+                          <button type="button" data-time-mode="minute">Minute</button>
+                        </div>
+                        <div class="time-picker-period" aria-label="Time period">
+                          <button class="active" type="button" data-time-period-option="AM">AM</button>
+                          <button type="button" data-time-period-option="PM">PM</button>
+                        </div>
+                        <p class="time-picker-numeric" data-time-numeric>--:--</p>
+                      </div>
+                    </div>
                   </div>
 
                   <div class="form-row">

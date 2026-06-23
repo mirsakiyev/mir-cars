@@ -3,9 +3,14 @@ import { calculateEstimate, calculateRentalDays, formatMoney, generateBookingNum
 import { escapeHtml, setFormStatus, setFormStatusHtml } from "../lib/dom-utils.js";
 import { logClientWarning } from "../lib/logging.js";
 import { createBookingRequest, uploadBookingDocuments } from "../lib/request-service.js";
+import { bindCarouselControls } from "../lib/vehicle-card.js";
 import { checkVehicleAvailability, findVehicleByRequestValue, loadAvailableVehicles } from "../lib/vehicle-service.js";
 
 const vehicleSelect = document.querySelector("#vehicleSelect");
+const vehiclePickerTrigger = document.querySelector("#vehiclePickerTrigger");
+const vehiclePickerPanel = document.querySelector("#vehiclePickerPanel");
+const vehiclePickerSearch = document.querySelector("#vehiclePickerSearch");
+const vehiclePickerResults = document.querySelector("#vehiclePickerResults");
 const selectedVehicleCard = document.querySelector("#selectedVehicleCard");
 const bookingEstimate = document.querySelector("#bookingEstimate");
 const availabilityStatus = document.querySelector("#availabilityStatus");
@@ -16,11 +21,13 @@ const status = document.querySelector("#formStatus");
 const submitButton = form.querySelector('button[type="submit"]');
 const stepPanels = [...form.querySelectorAll("[data-booking-step]")];
 const stepIndicators = [...form.querySelectorAll("[data-step-indicator]")];
+const timePickers = [...form.querySelectorAll("[data-time-picker]")];
 
 let vehicles = [];
 let availabilityState = { status: "unknown", key: "" };
 let availabilityRequestId = 0;
 let currentStep = 0;
+let activeClockPicker = null;
 
 function selectedVehicle() {
   return findVehicleByRequestValue(vehicles, vehicleSelect.value) || vehicles[0] || null;
@@ -31,6 +38,239 @@ function populateVehicleSelect() {
     .sort(window.MIR_CARS.compareVehicleLabels)
     .map((vehicle) => `<option value="${escapeHtml(vehicle.slug)}">${escapeHtml(window.MIR_CARS.getVehicleRequestLabel(vehicle))}</option>`)
     .join("");
+}
+
+function vehicleSearchText(vehicle) {
+  return [
+    window.MIR_CARS.getVehicleRequestLabel(vehicle),
+    vehicle.title,
+    vehicle.type,
+    vehicle.color,
+    vehicle.year,
+    vehicle.description,
+    ...(vehicle.specs || []),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
+function syncVehiclePickerSelection() {
+  const vehicle = selectedVehicle();
+  const triggerLabel = vehiclePickerTrigger?.querySelector("[data-vehicle-picker-label]");
+
+  if (triggerLabel) {
+    triggerLabel.textContent = vehicle ? window.MIR_CARS.getVehicleRequestLabel(vehicle) : "Select a vehicle";
+  }
+
+  vehiclePickerResults?.querySelectorAll("[data-vehicle-option]").forEach((option) => {
+    const isSelected = option.dataset.vehicleValue === vehicleSelect.value;
+    option.classList.toggle("active", isSelected);
+    option.setAttribute("aria-selected", String(isSelected));
+  });
+}
+
+function renderVehiclePickerOptions() {
+  if (!vehiclePickerResults) return;
+
+  const query = vehiclePickerSearch?.value.trim().toLowerCase() || "";
+  const filteredVehicles = vehicles.filter((vehicle) => !query || vehicleSearchText(vehicle).includes(query));
+
+  if (!filteredVehicles.length) {
+    vehiclePickerResults.innerHTML = `
+      <div class="vehicle-picker-empty">No vehicles match that search.</div>
+    `;
+    return;
+  }
+
+  vehiclePickerResults.innerHTML = filteredVehicles
+    .map((vehicle) => {
+      const label = window.MIR_CARS.getVehicleRequestLabel(vehicle);
+      const image = vehicle.images?.[0];
+      const isSelected = vehicle.slug === vehicleSelect.value;
+
+      return `
+        <button
+          class="vehicle-picker-option${isSelected ? " active" : ""}"
+          type="button"
+          role="option"
+          aria-selected="${isSelected}"
+          data-vehicle-option
+          data-vehicle-value="${escapeHtml(vehicle.slug)}"
+        >
+          <span class="vehicle-picker-thumb" style="background-image: url('${escapeHtml(image?.src || "")}')" role="img" aria-label="${escapeHtml(label)}"></span>
+          <span class="vehicle-picker-option-copy">
+            <strong>${escapeHtml(label)}</strong>
+            <small>${escapeHtml(vehicle.type || "MIR CARS")} - ${formatMoney(vehicle.rate, vehicle.currency)}/day</small>
+          </span>
+        </button>
+      `;
+    })
+    .join("");
+}
+
+function setVehiclePickerOpen(isOpen) {
+  if (!vehiclePickerTrigger || !vehiclePickerPanel) return;
+
+  vehiclePickerPanel.hidden = !isOpen;
+  vehiclePickerTrigger.setAttribute("aria-expanded", String(isOpen));
+
+  if (isOpen) {
+    renderVehiclePickerOptions();
+    requestAnimationFrame(() => vehiclePickerSearch?.focus());
+  }
+}
+
+function selectVehicleFromPicker(value) {
+  if (!value || vehicleSelect.value === value) {
+    setVehiclePickerOpen(false);
+    return;
+  }
+
+  vehicleSelect.value = value;
+  vehicleSelect.dispatchEvent(new Event("change", { bubbles: true }));
+  setVehiclePickerOpen(false);
+}
+
+function padTime(value) {
+  return String(value).padStart(2, "0");
+}
+
+function parseTimeValue(value) {
+  const match = /^(\d{2}):(\d{2})$/.exec(value || "");
+  if (!match) return null;
+
+  const hour24 = Number(match[1]);
+  const minute = Number(match[2]);
+  if (!Number.isInteger(hour24) || !Number.isInteger(minute) || hour24 > 23 || minute > 59) return null;
+
+  return {
+    hour12: hour24 % 12 || 12,
+    minute,
+    period: hour24 >= 12 ? "PM" : "AM",
+  };
+}
+
+function timeState(picker) {
+  const input = picker.querySelector(".native-time-input");
+  const parsed = parseTimeValue(input?.value);
+
+  if (parsed) return parsed;
+
+  return {
+    hour12: Number(picker.dataset.timeHour || 12),
+    minute: Number(picker.dataset.timeMinute || 0),
+    period: picker.dataset.timePeriod || "AM",
+  };
+}
+
+function timeValueFromState(state) {
+  const hour24 = state.period === "PM" ? (state.hour12 % 12) + 12 : state.hour12 % 12;
+
+  return `${padTime(hour24)}:${padTime(state.minute)}`;
+}
+
+function formatTimeLabel(value) {
+  const parsed = parseTimeValue(value);
+  if (!parsed) return { main: "--:--", sub: "Choose time", numeric: "--:--" };
+
+  const numeric = `${parsed.hour12}:${padTime(parsed.minute)} ${parsed.period}`;
+
+  return {
+    main: `${parsed.hour12}:${padTime(parsed.minute)}`,
+    sub: parsed.period,
+    numeric,
+  };
+}
+
+function syncTimePicker(picker) {
+  const input = picker.querySelector(".native-time-input");
+  const display = picker.querySelector("[data-time-display]");
+  const periodDisplay = picker.querySelector("[data-time-period]");
+  const numeric = picker.querySelector("[data-time-numeric]");
+  const hand = picker.querySelector("[data-time-hand]");
+  const state = timeState(picker);
+  const mode = picker.dataset.timeMode || "hour";
+  const label = formatTimeLabel(input?.value);
+
+  if (display) display.textContent = label.main;
+  if (periodDisplay) periodDisplay.textContent = label.sub;
+  if (numeric) numeric.textContent = label.numeric;
+
+  picker.dataset.timeHour = String(state.hour12);
+  picker.dataset.timeMinute = String(state.minute);
+  picker.dataset.timePeriod = state.period;
+
+  if (hand) {
+    const angle = mode === "minute" ? state.minute * 6 : (state.hour12 % 12) * 30;
+    hand.style.setProperty("--hand-angle", `${angle}deg`);
+  }
+
+  picker.querySelectorAll("[data-time-mode]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.timeMode === mode);
+  });
+
+  picker.querySelectorAll("[data-time-period-option]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.timePeriodOption === state.period);
+  });
+}
+
+function setTimePickerValue(picker, state, options = {}) {
+  const input = picker.querySelector(".native-time-input");
+  if (!input) return;
+
+  picker.dataset.timeHour = String(state.hour12);
+  picker.dataset.timeMinute = String(state.minute);
+  picker.dataset.timePeriod = state.period;
+  input.value = timeValueFromState(state);
+  syncTimePicker(picker);
+
+  if (options.dispatch !== false) {
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+}
+
+function setTimePickerOpen(picker, isOpen) {
+  const panel = picker.querySelector(".time-picker-panel");
+  const trigger = picker.querySelector(".time-picker-trigger");
+  if (!panel || !trigger) return;
+
+  panel.hidden = !isOpen;
+  trigger.setAttribute("aria-expanded", String(isOpen));
+
+  if (isOpen) {
+    timePickers.forEach((otherPicker) => {
+      if (otherPicker !== picker) setTimePickerOpen(otherPicker, false);
+    });
+    setVehiclePickerOpen(false);
+    syncTimePicker(picker);
+  }
+}
+
+function updateTimeFromClockEvent(picker, event) {
+  const face = picker.querySelector("[data-time-face]");
+  if (!face) return;
+
+  const rect = face.getBoundingClientRect();
+  const x = event.clientX - rect.left - rect.width / 2;
+  const y = event.clientY - rect.top - rect.height / 2;
+  const normalizedAngle = (Math.atan2(y, x) * 180) / Math.PI + 90;
+  const angle = (normalizedAngle + 360) % 360;
+  const mode = picker.dataset.timeMode || "hour";
+  const state = timeState(picker);
+
+  if (mode === "minute") {
+    state.minute = Math.round(angle / 6) % 60;
+  } else {
+    state.hour12 = Math.round(angle / 30) % 12 || 12;
+  }
+
+  setTimePickerValue(picker, state);
+}
+
+function timePickerTriggerFor(name) {
+  return form.elements[name]?.closest("[data-time-picker]")?.querySelector(".time-picker-trigger");
 }
 
 function selectVehicleFromUrl() {
@@ -52,9 +292,37 @@ function renderSelectedVehicle() {
 
   const label = window.MIR_CARS.getVehicleRequestLabel(vehicle);
   const terms = window.MIR_CARS.getVehicleRentalTerms(vehicle);
+  const images = vehicle.images?.length ? vehicle.images : [{ src: "", label }];
+  const hasMultipleImages = images.length > 1;
+  const carouselControls = hasMultipleImages
+    ? `
+      <button class="carousel-arrow carousel-arrow-left" type="button" data-carousel-step="-1" aria-label="Previous ${escapeHtml(vehicle.title)} image"></button>
+      <button class="carousel-arrow carousel-arrow-right" type="button" data-carousel-step="1" aria-label="Next ${escapeHtml(vehicle.title)} image"></button>
+      <div class="carousel-dots" aria-label="${escapeHtml(vehicle.title)} image slides">
+        ${images
+          .map(
+            (image, index) => `
+              <button
+                class="carousel-dot${index === 0 ? " active" : ""}"
+                type="button"
+                data-carousel-go="${index}"
+                data-image="${escapeHtml(image.src)}"
+                data-label="${escapeHtml(image.label || `Image ${index + 1}`)}"
+                aria-label="Show ${escapeHtml((image.label || `image ${index + 1}`).toLowerCase())}"
+              ></button>
+            `,
+          )
+          .join("")}
+      </div>
+    `
+    : "";
 
   selectedVehicleCard.innerHTML = `
-    <div class="selected-vehicle-image" style="background-image: url('${vehicle.images[0].src}')" role="img" aria-label="${escapeHtml(label)}"></div>
+    <div class="selected-vehicle-carousel" data-carousel data-current="0" data-count="${images.length}" data-vehicle="${escapeHtml(label)}">
+      <div class="selected-vehicle-image" data-carousel-image style="background-image: url('${escapeHtml(images[0].src)}')" role="img" aria-label="${escapeHtml(label)}, ${escapeHtml(images[0].label || "selected vehicle image")}">
+        ${carouselControls}
+      </div>
+    </div>
     <div class="selected-vehicle-copy">
       <span>${escapeHtml(vehicle.type || "MIR CARS")} rental</span>
       <strong>${escapeHtml(label)}</strong>
@@ -183,6 +451,12 @@ function formatSummaryDate(value) {
   }).format(date);
 }
 
+function formatSummaryTime(value) {
+  const label = formatTimeLabel(value);
+
+  return label.numeric === "--:--" ? "" : label.numeric;
+}
+
 function summaryValue(value, fallback = "Not selected") {
   return escapeHtml(String(value || "").trim() || fallback);
 }
@@ -192,8 +466,8 @@ function renderBookingSummaryDetails() {
 
   const pickupDate = formatSummaryDate(form.elements.pickup_date.value);
   const returnDate = formatSummaryDate(form.elements.return_date.value);
-  const pickupTime = form.elements.pickup_time.value;
-  const returnTime = form.elements.return_time.value;
+  const pickupTime = formatSummaryTime(form.elements.pickup_time.value);
+  const returnTime = formatSummaryTime(form.elements.return_time.value);
   const pickupLocation = form.elements.pickup_location.value;
   const returnLocation = form.elements.return_location.value;
 
@@ -259,7 +533,9 @@ function showStep(stepIndex, options = {}) {
 }
 
 function stepFields(stepIndex) {
-  return [...stepPanels[stepIndex].querySelectorAll("input, select, textarea")].filter((field) => !field.disabled);
+  return [...stepPanels[stepIndex].querySelectorAll("input, select, textarea")].filter(
+    (field) => !field.disabled && !field.classList.contains("native-vehicle-select") && !field.classList.contains("native-time-input"),
+  );
 }
 
 function reportStepInvalid(field, message = "Please complete the required details for this step.") {
@@ -280,6 +556,24 @@ async function validateStep(stepIndex) {
     const pickupDate = form.elements.pickup_date.value;
     const returnDate = form.elements.return_date.value;
     const rentalDays = calculateRentalDays(pickupDate, returnDate);
+
+    if (!selectedVehicle()) {
+      setFormStatus(status, "error", "Please choose a preferred vehicle.");
+      vehiclePickerTrigger?.focus();
+      return false;
+    }
+
+    if (!form.elements.pickup_time.value) {
+      setFormStatus(status, "error", "Pickup time is required.");
+      timePickerTriggerFor("pickup_time")?.focus();
+      return false;
+    }
+
+    if (!form.elements.return_time.value) {
+      setFormStatus(status, "error", "Return time is required.");
+      timePickerTriggerFor("return_time")?.focus();
+      return false;
+    }
 
     if (!rentalDays) {
       reportStepInvalid(form.elements.return_date, "Return date must be after or the same as the pickup date.");
@@ -433,6 +727,103 @@ function paymentRedirectUrl(bookingNumber, paymentAccessToken) {
 }
 
 function bindBookingForm() {
+  timePickers.forEach((picker) => {
+    const trigger = picker.querySelector(".time-picker-trigger");
+    const face = picker.querySelector("[data-time-face]");
+
+    picker.dataset.timeMode = picker.dataset.timeMode || "hour";
+    syncTimePicker(picker);
+
+    trigger?.addEventListener("click", () => {
+      setTimePickerOpen(picker, picker.querySelector(".time-picker-panel")?.hidden !== false);
+    });
+
+    picker.querySelectorAll("[data-time-mode]").forEach((button) => {
+      button.addEventListener("click", () => {
+        picker.dataset.timeMode = button.dataset.timeMode;
+        syncTimePicker(picker);
+      });
+    });
+
+    picker.querySelectorAll("[data-time-period-option]").forEach((button) => {
+      button.addEventListener("click", () => {
+        setTimePickerValue(picker, {
+          ...timeState(picker),
+          period: button.dataset.timePeriodOption,
+        });
+      });
+    });
+
+    face?.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      activeClockPicker = picker;
+      face.setPointerCapture?.(event.pointerId);
+      updateTimeFromClockEvent(picker, event);
+    });
+
+    face?.addEventListener("pointermove", (event) => {
+      if (activeClockPicker !== picker) return;
+
+      updateTimeFromClockEvent(picker, event);
+    });
+
+    face?.addEventListener("pointerup", () => {
+      if (activeClockPicker !== picker) return;
+
+      activeClockPicker = null;
+      if ((picker.dataset.timeMode || "hour") === "hour") {
+        picker.dataset.timeMode = "minute";
+        syncTimePicker(picker);
+      }
+    });
+
+    face?.addEventListener("pointercancel", () => {
+      if (activeClockPicker === picker) activeClockPicker = null;
+    });
+  });
+
+  vehiclePickerTrigger?.addEventListener("click", () => {
+    timePickers.forEach((picker) => setTimePickerOpen(picker, false));
+    setVehiclePickerOpen(vehiclePickerPanel?.hidden !== false);
+  });
+
+  vehiclePickerSearch?.addEventListener("input", renderVehiclePickerOptions);
+
+  vehiclePickerResults?.addEventListener("click", (event) => {
+    const option = event.target.closest("[data-vehicle-option]");
+    if (!option) return;
+
+    selectVehicleFromPicker(option.dataset.vehicleValue);
+  });
+
+  document.addEventListener("click", (event) => {
+    if (event.target.closest(".vehicle-picker-field")) return;
+
+    setVehiclePickerOpen(false);
+  });
+
+  document.addEventListener("click", (event) => {
+    if (event.target.closest("[data-time-picker]")) return;
+
+    timePickers.forEach((picker) => setTimePickerOpen(picker, false));
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+
+    if (vehiclePickerPanel?.hidden === false) {
+      setVehiclePickerOpen(false);
+      vehiclePickerTrigger?.focus();
+      return;
+    }
+
+    const openTimePicker = timePickers.find((picker) => picker.querySelector(".time-picker-panel")?.hidden === false);
+    if (openTimePicker) {
+      setTimePickerOpen(openTimePicker, false);
+      openTimePicker.querySelector(".time-picker-trigger")?.focus();
+    }
+  });
+
   form.querySelectorAll("[data-step-next]").forEach((button) => {
     button.addEventListener("click", goToNextStep);
   });
@@ -453,6 +844,10 @@ function bindBookingForm() {
         renderSelectedVehicle();
         renderEstimate();
         refreshAvailability();
+      }
+
+      if (event.target.name === "vehicle") {
+        syncVehiclePickerSelection();
       }
 
       if (event.target.type === "file") {
@@ -525,12 +920,15 @@ async function initBookingPage() {
   vehicles = await loadAvailableVehicles();
   populateVehicleSelect();
   selectVehicleFromUrl();
+  renderVehiclePickerOptions();
+  syncVehiclePickerSelection();
   renderSelectedVehicle();
   renderEstimate();
   renderBookingSummaryDetails();
   refreshAvailability();
   showStep(0);
   bindBookingForm();
+  bindCarouselControls(selectedVehicleCard);
 }
 
 initBookingPage();
