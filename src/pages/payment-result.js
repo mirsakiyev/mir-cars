@@ -1,4 +1,7 @@
 import { escapeHtml } from "../lib/dom-utils.js";
+import { initPublicSite } from "../lib/public-site.js";
+
+initPublicSite();
 
 const resultRoot = document.querySelector("#paymentResult");
 const status = document.body.dataset.paymentResult || "success";
@@ -27,7 +30,7 @@ resultRoot.innerHTML = `
     <p>${escapeHtml(state.message)}</p>
     <div class="payment-state-actions">
       <a class="button secondary" href="booking.html">Back to booking</a>
-      <a class="button primary" href="index.html#contact">Contact MIR CARS</a>
+      <a class="button primary" href="${escapeHtml(window.MIR_CARS.contactUrl())}">Contact MIR CARS</a>
     </div>
   </section>
 `;

@@ -92,5 +92,22 @@ export async function createContactRequest(payload) {
   const client = await requireClient();
   const { error } = await client.from("contact_requests").insert(payload);
 
-  if (error) throw error;
+  if (!error) return;
+
+  if (payload.request_type && isMissingOptionalContactColumn(error)) {
+    const fallbackPayload = { ...payload };
+    delete fallbackPayload.request_type;
+
+    const { error: fallbackError } = await client.from("contact_requests").insert(fallbackPayload);
+    if (fallbackError) throw fallbackError;
+    return;
+  }
+
+  throw error;
+}
+
+function isMissingOptionalContactColumn(error) {
+  const message = `${error?.code || ""} ${error?.message || ""} ${error?.details || ""}`;
+
+  return /request_type|schema cache|column/i.test(message);
 }

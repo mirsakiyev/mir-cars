@@ -1,6 +1,7 @@
 import "../../vehicle-data.js";
 import { formatMoney } from "../lib/booking-utils.js";
 import { escapeHtml } from "../lib/dom-utils.js";
+import { initPublicSite } from "../lib/public-site.js";
 import { bindCarouselControls } from "../lib/vehicle-card.js";
 import { loadAvailableVehicles, loadVehicleBySlug } from "../lib/vehicle-service.js";
 
@@ -241,6 +242,7 @@ function renderVehiclePage(vehicleData) {
 }
 
 async function initVehiclePage() {
+  initPublicSite();
   await loadAvailableVehicles();
   const vehicle = await loadVehicleBySlug(window.MIR_VEHICLE_SLUG);
 

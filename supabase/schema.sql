@@ -267,9 +267,24 @@ create table if not exists public.contact_requests (
   email text,
   phone text,
   message text,
+  request_type text default 'contact',
   status text default 'new',
   created_at timestamptz default now(),
+  constraint contact_requests_request_type_check check (
+    request_type is null or request_type in ('contact', 'lost_and_found')
+  ),
   constraint contact_requests_status_check check (status in ('new', 'contacted', 'closed'))
+);
+
+alter table public.contact_requests
+add column if not exists request_type text default 'contact';
+
+alter table public.contact_requests
+drop constraint if exists contact_requests_request_type_check;
+
+alter table public.contact_requests
+add constraint contact_requests_request_type_check check (
+  request_type is null or request_type in ('contact', 'lost_and_found')
 );
 
 create table if not exists public.admin_users (
@@ -311,6 +326,9 @@ on public.booking_requests (booking_number, payment_access_token);
 
 create index if not exists payments_booking_created_idx
 on public.payments (booking_request_id, created_at desc);
+
+create index if not exists contact_requests_type_created_idx
+on public.contact_requests (request_type, created_at desc);
 
 create or replace function public.check_vehicle_availability(
   vehicle_id_input uuid,

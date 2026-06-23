@@ -1,6 +1,7 @@
 import { formatMoney } from "../lib/booking-utils.js";
 import { escapeHtml, setFormStatus } from "../lib/dom-utils.js";
 import { logClientWarning } from "../lib/logging.js";
+import { initPublicSite } from "../lib/public-site.js";
 import {
   loadPaymentCheckoutSummary,
   markBookingPaymentPending,
@@ -48,7 +49,7 @@ function renderResultState({ tone = "info", eyebrow = "Payment status", title, m
       <p>${escapeHtml(message)}</p>
       <div class="payment-state-actions">
         <a class="button secondary" href="booking.html">Back to booking</a>
-        <a class="button primary" href="index.html#contact">Contact MIR CARS</a>
+        <a class="button primary" href="${escapeHtml(window.MIR_CARS.contactUrl())}">Contact MIR CARS</a>
       </div>
     </section>
   `;
@@ -171,6 +172,8 @@ async function handleContinueToPayment() {
 }
 
 async function initPaymentPage() {
+  initPublicSite();
+
   const result = params.get("result");
 
   if (result === "success") {

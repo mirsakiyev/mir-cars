@@ -1,5 +1,7 @@
 import "../../vehicle-data.js";
 import { escapeHtml } from "../lib/dom-utils.js";
+import { refreshHashScroll } from "../lib/hash-scroll.js";
+import { initPublicSite } from "../lib/public-site.js";
 import { bindCarouselControls, renderVehicleCard } from "../lib/vehicle-card.js";
 import { loadAvailableVehicles } from "../lib/vehicle-service.js";
 
@@ -83,6 +85,8 @@ function bindFleetControls() {
 }
 
 async function initFleetPage() {
+  initPublicSite();
+
   vehicles = await loadAvailableVehicles();
   vehicleTypes = [...new Set(vehicles.map((vehicle) => vehicle.type))].sort(orderTypes);
 
@@ -90,6 +94,7 @@ async function initFleetPage() {
   renderFleet();
   bindFleetControls();
   bindCarouselControls();
+  refreshHashScroll();
 }
 
 initFleetPage();

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Contact MIR CARS for reservations, vehicle questions, delivery support, and general inquiries."
+    />
+    <title>Contact | MIR CARS</title>
+    <link rel="icon" href="../favicon.ico" sizes="any" />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+    <link rel="stylesheet" href="../styles.css" />
+    <script type="module" src="../contact.js"></script>
+  </head>
+  <body id="top">
+    <header class="site-header">
+      <a class="brand" href="../index.html#top" aria-label="MIR CARS home">
+        <span>
+          <strong class="mir-lockup brand-name" aria-label="MIR CARS">
+            <span class="mir-lockup-top">MIR</span>
+            <span class="mir-lockup-bottom">CARS</span>
+          </strong>
+          <small>LA Rentals</small>
+        </span>
+      </a>
+
+      <nav class="main-nav" aria-label="Primary navigation">
+        <a href="../fleet.html">Fleet</a>
+        <a href="../index.html#policies">Policies</a>
+        <a href="../index.html#testimonials">Testimonials</a>
+        <a href="../contact/" aria-current="page">Contact</a>
+      </nav>
+
+      <a class="header-cta" href="../booking.html">Book now</a>
+    </header>
+
+    <main class="support-page-main">
+      <section class="support-hero">
+        <p class="eyebrow">MIR CARS SUPPORT</p>
+        <h1>Contact MIR CARS</h1>
+        <p>Have a question about a reservation, vehicle, delivery, or support request? Send us a message.</p>
+      </section>
+
+      <section class="support-layout contact-page-layout" aria-label="Contact options">
+        <div class="support-card contact-info-card">
+          <p class="eyebrow">Direct contact</p>
+          <h2>Reservation and rental support.</h2>
+          <address>
+            1137 N Central Ave, Glendale, CA 91202<br />
+            <a href="tel:+17477449777">(747) 744-9777</a><br />
+            <a href="mailto:ruslan@mircars.com">ruslan@mircars.com</a>
+          </address>
+          <p>Daily hours: 9:00 AM - 7:00 PM</p>
+
+          <div class="support-mini-card">
+            <h3>Lost something in a rental?</h3>
+            <p>Submit the trip details and item description so the MIR CARS team can review it.</p>
+            <a class="button secondary" href="../lost-and-found/">Submit Lost & Found Report</a>
+          </div>
+        </div>
+
+        <form
+          class="contact-form support-form"
+          id="contactForm"
+          data-success="Thanks. Your message was sent to MIR CARS."
+          data-error="Something went wrong. Please try again or contact MIR CARS directly."
+        >
+          <label>
+            Name
+            <input name="name" autocomplete="name" required />
+          </label>
+          <label>
+            Email
+            <input type="email" name="email" autocomplete="email" required />
+          </label>
+          <label>
+            Phone
+            <input name="phone" autocomplete="tel" />
+          </label>
+          <label>
+            Inquiry type
+            <select name="inquiry_type">
+              <option>New reservation</option>
+              <option>Existing reservation</option>
+              <option>Vehicle question</option>
+              <option>Delivery question</option>
+              <option>Lost &amp; Found</option>
+              <option>Other</option>
+            </select>
+          </label>
+          <label>
+            How can we help?
+            <textarea name="message" rows="6" required></textarea>
+          </label>
+          <button class="button primary" type="submit">Send Message</button>
+          <p class="form-status" id="contactStatus" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-brand">
+        <span class="mir-lockup mir-lockup-inline" aria-label="MIR CARS"><span class="mir-lockup-top">MIR</span><span class="mir-lockup-bottom">CARS</span></span>
+        <span>Los Angeles, California</span>
+      </div>
+      <span class="footer-copyright">&copy; 2026 MIR CARS. All rights reserved.</span>
+    </footer>
+  </body>
+</html>

@@ -28,6 +28,26 @@
   status = 301
 
 [[redirects]]
+  from = "/terms"
+  to = "/terms/"
+  status = 301
+
+[[redirects]]
+  from = "/faq"
+  to = "/faq/"
+  status = 301
+
+[[redirects]]
+  from = "/lost-and-found"
+  to = "/lost-and-found/"
+  status = 301
+
+[[redirects]]
+  from = "/contact"
+  to = "/contact/"
+  status = 301
+
+[[redirects]]
   from = "/payment-success"
   to = "/payment-success.html"
   status = 200

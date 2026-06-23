@@ -1202,24 +1202,30 @@ async function renderContacts(client) {
     <div class="admin-card-list">
       ${(data || [])
         .map(
-          (contact) => `
+          (contact) => {
+            const requestType = contact.request_type === "lost_and_found" ? "Lost & Found" : "Contact";
+
+            return `
             <article class="admin-card">
               <div class="admin-card-head">
                 <div>
                   <span>${escapeHtml(contact.email || "")}</span>
                   <h2>${escapeHtml(contact.name || "Contact")}</h2>
+                  ${statusBadge(requestType)}
                 </div>
                 <select data-contact-status="${contact.id}">
                   ${["new", "contacted", "closed"].map((status) => `<option value="${status}"${contact.status === status ? " selected" : ""}>${status}</option>`).join("")}
                 </select>
               </div>
               <div class="admin-detail-grid">
+                <span><strong>Type</strong>${escapeHtml(requestType)}</span>
                 <span><strong>Phone</strong>${escapeHtml(contact.phone || "")}</span>
                 <span><strong>Created</strong>${escapeHtml(new Date(contact.created_at).toLocaleString())}</span>
               </div>
               <p class="admin-message">${escapeHtml(contact.message || "")}</p>
             </article>
-          `,
+          `;
+          },
         )
         .join("")}
     </div>

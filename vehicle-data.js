@@ -58,6 +58,32 @@
     return fromSiteRoot(`fleet.html${suffix}`);
   }
 
+  function publicPageUrl(path, suffix = "") {
+    const cleanPath = path.replace(/^\/+|\/+$/g, "");
+
+    if (isFilePage && siteRoot) {
+      return fromSiteRoot(`${cleanPath}/index.html${suffix}`);
+    }
+
+    return `/${cleanPath}/${suffix}`;
+  }
+
+  function termsUrl(suffix = "") {
+    return publicPageUrl("terms", suffix);
+  }
+
+  function faqUrl(suffix = "") {
+    return publicPageUrl("faq", suffix);
+  }
+
+  function lostAndFoundUrl(suffix = "") {
+    return publicPageUrl("lost-and-found", suffix);
+  }
+
+  function contactUrl(suffix = "") {
+    return publicPageUrl("contact", suffix);
+  }
+
   const rentalClasses = {
     economy: {
       label: "Economy",
@@ -565,5 +591,9 @@
     bookingUrl,
     paymentUrl,
     fleetUrl,
+    termsUrl,
+    faqUrl,
+    lostAndFoundUrl,
+    contactUrl,
   };
 })(typeof window !== "undefined" ? window : globalThis);

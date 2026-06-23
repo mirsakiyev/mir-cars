@@ -1,7 +1,9 @@
 import "../../vehicle-data.js";
 import { calculateEstimate, calculateRentalDays, formatMoney, generateBookingNumber, getAge } from "../lib/booking-utils.js";
 import { escapeHtml, setFormStatus, setFormStatusHtml } from "../lib/dom-utils.js";
+import { refreshHashScroll } from "../lib/hash-scroll.js";
 import { logClientWarning } from "../lib/logging.js";
+import { initPublicSite } from "../lib/public-site.js";
 import { createBookingRequest, uploadBookingDocuments } from "../lib/request-service.js";
 import {
   CUSTOM_PICKUP_VALUE,
@@ -1198,6 +1200,8 @@ function bindBookingForm() {
 }
 
 async function initBookingPage() {
+  initPublicSite();
+
   document.querySelectorAll("[data-home-link]").forEach((link) => {
     link.href = window.MIR_CARS.homeUrl(link.dataset.homeLink);
   });
@@ -1216,6 +1220,7 @@ async function initBookingPage() {
   showStep(0);
   bindBookingForm();
   bindCarouselControls(selectedVehicleCard);
+  refreshHashScroll();
 }
 
 initBookingPage();

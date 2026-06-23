@@ -12,6 +12,10 @@ const extensionlessRoutes = new Map([
   ["/admin/vehicles", "/admin/vehicles/index.html"],
   ["/admin/contacts", "/admin/contacts/index.html"],
   ["/admin/payments", "/admin/payments/index.html"],
+  ["/terms", "/terms/index.html"],
+  ["/faq", "/faq/index.html"],
+  ["/lost-and-found", "/lost-and-found/index.html"],
+  ["/contact", "/contact/index.html"],
   ["/payment-success", "/payment-success.html"],
   ["/payment-cancelled", "/payment-cancelled.html"],
 ]);
