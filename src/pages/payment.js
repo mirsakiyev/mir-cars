@@ -77,7 +77,11 @@ function renderCheckout(summary) {
   const mileageLimit = summary.mileage_limit_per_day
     ? `${summary.mileage_limit_per_day} miles/day`
     : "Included limit not available";
-  const taxesFees = summary.taxes_fees === null || summary.taxes_fees === undefined ? "Calculated later if applicable" : formatMoney(summary.taxes_fees, currency);
+  const hasLocationFee = summary.total_location_fee !== null && summary.total_location_fee !== undefined;
+  const taxesFees =
+    hasLocationFee || summary.taxes_fees === null || summary.taxes_fees === undefined
+      ? "Calculated later if applicable"
+      : formatMoney(summary.taxes_fees, currency);
 
   paymentSummary.innerHTML = `
     <div class="payment-layout">
@@ -94,6 +98,7 @@ function renderCheckout(summary) {
           ${amountRow("Daily rate", summary.daily_rate, currency)}
           ${summaryRow("Mileage limit", mileageLimit)}
           ${amountRow("Security deposit", summary.security_deposit_amount, currency)}
+          ${hasLocationFee ? amountRow("Delivery / location fee", summary.total_location_fee, currency) : ""}
           ${summaryRow("Taxes / fees", taxesFees)}
           ${amountRow("Total due today", summary.total_due_today, currency, { strong: true })}
         </div>

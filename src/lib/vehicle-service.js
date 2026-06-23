@@ -21,7 +21,14 @@ const vehicleColumns = [
   "distance_unit",
   "status",
   "is_featured",
+  "title",
   "description",
+  "short_description",
+  "full_description",
+  "tags",
+  "sort_order",
+  "public_visible",
+  "archived_at",
   "image_urls",
 ].join(",");
 
@@ -68,7 +75,7 @@ function imageObjects(imageUrls, fallbackImages = []) {
 }
 
 function buildVehicleTitle(row, fallback) {
-  return fallback?.title || [row.make, row.model, row.trim].filter(Boolean).join(" ").trim() || "MIR CARS vehicle";
+  return row.title || fallback?.title || [row.make, row.model, row.trim].filter(Boolean).join(" ").trim() || "MIR CARS vehicle";
 }
 
 function buildVehicleSpecs(row, fallback) {
@@ -114,12 +121,17 @@ export function mapDatabaseVehicle(row) {
     distanceUnit: row.distance_unit || fallback?.distanceUnit || "miles",
     status: row.status || "available",
     isFeatured: Boolean(row.is_featured),
-    description: row.description || fallback?.description || "",
+    description: row.short_description || row.description || fallback?.description || "",
+    fullDescription: row.full_description || row.description || fallback?.fullDescription || "",
+    tags: Array.isArray(row.tags) ? row.tags : fallback?.tags || [],
+    sortOrder: Number(row.sort_order || 0),
+    publicVisible: row.public_visible !== false,
+    archivedAt: row.archived_at || null,
     images: imageObjects(row.image_urls, fallback?.images),
     specs: buildVehicleSpecs(row, fallback),
     detail: fallback?.detail || {
-      tagline: row.description || "A MIR CARS rental available through the booking checkout.",
-      overview: [row.description || "Select this vehicle, enter dates and driver details, upload documents, and continue to the payment step."],
+      tagline: row.short_description || row.description || "A MIR CARS rental available through the booking checkout.",
+      overview: [row.full_description || row.description || "Select this vehicle, enter dates and driver details, upload documents, and continue to the payment step."],
       stats: [
         ["Powertrain", row.fuel_type || "TBD"],
         ["Seating", row.seats ? `${row.seats} passengers` : "TBD"],
@@ -142,7 +154,14 @@ export async function loadAvailableVehicles() {
   }
 
   try {
-    const { data, error } = await client.from("vehicles").select(vehicleColumns).eq("status", "available").order("year", { ascending: false });
+    const { data, error } = await client
+      .from("vehicles")
+      .select(vehicleColumns)
+      .eq("status", "available")
+      .eq("public_visible", true)
+      .is("archived_at", null)
+      .order("sort_order", { ascending: true })
+      .order("year", { ascending: false });
 
     if (error) throw error;
 
@@ -187,7 +206,7 @@ export async function loadVehicleBySlug(slug) {
       const { data, error } = await client.from("vehicles").select(vehicleColumns).eq("slug", slug).maybeSingle();
 
       if (error) throw error;
-      if (data?.status === "available") return mapDatabaseVehicle(data);
+      if (data?.status === "available" && data.public_visible !== false && !data.archived_at) return mapDatabaseVehicle(data);
     } catch (error) {
       logClientWarning("Falling back to hardcoded vehicle after Supabase detail load failed.", error);
     }

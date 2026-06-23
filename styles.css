@@ -3078,23 +3078,22 @@ address {
 }
 
 .time-picker-panel {
-  position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
+  position: static;
   z-index: 30;
   display: grid;
-  width: min(280px, calc(100vw - 48px));
+  width: min(320px, 100%);
   justify-items: center;
   gap: 12px;
+  margin-top: 2px;
   padding: 16px;
   border: 1px solid rgba(226, 234, 242, 0.18);
   border-radius: var(--radius);
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.07), rgba(148, 166, 181, 0.025)),
-    rgba(10, 12, 14, 0.98);
+    linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(148, 166, 181, 0.026)),
+    rgba(8, 10, 11, 0.98);
   box-shadow:
-    0 22px 52px rgba(0, 0, 0, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.09);
+    0 18px 44px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .time-picker-panel[hidden] {
@@ -3103,16 +3102,42 @@ address {
 
 .time-clock-face {
   position: relative;
-  width: 210px;
-  height: 210px;
-  border: 1px solid rgba(226, 234, 242, 0.14);
+  width: 224px;
+  height: 224px;
+  border: 8px solid rgba(22, 25, 27, 0.96);
   border-radius: 999px;
   background:
-    radial-gradient(circle at center, rgba(244, 248, 251, 0.08) 0 4px, transparent 5px),
-    radial-gradient(circle at center, rgba(226, 234, 242, 0.08), rgba(5, 6, 7, 0.84) 72%);
+    radial-gradient(circle at center, rgba(240, 248, 246, 0.13) 0 4px, transparent 5px),
+    repeating-conic-gradient(from -1deg, rgba(244, 248, 251, 0.28) 0deg 1deg, transparent 1deg 6deg),
+    radial-gradient(circle at 50% 44%, rgba(38, 49, 51, 0.72), rgba(4, 7, 8, 0.96) 66%),
+    #050708;
+  box-shadow:
+    inset 0 0 0 2px rgba(240, 248, 246, 0.12),
+    inset 0 0 0 12px rgba(0, 0, 0, 0.34),
+    inset 0 18px 32px rgba(255, 255, 255, 0.06),
+    0 18px 32px rgba(0, 0, 0, 0.34);
   cursor: grab;
   touch-action: none;
   user-select: none;
+}
+
+.time-clock-face::before {
+  position: absolute;
+  inset: -8px;
+  border-radius: inherit;
+  background:
+    conic-gradient(from 0deg, rgba(238, 245, 250, 0.28), rgba(65, 77, 82, 0.32), rgba(238, 245, 250, 0.2), rgba(8, 10, 11, 0.72), rgba(238, 245, 250, 0.28));
+  content: "";
+  opacity: 0.28;
+}
+
+.time-clock-face::after {
+  position: absolute;
+  inset: 18px;
+  border-radius: inherit;
+  border: 1px solid rgba(240, 248, 246, 0.08);
+  content: "";
+  pointer-events: none;
 }
 
 .time-clock-face:active {
@@ -3124,39 +3149,118 @@ address {
   top: 50%;
   left: 50%;
   display: grid;
-  width: 28px;
-  height: 28px;
+  width: 18px;
+  height: 18px;
   place-items: center;
-  color: rgba(238, 243, 247, 0.72);
-  font-size: 0.8rem;
-  font-weight: 850;
+  border: 2px solid rgba(238, 245, 250, 0.78);
+  background:
+    radial-gradient(circle, rgba(221, 239, 230, 0.96), rgba(167, 195, 183, 0.78));
+  box-shadow:
+    0 0 0 1px rgba(5, 6, 7, 0.88),
+    0 0 12px rgba(205, 235, 222, 0.18);
   transform:
     translate(-50%, -50%)
     rotate(var(--mark-angle))
-    translateY(-80px)
+    translateY(-78px)
     rotate(calc(-1 * var(--mark-angle)));
+}
+
+.time-clock-mark.round {
+  border-radius: 999px;
+}
+
+.time-clock-mark.baton {
+  width: 12px;
+  height: 27px;
+  border-radius: 999px;
+}
+
+.time-clock-mark.triangle {
+  width: 0;
+  height: 0;
+  border-width: 0 11px 20px;
+  border-style: solid;
+  border-color: transparent transparent rgba(221, 239, 230, 0.96);
+  background: transparent;
+  box-shadow: 0 0 12px rgba(205, 235, 222, 0.16);
 }
 
 .time-clock-hand {
   position: absolute;
   bottom: 50%;
   left: 50%;
-  width: 3px;
-  height: 74px;
+  z-index: 2;
   border-radius: 999px;
-  background: linear-gradient(180deg, var(--gold-strong), rgba(174, 184, 194, 0.62));
-  box-shadow: 0 0 18px rgba(244, 248, 251, 0.16);
+  background: linear-gradient(180deg, rgba(244, 248, 251, 0.96), rgba(154, 168, 176, 0.82));
+  box-shadow:
+    0 0 0 1px rgba(4, 7, 8, 0.72),
+    0 0 18px rgba(244, 248, 251, 0.15);
   transform: translateX(-50%) rotate(var(--hand-angle, 0deg));
   transform-origin: bottom center;
+  transition:
+    filter 160ms ease,
+    opacity 160ms ease;
+}
+
+.hour-hand {
+  width: 8px;
+  height: 56px;
+}
+
+.hour-hand::before {
+  position: absolute;
+  top: 11px;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(244, 248, 251, 0.96);
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, transparent 43%, rgba(244, 248, 251, 0.95) 43% 57%, transparent 57%),
+    linear-gradient(30deg, transparent 44%, rgba(244, 248, 251, 0.95) 44% 56%, transparent 56%),
+    rgba(5, 8, 9, 0.78);
+  content: "";
+  transform: translateX(-50%);
+}
+
+.minute-hand {
+  width: 5px;
+  height: 78px;
+}
+
+.minute-hand::before {
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  width: 13px;
+  height: 58px;
+  border-radius: 999px 999px 4px 4px;
+  background:
+    linear-gradient(90deg, transparent 0 3px, rgba(244, 248, 251, 0.94) 3px 10px, transparent 10px),
+    rgba(5, 8, 9, 0.68);
+  content: "";
+  transform: translateX(-50%);
+}
+
+.time-mode-hour .minute-hand,
+.time-mode-minute .hour-hand {
+  filter: saturate(70%);
+  opacity: 0.58;
+}
+
+.time-mode-hour .hour-hand,
+.time-mode-minute .minute-hand {
+  filter: drop-shadow(0 0 8px rgba(244, 248, 251, 0.18));
+  opacity: 1;
 }
 
 .time-clock-hand::after {
   position: absolute;
-  top: -5px;
+  top: -4px;
   left: 50%;
-  width: 13px;
-  height: 13px;
-  border: 2px solid rgba(5, 6, 7, 0.82);
+  width: 9px;
+  height: 9px;
+  border: 2px solid rgba(5, 8, 9, 0.82);
   border-radius: 999px;
   background: var(--gold-strong);
   content: "";
@@ -3167,6 +3271,7 @@ address {
   position: absolute;
   top: 50%;
   left: 50%;
+  z-index: 3;
   width: 12px;
   height: 12px;
   border-radius: 999px;
@@ -3215,6 +3320,123 @@ address {
   font-size: 0.88rem;
   font-weight: 750;
   line-height: 1.3;
+}
+
+.location-custom-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.location-custom-panel,
+.location-fee-preview {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(226, 234, 242, 0.13);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.045), rgba(148, 166, 181, 0.02)),
+    rgba(5, 6, 7, 0.42);
+}
+
+.location-custom-panel[hidden] {
+  display: none;
+}
+
+.location-panel-head,
+.location-fee-preview {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.location-panel-head {
+  display: flex;
+  gap: 12px;
+}
+
+.location-panel-head span,
+.location-fee-preview span {
+  color: rgba(238, 243, 247, 0.58);
+  font-size: 0.76rem;
+  font-weight: 850;
+}
+
+.location-panel-head strong,
+.location-fee-preview strong {
+  color: var(--gold-strong);
+  font-size: 0.92rem;
+  text-align: right;
+}
+
+.location-fee-preview {
+  grid-template-columns: minmax(0, 0.45fr) minmax(0, 0.55fr);
+  min-height: 62px;
+}
+
+.location-fee-preview small {
+  grid-column: 1 / -1;
+  color: rgba(238, 243, 247, 0.62);
+  font-size: 0.78rem;
+  font-weight: 750;
+  line-height: 1.35;
+  text-align: right;
+}
+
+.location-fee-preview.pending strong {
+  color: var(--gold-strong);
+}
+
+.location-fee-preview.priced strong {
+  color: #9ff0b8;
+}
+
+.location-search-actions {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.location-search-actions .button {
+  min-height: 38px;
+  padding: 0 12px;
+  font-size: 0.74rem;
+}
+
+.location-search-actions span {
+  color: rgba(238, 243, 247, 0.62);
+  font-size: 0.78rem;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.location-search-actions span[data-tone="success"] {
+  color: #9ff0b8;
+}
+
+.location-search-actions span[data-tone="error"] {
+  color: var(--danger);
+}
+
+.location-map-preview {
+  display: grid;
+  gap: 8px;
+}
+
+.location-map-preview iframe {
+  width: 100%;
+  height: 180px;
+  border: 1px solid rgba(226, 234, 242, 0.12);
+  border-radius: 6px;
+  background: #101214;
+}
+
+.location-map-preview a {
+  overflow-wrap: anywhere;
+  color: rgba(238, 243, 247, 0.72);
+  font-size: 0.78rem;
+  font-weight: 750;
 }
 
 .booking-checkout-form input[type="file"] {
@@ -3894,6 +4116,252 @@ address a:hover {
   padding: 8px;
 }
 
+.admin-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-toolbar .button {
+  min-height: 40px;
+  padding: 0 14px;
+}
+
+.admin-fleet-workspace {
+  display: grid;
+  grid-template-columns: minmax(520px, 0.92fr) minmax(420px, 0.72fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.admin-table-head,
+.admin-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px;
+  border-bottom: 1px solid rgba(226, 234, 242, 0.08);
+}
+
+.admin-table-head span,
+.admin-section-head span {
+  display: block;
+  color: rgba(238, 243, 247, 0.58);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.admin-table-head strong,
+.admin-section-head strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--gold-strong);
+  font-size: 1rem;
+}
+
+.admin-vehicle-table {
+  min-width: 900px;
+}
+
+.admin-vehicle-table tr.active-row td {
+  background: rgba(226, 234, 242, 0.055);
+}
+
+.admin-fleet-thumb,
+.admin-image-thumb {
+  display: block;
+  border: 1px solid rgba(226, 234, 242, 0.12);
+  border-radius: 6px;
+  background-color: rgba(5, 6, 7, 0.7);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.admin-fleet-thumb {
+  width: 84px;
+  height: 54px;
+}
+
+.admin-editor-form,
+.admin-settings-form,
+.admin-mini-form {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-form-grid.compact {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.admin-editor-form label,
+.admin-settings-form label,
+.admin-mini-form label,
+.admin-upload-field {
+  display: grid;
+  gap: 7px;
+  color: rgba(238, 243, 247, 0.62);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.admin-editor-form input,
+.admin-editor-form select,
+.admin-editor-form textarea,
+.admin-settings-form input,
+.admin-settings-form select,
+.admin-settings-form textarea,
+.admin-mini-form input,
+.admin-mini-form select,
+.admin-mini-form textarea,
+.admin-inline-form input {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid rgba(226, 234, 242, 0.14);
+  border-radius: 6px;
+  background: rgba(5, 6, 7, 0.72);
+  color: var(--text);
+  padding: 9px 10px;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.admin-editor-form textarea,
+.admin-settings-form textarea,
+.admin-mini-form textarea {
+  min-height: 82px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.admin-wide-field {
+  grid-column: 1 / -1;
+}
+
+.admin-toggle-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-toggle-row label {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid rgba(226, 234, 242, 0.1);
+  border-radius: 6px;
+  background: rgba(5, 6, 7, 0.38);
+}
+
+.admin-toggle-row input[type="checkbox"] {
+  width: 16px;
+  min-width: 16px;
+  height: 16px;
+  min-height: 16px;
+}
+
+.admin-image-editor {
+  display: grid;
+  gap: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(226, 234, 242, 0.1);
+  border-radius: var(--radius);
+}
+
+.admin-image-gallery {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+}
+
+.admin-image-row {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid rgba(226, 234, 242, 0.1);
+  border-radius: 6px;
+  background: rgba(5, 6, 7, 0.38);
+}
+
+.admin-image-thumb {
+  width: 86px;
+  height: 58px;
+}
+
+.admin-image-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, auto));
+  gap: 6px;
+}
+
+.admin-image-actions .button,
+.admin-inline-form .button,
+.admin-mini-form .button {
+  min-height: 34px;
+  padding: 0 10px;
+  font-size: 0.7rem;
+}
+
+.admin-inline-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  padding: 0 12px 12px;
+}
+
+.admin-upload-field {
+  margin: 0 12px 12px;
+}
+
+.admin-upload-field input {
+  min-height: 68px;
+  border-style: dashed;
+}
+
+.admin-location-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.8fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.admin-nested-list {
+  gap: 12px;
+}
+
+.admin-mini-form {
+  padding: 12px;
+  border: 1px solid rgba(226, 234, 242, 0.08);
+  border-radius: 6px;
+  background: rgba(5, 6, 7, 0.34);
+}
+
+.admin-preview-result {
+  margin: 0;
+  color: rgba(238, 243, 247, 0.68);
+  font-size: 0.9rem;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
 .payment-page-main {
   min-height: calc(100vh - 82px);
 }
@@ -4135,6 +4603,16 @@ address a:hover {
   .booking-summary-panel .selected-vehicle-card {
     grid-template-columns: minmax(240px, 0.46fr) minmax(0, 0.54fr);
     align-items: center;
+  }
+
+  .admin-fleet-workspace,
+  .admin-location-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-form-grid,
+  .admin-form-grid.compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .policy-grid {
@@ -4444,6 +4922,7 @@ address a:hover {
   .selected-vehicle-card,
   .form-row,
   .booking-checkout-form .form-row,
+  .location-custom-grid,
   .booking-summary-panel .selected-vehicle-card,
   .booking-requirements-grid,
   .policy-grid {
@@ -4520,6 +4999,16 @@ address a:hover {
     text-align: left;
   }
 
+  .location-fee-preview {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .location-fee-preview strong,
+  .location-fee-preview small {
+    text-align: left;
+  }
+
   .vehicle-picker-panel {
     position: static;
     margin-top: 2px;
@@ -4547,6 +5036,23 @@ address a:hover {
 
   .booking-step-actions.split {
     grid-template-columns: 1fr;
+  }
+
+  .admin-form-grid,
+  .admin-form-grid.compact,
+  .admin-image-row,
+  .admin-inline-form {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-image-thumb {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+
+  .admin-image-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .payment-page-section {

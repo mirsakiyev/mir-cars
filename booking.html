@@ -142,19 +142,20 @@
                       </button>
                       <div class="time-picker-panel" id="pickupTimePanel" hidden>
                         <div class="time-clock-face" data-time-face role="application" aria-label="Analog pickup time picker">
-                          <span class="time-clock-mark" style="--mark-angle: 0deg">12</span>
-                          <span class="time-clock-mark" style="--mark-angle: 30deg">1</span>
-                          <span class="time-clock-mark" style="--mark-angle: 60deg">2</span>
-                          <span class="time-clock-mark" style="--mark-angle: 90deg">3</span>
-                          <span class="time-clock-mark" style="--mark-angle: 120deg">4</span>
-                          <span class="time-clock-mark" style="--mark-angle: 150deg">5</span>
-                          <span class="time-clock-mark" style="--mark-angle: 180deg">6</span>
-                          <span class="time-clock-mark" style="--mark-angle: 210deg">7</span>
-                          <span class="time-clock-mark" style="--mark-angle: 240deg">8</span>
-                          <span class="time-clock-mark" style="--mark-angle: 270deg">9</span>
-                          <span class="time-clock-mark" style="--mark-angle: 300deg">10</span>
-                          <span class="time-clock-mark" style="--mark-angle: 330deg">11</span>
-                          <span class="time-clock-hand" data-time-hand></span>
+                          <span class="time-clock-mark triangle" style="--mark-angle: 0deg"></span>
+                          <span class="time-clock-mark round" style="--mark-angle: 30deg"></span>
+                          <span class="time-clock-mark round" style="--mark-angle: 60deg"></span>
+                          <span class="time-clock-mark baton" style="--mark-angle: 90deg"></span>
+                          <span class="time-clock-mark round" style="--mark-angle: 120deg"></span>
+                          <span class="time-clock-mark round" style="--mark-angle: 150deg"></span>
+                          <span class="time-clock-mark baton" style="--mark-angle: 180deg"></span>
+                          <span class="time-clock-mark round" style="--mark-angle: 210deg"></span>
+                          <span class="time-clock-mark round" style="--mark-angle: 240deg"></span>
+                          <span class="time-clock-mark baton" style="--mark-angle: 270deg"></span>
+                          <span class="time-clock-mark round" style="--mark-angle: 300deg"></span>
+                          <span class="time-clock-mark round" style="--mark-angle: 330deg"></span>
+                          <span class="time-clock-hand hour-hand" data-time-hour-hand></span>
+                          <span class="time-clock-hand minute-hand" data-time-minute-hand></span>
                           <span class="time-clock-center"></span>
                         </div>
                         <div class="time-picker-mode" aria-label="Time picker mode">
@@ -192,19 +193,20 @@
                       </button>
                       <div class="time-picker-panel" id="returnTimePanel" hidden>
                         <div class="time-clock-face" data-time-face role="application" aria-label="Analog return time picker">
-                          <span class="time-clock-mark" style="--mark-angle: 0deg">12</span>
-                          <span class="time-clock-mark" style="--mark-angle: 30deg">1</span>
-                          <span class="time-clock-mark" style="--mark-angle: 60deg">2</span>
-                          <span class="time-clock-mark" style="--mark-angle: 90deg">3</span>
-                          <span class="time-clock-mark" style="--mark-angle: 120deg">4</span>
-                          <span class="time-clock-mark" style="--mark-angle: 150deg">5</span>
-                          <span class="time-clock-mark" style="--mark-angle: 180deg">6</span>
-                          <span class="time-clock-mark" style="--mark-angle: 210deg">7</span>
-                          <span class="time-clock-mark" style="--mark-angle: 240deg">8</span>
-                          <span class="time-clock-mark" style="--mark-angle: 270deg">9</span>
-                          <span class="time-clock-mark" style="--mark-angle: 300deg">10</span>
-                          <span class="time-clock-mark" style="--mark-angle: 330deg">11</span>
-                          <span class="time-clock-hand" data-time-hand></span>
+                          <span class="time-clock-mark triangle" style="--mark-angle: 0deg"></span>
+                          <span class="time-clock-mark round" style="--mark-angle: 30deg"></span>
+                          <span class="time-clock-mark round" style="--mark-angle: 60deg"></span>
+                          <span class="time-clock-mark baton" style="--mark-angle: 90deg"></span>
+                          <span class="time-clock-mark round" style="--mark-angle: 120deg"></span>
+                          <span class="time-clock-mark round" style="--mark-angle: 150deg"></span>
+                          <span class="time-clock-mark baton" style="--mark-angle: 180deg"></span>
+                          <span class="time-clock-mark round" style="--mark-angle: 210deg"></span>
+                          <span class="time-clock-mark round" style="--mark-angle: 240deg"></span>
+                          <span class="time-clock-mark baton" style="--mark-angle: 270deg"></span>
+                          <span class="time-clock-mark round" style="--mark-angle: 300deg"></span>
+                          <span class="time-clock-mark round" style="--mark-angle: 330deg"></span>
+                          <span class="time-clock-hand hour-hand" data-time-hour-hand></span>
+                          <span class="time-clock-hand minute-hand" data-time-minute-hand></span>
                           <span class="time-clock-center"></span>
                         </div>
                         <div class="time-picker-mode" aria-label="Time picker mode">
@@ -223,7 +225,7 @@
                   <div class="form-row">
                     <label>
                       Pickup location
-                      <select name="pickup_location" required>
+                      <select name="pickup_location" id="pickupLocationSelect" required>
                         <option>LAX Airport</option>
                         <option>Glendale pickup</option>
                         <option>Custom Delivery Request</option>
@@ -231,13 +233,63 @@
                     </label>
                     <label>
                       Return location
-                      <select name="return_location" required>
+                      <select name="return_location" id="returnLocationSelect" required>
                         <option>Same as pickup</option>
                         <option>LAX Airport</option>
                         <option>Glendale return</option>
                         <option>Custom Return Request</option>
                       </select>
                     </label>
+                  </div>
+
+                  <input type="hidden" name="pickup_location_type" value="hub" />
+                  <input type="hidden" name="return_location_type" value="same_as_pickup" />
+                  <input type="hidden" name="pickup_location_hub_id" />
+                  <input type="hidden" name="return_location_hub_id" />
+                  <input type="hidden" name="pickup_lat" />
+                  <input type="hidden" name="pickup_lng" />
+                  <input type="hidden" name="return_lat" />
+                  <input type="hidden" name="return_lng" />
+                  <input type="hidden" name="total_location_fee" value="0" />
+                  <input type="hidden" name="location_fee_breakdown" value="{}" />
+
+                  <div class="location-custom-grid" id="customLocationFields">
+                    <section class="location-custom-panel" data-location-panel="pickup" hidden>
+                      <div class="location-panel-head">
+                        <span>Pickup delivery</span>
+                        <strong>Map custom pickup</strong>
+                      </div>
+                      <label>
+                        Pickup address
+                        <input name="pickup_custom_address" autocomplete="street-address" placeholder="Street, city, state" />
+                      </label>
+                      <div class="location-search-actions">
+                        <button class="button secondary" type="button" data-location-geocode="pickup">Search map</button>
+                        <span data-location-status="pickup">Search an address to preview the fee.</span>
+                      </div>
+                      <div class="location-map-preview" data-location-map="pickup"></div>
+                    </section>
+
+                    <section class="location-custom-panel" data-location-panel="return" hidden>
+                      <div class="location-panel-head">
+                        <span>Return collection</span>
+                        <strong>Map custom return</strong>
+                      </div>
+                      <label>
+                        Return address
+                        <input name="return_custom_address" autocomplete="street-address" placeholder="Street, city, state" />
+                      </label>
+                      <div class="location-search-actions">
+                        <button class="button secondary" type="button" data-location-geocode="return">Search map</button>
+                        <span data-location-status="return">Search an address to preview the fee.</span>
+                      </div>
+                      <div class="location-map-preview" data-location-map="return"></div>
+                    </section>
+                  </div>
+
+                  <div class="location-fee-preview" id="locationFeePreview" aria-live="polite">
+                    <span>Location pricing</span>
+                    <strong>No delivery fee for selected hubs</strong>
                   </div>
 
                   <div class="availability-panel" id="availabilityStatus" aria-live="polite">

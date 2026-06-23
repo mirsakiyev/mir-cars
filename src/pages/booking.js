@@ -3,6 +3,15 @@ import { calculateEstimate, calculateRentalDays, formatMoney, generateBookingNum
 import { escapeHtml, setFormStatus, setFormStatusHtml } from "../lib/dom-utils.js";
 import { logClientWarning } from "../lib/logging.js";
 import { createBookingRequest, uploadBookingDocuments } from "../lib/request-service.js";
+import {
+  CUSTOM_PICKUP_VALUE,
+  CUSTOM_RETURN_VALUE,
+  SAME_AS_PICKUP_VALUE,
+  calculateLocationFee,
+  geocodeDeliveryAddress,
+  loadDeliveryPricingConfig,
+  openStreetMapEmbedUrl,
+} from "../lib/location-service.js";
 import { bindCarouselControls } from "../lib/vehicle-card.js";
 import { checkVehicleAvailability, findVehicleByRequestValue, loadAvailableVehicles } from "../lib/vehicle-service.js";
 
@@ -22,8 +31,12 @@ const submitButton = form.querySelector('button[type="submit"]');
 const stepPanels = [...form.querySelectorAll("[data-booking-step]")];
 const stepIndicators = [...form.querySelectorAll("[data-step-indicator]")];
 const timePickers = [...form.querySelectorAll("[data-time-picker]")];
+const locationFeePreview = document.querySelector("#locationFeePreview");
+const customLocationFields = document.querySelector("#customLocationFields");
 
 let vehicles = [];
+let deliveryConfig = null;
+let locationFeeBreakdown = { totalLocationFee: 0 };
 let availabilityState = { status: "unknown", key: "" };
 let availabilityRequestId = 0;
 let currentStep = 0;
@@ -188,7 +201,8 @@ function syncTimePicker(picker) {
   const display = picker.querySelector("[data-time-display]");
   const periodDisplay = picker.querySelector("[data-time-period]");
   const numeric = picker.querySelector("[data-time-numeric]");
-  const hand = picker.querySelector("[data-time-hand]");
+  const hourHand = picker.querySelector("[data-time-hour-hand]");
+  const minuteHand = picker.querySelector("[data-time-minute-hand]");
   const state = timeState(picker);
   const mode = picker.dataset.timeMode || "hour";
   const label = formatTimeLabel(input?.value);
@@ -201,10 +215,17 @@ function syncTimePicker(picker) {
   picker.dataset.timeMinute = String(state.minute);
   picker.dataset.timePeriod = state.period;
 
-  if (hand) {
-    const angle = mode === "minute" ? state.minute * 6 : (state.hour12 % 12) * 30;
-    hand.style.setProperty("--hand-angle", `${angle}deg`);
+  if (hourHand) {
+    const hourAngle = ((state.hour12 % 12) + state.minute / 60) * 30;
+    hourHand.style.setProperty("--hand-angle", `${hourAngle}deg`);
   }
+
+  if (minuteHand) {
+    minuteHand.style.setProperty("--hand-angle", `${state.minute * 6}deg`);
+  }
+
+  picker.classList.toggle("time-mode-hour", mode === "hour");
+  picker.classList.toggle("time-mode-minute", mode === "minute");
 
   picker.querySelectorAll("[data-time-mode]").forEach((button) => {
     button.classList.toggle("active", button.dataset.timeMode === mode);
@@ -271,6 +292,269 @@ function updateTimeFromClockEvent(picker, event) {
 
 function timePickerTriggerFor(name) {
   return form.elements[name]?.closest("[data-time-picker]")?.querySelector(".time-picker-trigger");
+}
+
+function numberOrNull(value) {
+  if (value === null || value === undefined || value === "") return null;
+
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function deliveryHubsFor(kind) {
+  const hubs = deliveryConfig?.hubs || [];
+
+  return hubs.filter((hub) => {
+    if (hub.active === false) return false;
+    return kind === "pickup" ? hub.public_pickup_enabled !== false : hub.public_return_enabled !== false;
+  });
+}
+
+function populateLocationSelects() {
+  const pickupSelect = form.elements.pickup_location;
+  const returnSelect = form.elements.return_location;
+
+  if (!pickupSelect || !returnSelect) return;
+
+  const pickupValue = pickupSelect.value || "LAX Airport";
+  const returnValue = returnSelect.value || SAME_AS_PICKUP_VALUE;
+
+  pickupSelect.innerHTML = [
+    ...deliveryHubsFor("pickup").map(
+      (hub) =>
+        `<option value="${escapeHtml(hub.name)}" data-location-type="hub" data-hub-id="${escapeHtml(String(hub.id || ""))}">${escapeHtml(hub.name)}</option>`,
+    ),
+    `<option value="${CUSTOM_PICKUP_VALUE}" data-location-type="custom">${CUSTOM_PICKUP_VALUE}</option>`,
+  ].join("");
+
+  returnSelect.innerHTML = [
+    `<option value="${SAME_AS_PICKUP_VALUE}" data-location-type="same_as_pickup">${SAME_AS_PICKUP_VALUE}</option>`,
+    ...deliveryHubsFor("return").map(
+      (hub) =>
+        `<option value="${escapeHtml(hub.name)}" data-location-type="hub" data-hub-id="${escapeHtml(String(hub.id || ""))}">${escapeHtml(hub.name)}</option>`,
+    ),
+    `<option value="${CUSTOM_RETURN_VALUE}" data-location-type="custom">${CUSTOM_RETURN_VALUE}</option>`,
+  ].join("");
+
+  if ([...pickupSelect.options].some((option) => option.value === pickupValue)) pickupSelect.value = pickupValue;
+  if ([...returnSelect.options].some((option) => option.value === returnValue)) returnSelect.value = returnValue;
+}
+
+function selectedLocationOption(kind) {
+  const select = form.elements[`${kind}_location`];
+
+  return select?.selectedOptions?.[0] || null;
+}
+
+function locationType(kind) {
+  const option = selectedLocationOption(kind);
+  const value = form.elements[`${kind}_location`]?.value || "";
+
+  if (option?.dataset.locationType) return option.dataset.locationType;
+  if (kind === "return" && value === SAME_AS_PICKUP_VALUE) return "same_as_pickup";
+  if (value === CUSTOM_PICKUP_VALUE || value === CUSTOM_RETURN_VALUE) return "custom";
+
+  return "hub";
+}
+
+function locationStatusElement(kind) {
+  return customLocationFields?.querySelector(`[data-location-status="${kind}"]`) || null;
+}
+
+function setLocationStatus(kind, message, tone = "") {
+  const element = locationStatusElement(kind);
+  if (!element) return;
+
+  element.textContent = message;
+  element.dataset.tone = tone;
+}
+
+function renderLocationMap(kind) {
+  const map = customLocationFields?.querySelector(`[data-location-map="${kind}"]`);
+  const lat = numberOrNull(form.elements[`${kind}_lat`]?.value);
+  const lng = numberOrNull(form.elements[`${kind}_lng`]?.value);
+  const address = form.elements[`${kind}_custom_address`]?.value || "";
+
+  if (!map) return;
+
+  if (lat === null || lng === null) {
+    map.innerHTML = "";
+    return;
+  }
+
+  map.innerHTML = `
+    <iframe
+      title="${escapeHtml(kind === "pickup" ? "Pickup location map" : "Return location map")}"
+      loading="lazy"
+      src="${escapeHtml(openStreetMapEmbedUrl(lat, lng))}"
+    ></iframe>
+    <a href="https://www.openstreetmap.org/?mlat=${encodeURIComponent(String(lat))}&mlon=${encodeURIComponent(String(lng))}#map=15/${encodeURIComponent(String(lat))}/${encodeURIComponent(String(lng))}" target="_blank" rel="noopener">
+      ${escapeHtml(address || "Open map")}
+    </a>
+  `;
+}
+
+function selectedLocation(kind) {
+  const type = locationType(kind);
+  const option = selectedLocationOption(kind);
+  const addressInput = form.elements[`${kind}_custom_address`];
+
+  return {
+    type,
+    label: option?.textContent?.trim() || form.elements[`${kind}_location`]?.value || "",
+    hubId: option?.dataset.hubId || "",
+    address: type === "custom" ? String(addressInput?.value || "").trim() : "",
+    lat: type === "custom" ? numberOrNull(form.elements[`${kind}_lat`]?.value) : null,
+    lng: type === "custom" ? numberOrNull(form.elements[`${kind}_lng`]?.value) : null,
+  };
+}
+
+function displayLocation(kind) {
+  const location = selectedLocation(kind);
+
+  if (kind === "return" && location.type === "same_as_pickup") {
+    const pickup = selectedLocation("pickup");
+    return pickup.type === "custom" ? pickup.address || "Same as pickup" : pickup.label || "Same as pickup";
+  }
+
+  if (location.type === "custom") {
+    return location.address || (kind === "pickup" ? "Custom delivery" : "Custom return");
+  }
+
+  return location.label || "Not selected";
+}
+
+function hasPendingCustomLocation(kind) {
+  const location = selectedLocation(kind);
+
+  return location.type === "custom" && (!location.address || location.lat === null || location.lng === null);
+}
+
+function refreshLocationFee() {
+  const pickup = selectedLocation("pickup");
+  const returnLocation = selectedLocation("return");
+
+  locationFeeBreakdown = calculateLocationFee({
+    pickup,
+    returnLocation,
+    hubs: deliveryConfig?.hubs || [],
+    serviceAreas: deliveryConfig?.serviceAreas || [],
+    settings: deliveryConfig?.settings,
+  });
+
+  form.elements.total_location_fee.value = String(locationFeeBreakdown.totalLocationFee || 0);
+  form.elements.location_fee_breakdown.value = JSON.stringify(locationFeeBreakdown);
+
+  const pendingPickup = hasPendingCustomLocation("pickup");
+  const pendingReturn = hasPendingCustomLocation("return");
+
+  if (locationFeePreview) {
+    const total = Number(locationFeeBreakdown.totalLocationFee || 0);
+    const detailParts = [
+      locationFeeBreakdown.pickupDeliveryFee ? `Pickup ${formatMoney(locationFeeBreakdown.pickupDeliveryFee)}` : "",
+      locationFeeBreakdown.returnCollectionFee ? `Return ${formatMoney(locationFeeBreakdown.returnCollectionFee)}` : "",
+      locationFeeBreakdown.oneWayCustomSurcharge ? `One-way ${formatMoney(locationFeeBreakdown.oneWayCustomSurcharge)}` : "",
+    ].filter(Boolean);
+
+    if (pendingPickup || pendingReturn) {
+      locationFeePreview.className = "location-fee-preview pending";
+      locationFeePreview.innerHTML = `
+        <span>Location pricing</span>
+        <strong>Search custom ${pendingPickup && pendingReturn ? "pickup and return" : pendingPickup ? "pickup" : "return"} address to preview</strong>
+      `;
+    } else {
+      locationFeePreview.className = `location-fee-preview${total > 0 ? " priced" : ""}`;
+      locationFeePreview.innerHTML = `
+        <span>Location pricing</span>
+        <strong>${total > 0 ? `${formatMoney(total)} estimated location fee` : "No delivery fee for selected hubs"}</strong>
+        ${detailParts.length ? `<small>${escapeHtml(detailParts.join(" / "))}</small>` : ""}
+      `;
+    }
+  }
+
+  return locationFeeBreakdown;
+}
+
+function syncLocationFields() {
+  const pickup = selectedLocation("pickup");
+  const returnLocation = selectedLocation("return");
+
+  form.elements.pickup_location_type.value = pickup.type;
+  form.elements.return_location_type.value = returnLocation.type;
+  form.elements.pickup_location_hub_id.value = pickup.type === "hub" ? pickup.hubId : "";
+  form.elements.return_location_hub_id.value = returnLocation.type === "hub" ? returnLocation.hubId : "";
+
+  customLocationFields?.querySelectorAll("[data-location-panel]").forEach((panel) => {
+    const kind = panel.dataset.locationPanel;
+    panel.hidden = locationType(kind) !== "custom";
+  });
+
+  ["pickup", "return"].forEach((kind) => {
+    if (locationType(kind) !== "custom") return;
+    renderLocationMap(kind);
+  });
+
+  refreshLocationFee();
+}
+
+async function geocodeLocation(kind) {
+  const addressInput = form.elements[`${kind}_custom_address`];
+  const button = form.querySelector(`[data-location-geocode="${kind}"]`);
+  const address = String(addressInput?.value || "").trim();
+
+  if (!address) {
+    setLocationStatus(kind, "Enter an address before searching.", "error");
+    addressInput?.focus();
+    return false;
+  }
+
+  button.disabled = true;
+  setLocationStatus(kind, "Searching map...", "loading");
+
+  try {
+    const result = await geocodeDeliveryAddress(address);
+    form.elements[`${kind}_custom_address`].value = result.address;
+    form.elements[`${kind}_lat`].value = String(result.lat);
+    form.elements[`${kind}_lng`].value = String(result.lng);
+    setLocationStatus(kind, "Address mapped. Fee preview updated.", "success");
+    renderLocationMap(kind);
+    syncLocationFields();
+    renderEstimate();
+    renderBookingSummaryDetails();
+    return true;
+  } catch (error) {
+    logClientWarning("Custom location geocoding failed.", error);
+    form.elements[`${kind}_lat`].value = "";
+    form.elements[`${kind}_lng`].value = "";
+    setLocationStatus(kind, error.message || "Could not map this address.", "error");
+    renderLocationMap(kind);
+    syncLocationFields();
+    renderEstimate();
+    renderBookingSummaryDetails();
+    return false;
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function ensureCustomLocationReady(kind) {
+  if (locationType(kind) !== "custom") return true;
+
+  if (!hasPendingCustomLocation(kind)) return true;
+
+  const input = form.elements[`${kind}_custom_address`];
+  if (!String(input?.value || "").trim()) {
+    reportStepInvalid(input, `${kind === "pickup" ? "Pickup" : "Return"} custom address is required.`);
+    return false;
+  }
+
+  return geocodeLocation(kind);
+}
+
+function estimateTotalWithLocation(estimate) {
+  if (estimate.total === null || estimate.total === undefined) return estimate.total;
+
+  return estimate.total + Number(locationFeeBreakdown.totalLocationFee || 0);
 }
 
 function selectVehicleFromUrl() {
@@ -410,6 +694,8 @@ async function refreshAvailability() {
 function renderEstimate() {
   const vehicle = selectedVehicle();
   const estimate = calculateEstimate(vehicle, form.elements.pickup_date.value, form.elements.return_date.value);
+  const locationFee = Number(locationFeeBreakdown.totalLocationFee || 0);
+  const total = estimateTotalWithLocation(estimate);
 
   if (!vehicle || !estimate.rentalDays) {
     bookingEstimate.innerHTML = `
@@ -431,9 +717,17 @@ function renderEstimate() {
       <span>Refundable deposit</span>
       <strong>${formatMoney(estimate.deposit, estimate.currency)}</strong>
     </div>
+    ${
+      locationFee > 0 || hasPendingCustomLocation("pickup") || hasPendingCustomLocation("return")
+        ? `<div class="estimate-row">
+            <span>Delivery / location fee</span>
+            <strong>${hasPendingCustomLocation("pickup") || hasPendingCustomLocation("return") ? "Map address" : formatMoney(locationFee, estimate.currency)}</strong>
+          </div>`
+        : ""
+    }
     <div class="estimate-row total">
       <span>Estimated total</span>
-      <strong>${formatMoney(estimate.total, estimate.currency)}</strong>
+      <strong>${formatMoney(total, estimate.currency)}</strong>
     </div>
   `;
 }
@@ -468,8 +762,8 @@ function renderBookingSummaryDetails() {
   const returnDate = formatSummaryDate(form.elements.return_date.value);
   const pickupTime = formatSummaryTime(form.elements.pickup_time.value);
   const returnTime = formatSummaryTime(form.elements.return_time.value);
-  const pickupLocation = form.elements.pickup_location.value;
-  const returnLocation = form.elements.return_location.value;
+  const pickupLocation = displayLocation("pickup");
+  const returnLocation = displayLocation("return");
 
   bookingSummaryDetails.innerHTML = `
     <div class="summary-detail-row">
@@ -580,6 +874,14 @@ async function validateStep(stepIndex) {
       return false;
     }
 
+    if (!(await ensureCustomLocationReady("pickup"))) {
+      return false;
+    }
+
+    if (!(await ensureCustomLocationReady("return"))) {
+      return false;
+    }
+
     const liveAvailability = await refreshAvailability();
 
     if (liveAvailability.status === "checking") {
@@ -629,6 +931,8 @@ function validateBooking() {
   if (!pickupDate) return "Pick-up date is required.";
   if (!returnDate) return "Drop-off date is required.";
   if (!rentalDays) return "Drop-off date must be after or the same as the pick-up date.";
+  if (hasPendingCustomLocation("pickup")) return "Please search and map the custom pickup address.";
+  if (hasPendingCustomLocation("return")) return "Please search and map the custom return address.";
   if (!String(data.get("date_of_birth") || "").trim()) return "Date of birth is required.";
   if (age !== null && age < 21) return "Drivers must be at least 21 years old.";
   if (!String(data.get("driver_license_number") || "").trim()) return "Driver license number is required.";
@@ -672,6 +976,9 @@ function bookingPayload(bookingId, bookingNumber, paymentAccessToken) {
   const data = new FormData(form);
   const vehicle = selectedVehicle();
   const estimate = calculateEstimate(vehicle, String(data.get("pickup_date") || ""), String(data.get("return_date") || ""));
+  const pickup = selectedLocation("pickup");
+  const returnLocation = selectedLocation("return");
+  const estimatedTotal = estimateTotalWithLocation(estimate);
 
   return {
     id: bookingId,
@@ -684,13 +991,25 @@ function bookingPayload(bookingId, bookingNumber, paymentAccessToken) {
     return_date: data.get("return_date") || null,
     pickup_time: data.get("pickup_time") || null,
     return_time: data.get("return_time") || null,
-    pickup_location: String(data.get("pickup_location") || "").trim() || null,
-    return_location: String(data.get("return_location") || "").trim() || null,
+    pickup_location: displayLocation("pickup"),
+    return_location: displayLocation("return"),
+    pickup_location_type: pickup.type,
+    return_location_type: returnLocation.type,
+    pickup_location_hub_id: pickup.type === "hub" && pickup.hubId ? pickup.hubId : null,
+    return_location_hub_id: returnLocation.type === "hub" && returnLocation.hubId ? returnLocation.hubId : null,
+    pickup_custom_address: pickup.type === "custom" ? pickup.address : null,
+    return_custom_address: returnLocation.type === "custom" ? returnLocation.address : null,
+    pickup_lat: pickup.type === "custom" ? pickup.lat : null,
+    pickup_lng: pickup.type === "custom" ? pickup.lng : null,
+    return_lat: returnLocation.type === "custom" ? returnLocation.lat : null,
+    return_lng: returnLocation.type === "custom" ? returnLocation.lng : null,
+    total_location_fee: Number(locationFeeBreakdown.totalLocationFee || 0),
+    location_fee_breakdown: locationFeeBreakdown,
     rental_days: estimate.rentalDays,
     daily_rate_snapshot: estimate.dailyRate,
     deposit_snapshot: estimate.deposit,
     estimated_subtotal: estimate.subtotal,
-    estimated_total: estimate.total,
+    estimated_total: estimatedTotal,
     currency: estimate.currency || "USD",
     payment_method: String(data.get("payment_method") || "stripe_card"),
     customer_first_name: String(data.get("customer_first_name") || "").trim(),
@@ -713,14 +1032,15 @@ function bookingPayload(bookingId, bookingNumber, paymentAccessToken) {
 function paymentRedirectUrl(bookingNumber, paymentAccessToken) {
   const vehicle = selectedVehicle();
   const estimate = calculateEstimate(vehicle, form.elements.pickup_date.value, form.elements.return_date.value);
+  const total = estimateTotalWithLocation(estimate);
   const params = new URLSearchParams({
     booking: bookingNumber,
     token: paymentAccessToken,
     currency: estimate.currency || "USD",
   });
 
-  if (estimate.total !== null && estimate.total !== undefined) {
-    params.set("amount", String(estimate.total));
+  if (total !== null && total !== undefined) {
+    params.set("amount", String(total));
   }
 
   return window.MIR_CARS.paymentUrl(`?${params.toString()}`);
@@ -796,6 +1116,12 @@ function bindBookingForm() {
     selectVehicleFromPicker(option.dataset.vehicleValue);
   });
 
+  form.querySelectorAll("[data-location-geocode]").forEach((button) => {
+    button.addEventListener("click", () => {
+      geocodeLocation(button.dataset.locationGeocode);
+    });
+  });
+
   document.addEventListener("click", (event) => {
     if (event.target.closest(".vehicle-picker-field")) return;
 
@@ -840,6 +1166,19 @@ function bindBookingForm() {
 
   ["change", "input"].forEach((eventName) => {
     form.addEventListener(eventName, (event) => {
+      if (event.target.name === "pickup_custom_address" || event.target.name === "return_custom_address") {
+        const kind = event.target.name.startsWith("pickup") ? "pickup" : "return";
+        form.elements[`${kind}_lat`].value = "";
+        form.elements[`${kind}_lng`].value = "";
+        setLocationStatus(kind, "Search this address to preview the fee.", "");
+        renderLocationMap(kind);
+      }
+
+      if (["pickup_location", "return_location", "pickup_custom_address", "return_custom_address"].includes(event.target.name)) {
+        syncLocationFields();
+        renderEstimate();
+      }
+
       if (["vehicle", "pickup_date", "return_date"].includes(event.target.name)) {
         renderSelectedVehicle();
         renderEstimate();
@@ -917,11 +1256,13 @@ async function initBookingPage() {
     link.href = window.MIR_CARS.homeUrl(link.dataset.homeLink);
   });
 
-  vehicles = await loadAvailableVehicles();
+  [vehicles, deliveryConfig] = await Promise.all([loadAvailableVehicles(), loadDeliveryPricingConfig()]);
   populateVehicleSelect();
+  populateLocationSelects();
   selectVehicleFromUrl();
   renderVehiclePickerOptions();
   syncVehiclePickerSelection();
+  syncLocationFields();
   renderSelectedVehicle();
   renderEstimate();
   renderBookingSummaryDetails();
