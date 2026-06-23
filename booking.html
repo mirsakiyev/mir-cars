@@ -141,32 +141,26 @@
                         <small data-time-period>Choose time</small>
                       </button>
                       <div class="time-picker-panel" id="pickupTimePanel" hidden>
-                        <div class="time-clock-face" data-time-face role="application" aria-label="Analog pickup time picker">
-                          <span class="time-clock-mark triangle" style="--mark-angle: 0deg"></span>
-                          <span class="time-clock-mark round" style="--mark-angle: 30deg"></span>
-                          <span class="time-clock-mark round" style="--mark-angle: 60deg"></span>
-                          <span class="time-clock-mark baton" style="--mark-angle: 90deg"></span>
-                          <span class="time-clock-mark round" style="--mark-angle: 120deg"></span>
-                          <span class="time-clock-mark round" style="--mark-angle: 150deg"></span>
-                          <span class="time-clock-mark baton" style="--mark-angle: 180deg"></span>
-                          <span class="time-clock-mark round" style="--mark-angle: 210deg"></span>
-                          <span class="time-clock-mark round" style="--mark-angle: 240deg"></span>
-                          <span class="time-clock-mark baton" style="--mark-angle: 270deg"></span>
-                          <span class="time-clock-mark round" style="--mark-angle: 300deg"></span>
-                          <span class="time-clock-mark round" style="--mark-angle: 330deg"></span>
-                          <span class="time-clock-hand hour-hand" data-time-hour-hand></span>
-                          <span class="time-clock-hand minute-hand" data-time-minute-hand></span>
-                          <span class="time-clock-center"></span>
+                        <div class="time-slider-display">
+                          <strong data-time-numeric>--:--</strong>
+                          <span>Slide to set time</span>
                         </div>
-                        <div class="time-picker-mode" aria-label="Time picker mode">
-                          <button class="active" type="button" data-time-mode="hour">Hour</button>
-                          <button type="button" data-time-mode="minute">Minute</button>
+                        <div class="time-slider-grid" aria-label="Pickup time sliders">
+                          <label class="time-slider-control">
+                            <span>Hour</span>
+                            <input type="range" min="1" max="12" step="1" value="12" data-time-slider="hour" aria-label="Pickup hour" />
+                            <strong data-time-slider-value="hour">12</strong>
+                          </label>
+                          <label class="time-slider-control">
+                            <span>Minute</span>
+                            <input type="range" min="0" max="59" step="1" value="0" data-time-slider="minute" aria-label="Pickup minute" />
+                            <strong data-time-slider-value="minute">00</strong>
+                          </label>
                         </div>
                         <div class="time-picker-period" aria-label="Time period">
                           <button class="active" type="button" data-time-period-option="AM">AM</button>
                           <button type="button" data-time-period-option="PM">PM</button>
                         </div>
-                        <p class="time-picker-numeric" data-time-numeric>--:--</p>
                       </div>
                     </div>
                   </div>
@@ -192,32 +186,26 @@
                         <small data-time-period>Choose time</small>
                       </button>
                       <div class="time-picker-panel" id="returnTimePanel" hidden>
-                        <div class="time-clock-face" data-time-face role="application" aria-label="Analog return time picker">
-                          <span class="time-clock-mark triangle" style="--mark-angle: 0deg"></span>
-                          <span class="time-clock-mark round" style="--mark-angle: 30deg"></span>
-                          <span class="time-clock-mark round" style="--mark-angle: 60deg"></span>
-                          <span class="time-clock-mark baton" style="--mark-angle: 90deg"></span>
-                          <span class="time-clock-mark round" style="--mark-angle: 120deg"></span>
-                          <span class="time-clock-mark round" style="--mark-angle: 150deg"></span>
-                          <span class="time-clock-mark baton" style="--mark-angle: 180deg"></span>
-                          <span class="time-clock-mark round" style="--mark-angle: 210deg"></span>
-                          <span class="time-clock-mark round" style="--mark-angle: 240deg"></span>
-                          <span class="time-clock-mark baton" style="--mark-angle: 270deg"></span>
-                          <span class="time-clock-mark round" style="--mark-angle: 300deg"></span>
-                          <span class="time-clock-mark round" style="--mark-angle: 330deg"></span>
-                          <span class="time-clock-hand hour-hand" data-time-hour-hand></span>
-                          <span class="time-clock-hand minute-hand" data-time-minute-hand></span>
-                          <span class="time-clock-center"></span>
+                        <div class="time-slider-display">
+                          <strong data-time-numeric>--:--</strong>
+                          <span>Slide to set time</span>
                         </div>
-                        <div class="time-picker-mode" aria-label="Time picker mode">
-                          <button class="active" type="button" data-time-mode="hour">Hour</button>
-                          <button type="button" data-time-mode="minute">Minute</button>
+                        <div class="time-slider-grid" aria-label="Return time sliders">
+                          <label class="time-slider-control">
+                            <span>Hour</span>
+                            <input type="range" min="1" max="12" step="1" value="12" data-time-slider="hour" aria-label="Return hour" />
+                            <strong data-time-slider-value="hour">12</strong>
+                          </label>
+                          <label class="time-slider-control">
+                            <span>Minute</span>
+                            <input type="range" min="0" max="59" step="1" value="0" data-time-slider="minute" aria-label="Return minute" />
+                            <strong data-time-slider-value="minute">00</strong>
+                          </label>
                         </div>
                         <div class="time-picker-period" aria-label="Time period">
                           <button class="active" type="button" data-time-period-option="AM">AM</button>
                           <button type="button" data-time-period-option="PM">PM</button>
                         </div>
-                        <p class="time-picker-numeric" data-time-numeric>--:--</p>
                       </div>
                     </div>
                   </div>

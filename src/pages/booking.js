@@ -40,7 +40,6 @@ let locationFeeBreakdown = { totalLocationFee: 0 };
 let availabilityState = { status: "unknown", key: "" };
 let availabilityRequestId = 0;
 let currentStep = 0;
-let activeClockPicker = null;
 
 function selectedVehicle() {
   return findVehicleByRequestValue(vehicles, vehicleSelect.value) || vehicles[0] || null;
@@ -201,10 +200,11 @@ function syncTimePicker(picker) {
   const display = picker.querySelector("[data-time-display]");
   const periodDisplay = picker.querySelector("[data-time-period]");
   const numeric = picker.querySelector("[data-time-numeric]");
-  const hourHand = picker.querySelector("[data-time-hour-hand]");
-  const minuteHand = picker.querySelector("[data-time-minute-hand]");
+  const hourSlider = picker.querySelector('[data-time-slider="hour"]');
+  const minuteSlider = picker.querySelector('[data-time-slider="minute"]');
+  const hourSliderValue = picker.querySelector('[data-time-slider-value="hour"]');
+  const minuteSliderValue = picker.querySelector('[data-time-slider-value="minute"]');
   const state = timeState(picker);
-  const mode = picker.dataset.timeMode || "hour";
   const label = formatTimeLabel(input?.value);
 
   if (display) display.textContent = label.main;
@@ -215,21 +215,10 @@ function syncTimePicker(picker) {
   picker.dataset.timeMinute = String(state.minute);
   picker.dataset.timePeriod = state.period;
 
-  if (hourHand) {
-    const hourAngle = ((state.hour12 % 12) + state.minute / 60) * 30;
-    hourHand.style.setProperty("--hand-angle", `${hourAngle}deg`);
-  }
-
-  if (minuteHand) {
-    minuteHand.style.setProperty("--hand-angle", `${state.minute * 6}deg`);
-  }
-
-  picker.classList.toggle("time-mode-hour", mode === "hour");
-  picker.classList.toggle("time-mode-minute", mode === "minute");
-
-  picker.querySelectorAll("[data-time-mode]").forEach((button) => {
-    button.classList.toggle("active", button.dataset.timeMode === mode);
-  });
+  if (hourSlider) hourSlider.value = String(state.hour12);
+  if (minuteSlider) minuteSlider.value = String(state.minute);
+  if (hourSliderValue) hourSliderValue.textContent = String(state.hour12);
+  if (minuteSliderValue) minuteSliderValue.textContent = padTime(state.minute);
 
   picker.querySelectorAll("[data-time-period-option]").forEach((button) => {
     button.classList.toggle("active", button.dataset.timePeriodOption === state.period);
@@ -267,27 +256,6 @@ function setTimePickerOpen(picker, isOpen) {
     setVehiclePickerOpen(false);
     syncTimePicker(picker);
   }
-}
-
-function updateTimeFromClockEvent(picker, event) {
-  const face = picker.querySelector("[data-time-face]");
-  if (!face) return;
-
-  const rect = face.getBoundingClientRect();
-  const x = event.clientX - rect.left - rect.width / 2;
-  const y = event.clientY - rect.top - rect.height / 2;
-  const normalizedAngle = (Math.atan2(y, x) * 180) / Math.PI + 90;
-  const angle = (normalizedAngle + 360) % 360;
-  const mode = picker.dataset.timeMode || "hour";
-  const state = timeState(picker);
-
-  if (mode === "minute") {
-    state.minute = Math.round(angle / 6) % 60;
-  } else {
-    state.hour12 = Math.round(angle / 30) % 12 || 12;
-  }
-
-  setTimePickerValue(picker, state);
 }
 
 function timePickerTriggerFor(name) {
@@ -1049,19 +1017,24 @@ function paymentRedirectUrl(bookingNumber, paymentAccessToken) {
 function bindBookingForm() {
   timePickers.forEach((picker) => {
     const trigger = picker.querySelector(".time-picker-trigger");
-    const face = picker.querySelector("[data-time-face]");
 
-    picker.dataset.timeMode = picker.dataset.timeMode || "hour";
     syncTimePicker(picker);
 
     trigger?.addEventListener("click", () => {
       setTimePickerOpen(picker, picker.querySelector(".time-picker-panel")?.hidden !== false);
     });
 
-    picker.querySelectorAll("[data-time-mode]").forEach((button) => {
-      button.addEventListener("click", () => {
-        picker.dataset.timeMode = button.dataset.timeMode;
-        syncTimePicker(picker);
+    picker.querySelectorAll("[data-time-slider]").forEach((slider) => {
+      slider.addEventListener("input", () => {
+        const state = timeState(picker);
+
+        if (slider.dataset.timeSlider === "hour") {
+          state.hour12 = Number(slider.value);
+        } else {
+          state.minute = Number(slider.value);
+        }
+
+        setTimePickerValue(picker, state);
       });
     });
 
@@ -1072,33 +1045,6 @@ function bindBookingForm() {
           period: button.dataset.timePeriodOption,
         });
       });
-    });
-
-    face?.addEventListener("pointerdown", (event) => {
-      event.preventDefault();
-      activeClockPicker = picker;
-      face.setPointerCapture?.(event.pointerId);
-      updateTimeFromClockEvent(picker, event);
-    });
-
-    face?.addEventListener("pointermove", (event) => {
-      if (activeClockPicker !== picker) return;
-
-      updateTimeFromClockEvent(picker, event);
-    });
-
-    face?.addEventListener("pointerup", () => {
-      if (activeClockPicker !== picker) return;
-
-      activeClockPicker = null;
-      if ((picker.dataset.timeMode || "hour") === "hour") {
-        picker.dataset.timeMode = "minute";
-        syncTimePicker(picker);
-      }
-    });
-
-    face?.addEventListener("pointercancel", () => {
-      if (activeClockPicker === picker) activeClockPicker = null;
     });
   });
 

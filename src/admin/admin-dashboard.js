@@ -1,3 +1,4 @@
+import "../../vehicle-data.js";
 import { escapeHtml } from "../lib/dom-utils.js";
 import { formatMoney } from "../lib/booking-utils.js";
 import { calculateLocationFee, deliverySettingsFromForm, fallbackDeliveryPricingConfig, geocodeDeliveryAddress } from "../lib/location-service.js";
@@ -16,22 +17,43 @@ document.body.innerHTML = adminShell(titles[page] || "Dashboard");
 
 const app = document.querySelector("#adminApp");
 
-const bookingStatuses = [
-  ["approved", "Approve"],
-  ["declined", "Reject"],
-  ["awaiting_payment", "Awaiting payment"],
-  ["payment_pending", "Payment pending"],
-  ["paid_pending_approval", "Paid pending approval"],
-  ["confirmed", "Confirmed"],
-  ["paid", "Paid"],
-  ["active", "Active"],
-  ["completed", "Completed"],
+const bookingActionGroups = [
+  {
+    title: "Review",
+    note: "Decide whether this request can move forward.",
+    actions: [
+      ["approved", "Approve"],
+      ["declined", "Reject"],
+    ],
+  },
+  {
+    title: "Payment",
+    note: "Track checkout and payment approval.",
+    actions: [
+      ["awaiting_payment", "Awaiting payment"],
+      ["payment_pending", "Payment pending"],
+      ["paid_pending_approval", "Paid pending approval"],
+      ["paid", "Paid"],
+    ],
+  },
+  {
+    title: "Trip",
+    note: "Move the rental through pickup, active use, and return.",
+    actions: [
+      ["confirmed", "Confirmed"],
+      ["active", "Active"],
+      ["completed", "Completed"],
+    ],
+  },
 ];
 
 const paymentStatuses = ["payment_pending", "requires_action", "paid", "failed", "cancelled", "refunded", "partially_refunded"];
 const securityDepositStatuses = ["pending", "authorized", "captured", "released", "refunded", "not_required"];
 const refundStatuses = ["none", "pending", "refunded", "partially_refunded", "failed"];
 const vehicleStatuses = ["available", "rented", "maintenance", "inactive"];
+const categoryOrder = ["SUV", "Sedan", "Convertible", "Coupe", "Van"];
+const transmissionOptions = ["Automatic", "Manual"];
+const fuelTypeOptions = ["Gas", "Hybrid", "Electric", "Diesel", "Plug-in Hybrid"];
 const activeBookingStatuses = ["pending", "approved", "awaiting_payment", "payment_pending", "paid_pending_approval", "confirmed", "paid", "active"];
 
 let vehicleAdminState = {
@@ -119,6 +141,53 @@ function renderBookingPaymentPanel(payment, booking) {
             </div>`
           : `<p>No Stripe references yet.</p>`
       }
+    </div>
+  `;
+}
+
+function renderBookingActions(booking) {
+  const currentStatus = booking.booking_status || booking.status || "unknown";
+
+  return `
+    <div class="booking-action-panel">
+      <div class="booking-action-head">
+        <div>
+          <span>Booking workflow</span>
+          <strong>Current status: ${escapeHtml(currentStatus)}</strong>
+        </div>
+      </div>
+      <div class="booking-action-groups">
+        ${bookingActionGroups
+          .map(
+            (group) => `
+              <section class="booking-action-group">
+                <div>
+                  <strong>${escapeHtml(group.title)}</strong>
+                  <span>${escapeHtml(group.note)}</span>
+                </div>
+                <div class="booking-action-buttons">
+                  ${group.actions
+                    .map(([status, label]) => {
+                      const isActive = status === currentStatus;
+
+                      return `<button type="button" class="button secondary${isActive ? " active" : ""}" data-booking-status="${status}"${isActive ? ' aria-current="true"' : ""}>${escapeHtml(label)}</button>`;
+                    })
+                    .join("")}
+                </div>
+              </section>
+            `,
+          )
+          .join("")}
+        <section class="booking-action-group notes-save">
+          <div>
+            <strong>Notes</strong>
+            <span>Save the admin note field above.</span>
+          </div>
+          <div class="booking-action-buttons">
+            <button type="button" class="button primary" data-save-notes>Save notes</button>
+          </div>
+        </section>
+      </div>
     </div>
   `;
 }
@@ -215,10 +284,7 @@ async function renderBookings(client) {
                     : `<p>No uploaded documents.</p>`
                 }
               </div>
-              <div class="admin-actions">
-                ${bookingStatuses.map(([status, label]) => `<button type="button" class="button secondary" data-booking-status="${status}">${label}</button>`).join("")}
-                <button type="button" class="button primary" data-save-notes>Save notes</button>
-              </div>
+              ${renderBookingActions(booking)}
             </article>
           `;
         })
@@ -283,6 +349,72 @@ function splitTags(value) {
 
 function checkboxAttribute(value) {
   return value ? " checked" : "";
+}
+
+function selectedAttribute(value, selectedValue) {
+  return String(value || "") === String(selectedValue || "") ? " selected" : "";
+}
+
+function optionHtml(value, selectedValue) {
+  return `<option value="${escapeHtml(value)}"${selectedAttribute(value, selectedValue)}>${escapeHtml(value)}</option>`;
+}
+
+function categoryOptions() {
+  const fallbackCategories = window.MIR_CARS?.vehicles?.map((vehicle) => vehicle.type) || [];
+  const databaseCategories = vehicleAdminState.vehicles.map((vehicle) => vehicle.category);
+  const categories = [...new Set([...categoryOrder, ...fallbackCategories, ...databaseCategories].filter(Boolean))];
+
+  return categories.sort((first, second) => {
+    const firstIndex = categoryOrder.indexOf(first);
+    const secondIndex = categoryOrder.indexOf(second);
+
+    if (firstIndex !== -1 || secondIndex !== -1) {
+      return (firstIndex === -1 ? Number.MAX_SAFE_INTEGER : firstIndex) - (secondIndex === -1 ? Number.MAX_SAFE_INTEGER : secondIndex);
+    }
+
+    return first.localeCompare(second);
+  });
+}
+
+function yearOptions(selectedYear) {
+  const currentYear = new Date().getFullYear();
+  const years = [];
+
+  for (let year = currentYear + 2; year >= currentYear - 24; year -= 1) {
+    years.push(year);
+  }
+
+  if (selectedYear && !years.includes(Number(selectedYear))) {
+    years.push(Number(selectedYear));
+    years.sort((first, second) => second - first);
+  }
+
+  return years;
+}
+
+function yearPickerHtml(selectedYear) {
+  return `
+    <div class="admin-year-field">
+      <span>Year</span>
+      <div class="admin-year-picker" data-year-picker>
+        <input name="year" value="${escapeHtml(adminNumber(selectedYear))}" placeholder="Select year" readonly data-year-input />
+        <button class="admin-year-trigger" type="button" data-year-picker-toggle aria-label="Choose year"></button>
+        <div class="admin-year-panel" hidden data-year-panel>
+          <div class="admin-year-grid">
+            ${yearOptions(selectedYear)
+              .map(
+                (year) => `
+                  <button class="${Number(selectedYear) === year ? "active" : ""}" type="button" data-year-option="${year}">
+                    ${year}
+                  </button>
+                `,
+              )
+              .join("")}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function imageRowHtml(url = "", index = 0) {
@@ -484,14 +616,32 @@ function renderVehicleEditor(vehicle) {
       <div class="admin-form-grid">
         <label>Title<input name="title" value="${escapeHtml(vehicle?.title || vehicleLabel(vehicle))}" required /></label>
         <label>Slug<input name="slug" value="${escapeHtml(vehicle?.slug || "")}" placeholder="2026-honda-civic-hybrid" /></label>
-        <label>Year<input type="number" name="year" value="${escapeHtml(adminNumber(vehicle?.year))}" /></label>
+        ${yearPickerHtml(vehicle?.year)}
         <label>Make<input name="make" value="${escapeHtml(vehicle?.make || "")}" required /></label>
         <label>Model<input name="model" value="${escapeHtml(vehicle?.model || "")}" required /></label>
         <label>Trim<input name="trim" value="${escapeHtml(vehicle?.trim || "")}" /></label>
         <label>Color<input name="color" value="${escapeHtml(vehicle?.color || "")}" /></label>
-        <label>Category<input name="category" value="${escapeHtml(vehicle?.category || "")}" placeholder="Sedan rental" /></label>
-        <label>Transmission<input name="transmission" value="${escapeHtml(vehicle?.transmission || "Automatic")}" /></label>
-        <label>Fuel type<input name="fuel_type" value="${escapeHtml(vehicle?.fuel_type || "")}" /></label>
+        <label>Category
+          <select name="category">
+            <option value="">Select category</option>
+            ${categoryOptions().map((category) => optionHtml(category, vehicle?.category || "")).join("")}
+          </select>
+        </label>
+        <label>Transmission
+          <select name="transmission">
+            ${[...new Set([...transmissionOptions, vehicle?.transmission].filter(Boolean))]
+              .map((transmission) => optionHtml(transmission, vehicle?.transmission || "Automatic"))
+              .join("")}
+          </select>
+        </label>
+        <label>Fuel type
+          <select name="fuel_type">
+            <option value="">Select fuel type</option>
+            ${[...new Set([...fuelTypeOptions, vehicle?.fuel_type].filter(Boolean))]
+              .map((fuelType) => optionHtml(fuelType, vehicle?.fuel_type || ""))
+              .join("")}
+          </select>
+        </label>
         <label>Seats<input type="number" name="seats" value="${escapeHtml(adminNumber(vehicle?.seats))}" min="1" /></label>
         <label>Daily rate<input type="number" name="daily_rate" value="${escapeHtml(adminNumber(vehicle?.daily_rate))}" min="0" step="1" /></label>
         <label>Deposit<input type="number" name="deposit_amount" value="${escapeHtml(adminNumber(vehicle?.deposit_amount))}" min="0" step="1" /></label>
@@ -876,8 +1026,35 @@ async function renderVehicles(client) {
     const disableHub = event.target.closest("[data-disable-hub]");
     const disableArea = event.target.closest("[data-disable-area]");
     const previewGeocode = event.target.closest("[data-preview-geocode]");
+    const yearToggle = event.target.closest("[data-year-picker-toggle], [data-year-input]");
+    const yearOption = event.target.closest("[data-year-option]");
+    const activeYearPicker = event.target.closest("[data-year-picker]");
 
     try {
+      app.querySelectorAll("[data-year-panel]").forEach((panel) => {
+        if (!activeYearPicker || !activeYearPicker.contains(panel)) panel.hidden = true;
+      });
+
+      if (yearToggle) {
+        const picker = yearToggle.closest("[data-year-picker]");
+        const panel = picker?.querySelector("[data-year-panel]");
+        if (panel) panel.hidden = !panel.hidden;
+        return;
+      }
+
+      if (yearOption) {
+        const picker = yearOption.closest("[data-year-picker]");
+        const input = picker?.querySelector("[data-year-input]");
+        const panel = picker?.querySelector("[data-year-panel]");
+
+        if (input) input.value = yearOption.dataset.yearOption;
+        picker?.querySelectorAll("[data-year-option]").forEach((button) => {
+          button.classList.toggle("active", button === yearOption);
+        });
+        if (panel) panel.hidden = true;
+        return;
+      }
+
       if (viewButton) {
         vehicleAdminState.view = viewButton.dataset.vehicleAdminView;
         renderVehicleAdminShell();
