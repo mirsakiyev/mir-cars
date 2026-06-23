@@ -8,6 +8,9 @@
       content="Request a MIR CARS rental in Los Angeles. Review booking steps, requirements, mileage, deposit, payment, pickup, and delivery details."
     />
     <title>Book a Rental | MIR CARS</title>
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css" />
     <script type="module" src="booking.js"></script>
   </head>
@@ -34,19 +37,272 @@
     </header>
 
     <main class="booking-page-main">
-      <section class="booking-section booking-page-section" id="booking">
-        <div class="booking-copy">
-          <a class="back-link" href="fleet.html">Back to fleet</a>
-          <p class="eyebrow">Secure rental checkout</p>
-          <h1>Complete your booking and continue to payment.</h1>
-          <p>
-            Select your vehicle, dates, pickup details, driver information, and required documents. Live availability
-            is checked from the database before you continue to the payment step.
-          </p>
-
-          <div class="booking-support-row">
-            <div class="selected-vehicle-card" id="selectedVehicleCard" aria-live="polite"></div>
+      <section class="booking-checkout-section" id="booking">
+        <div class="booking-checkout-shell">
+          <div class="booking-checkout-intro">
+            <a class="back-link" href="fleet.html">Back to fleet</a>
+            <p class="eyebrow">Secure rental checkout</p>
+            <h1>Complete Your Reservation</h1>
+            <p>
+              Confirm your trip details and driver information before continuing to secure payment.
+            </p>
           </div>
+
+          <form
+            class="booking-form booking-checkout-form"
+            id="bookingForm"
+            data-success="Thanks. Your booking was created and is ready for payment."
+            data-error="Something went wrong while creating your booking. Please call or email MIR CARS and we will help right away."
+          >
+            <aside class="booking-summary-panel" aria-label="Booking summary">
+              <div class="booking-summary-heading">
+                <p class="eyebrow">Booking summary</p>
+                <h2>Your Rental</h2>
+              </div>
+              <div class="selected-vehicle-card booking-summary-vehicle" id="selectedVehicleCard" aria-live="polite"></div>
+              <div class="booking-summary-details" id="bookingSummaryDetails" aria-live="polite"></div>
+              <div class="booking-summary-availability" id="summaryAvailabilityStatus" aria-live="polite">
+                <span>Availability</span>
+                <strong>Select dates to check</strong>
+              </div>
+              <div class="booking-estimate" id="bookingEstimate" aria-live="polite"></div>
+            </aside>
+
+            <div class="booking-step-column">
+              <ol class="booking-stepper" aria-label="Booking progress">
+                <li class="booking-step-indicator active" data-step-indicator="0" aria-current="step">
+                  <span>1</span>
+                  <strong>Trip Details</strong>
+                </li>
+                <li class="booking-step-indicator" data-step-indicator="1">
+                  <span>2</span>
+                  <strong>Driver Info</strong>
+                </li>
+                <li class="booking-step-indicator" data-step-indicator="2">
+                  <span>3</span>
+                  <strong>License &amp; Address</strong>
+                </li>
+                <li class="booking-step-indicator" data-step-indicator="3">
+                  <span>4</span>
+                  <strong>Documents &amp; Payment</strong>
+                </li>
+              </ol>
+
+              <div class="booking-step-card">
+                <section class="booking-step active" data-booking-step="0" aria-labelledby="bookingStepTripTitle">
+                  <div class="booking-step-header" tabindex="-1">
+                    <p>Step 1 of 4</p>
+                    <h2 id="bookingStepTripTitle">Trip Details</h2>
+                  </div>
+
+                  <div class="form-row">
+                    <label>
+                      Preferred vehicle
+                      <select name="vehicle" id="vehicleSelect" required></select>
+                    </label>
+                  </div>
+
+                  <div class="form-row">
+                    <label>
+                      Pickup date
+                      <input type="date" name="pickup_date" required />
+                    </label>
+                    <label>
+                      Pickup time
+                      <input type="time" name="pickup_time" required />
+                    </label>
+                  </div>
+
+                  <div class="form-row">
+                    <label>
+                      Return date
+                      <input type="date" name="return_date" required />
+                    </label>
+                    <label>
+                      Return time
+                      <input type="time" name="return_time" required />
+                    </label>
+                  </div>
+
+                  <div class="form-row">
+                    <label>
+                      Pickup location
+                      <select name="pickup_location" required>
+                        <option>LAX Airport</option>
+                        <option>Glendale pickup</option>
+                        <option>Custom Delivery Request</option>
+                      </select>
+                    </label>
+                    <label>
+                      Return location
+                      <select name="return_location" required>
+                        <option>Same as pickup</option>
+                        <option>LAX Airport</option>
+                        <option>Glendale return</option>
+                        <option>Custom Return Request</option>
+                      </select>
+                    </label>
+                  </div>
+
+                  <div class="availability-panel" id="availabilityStatus" aria-live="polite">
+                    <span>Availability</span>
+                    <strong>Select dates to check</strong>
+                  </div>
+
+                  <div class="booking-step-actions">
+                    <button class="button primary" type="button" data-step-next>Continue</button>
+                  </div>
+                </section>
+
+                <section class="booking-step" data-booking-step="1" aria-labelledby="bookingStepDriverTitle" hidden>
+                  <div class="booking-step-header" tabindex="-1">
+                    <p>Step 2 of 4</p>
+                    <h2 id="bookingStepDriverTitle">Driver Information</h2>
+                  </div>
+
+                  <div class="form-row">
+                    <label>
+                      First name
+                      <input name="customer_first_name" autocomplete="given-name" required />
+                    </label>
+                    <label>
+                      Last name
+                      <input name="customer_last_name" autocomplete="family-name" required />
+                    </label>
+                  </div>
+
+                  <div class="form-row">
+                    <label>
+                      Email
+                      <input type="email" name="customer_email" autocomplete="email" required />
+                    </label>
+                    <label>
+                      Phone
+                      <input name="customer_phone" autocomplete="tel" required />
+                    </label>
+                  </div>
+
+                  <div class="form-row">
+                    <label>
+                      Date of birth
+                      <input type="date" name="date_of_birth" autocomplete="bday" required />
+                    </label>
+                  </div>
+
+                  <div class="booking-step-actions split">
+                    <button class="button secondary" type="button" data-step-back>Back</button>
+                    <button class="button primary" type="button" data-step-next>Continue</button>
+                  </div>
+                </section>
+
+                <section class="booking-step" data-booking-step="2" aria-labelledby="bookingStepLicenseTitle" hidden>
+                  <div class="booking-step-header" tabindex="-1">
+                    <p>Step 3 of 4</p>
+                    <h2 id="bookingStepLicenseTitle">License &amp; Address</h2>
+                  </div>
+
+                  <div class="form-row">
+                    <label>
+                      Driver license number
+                      <input name="driver_license_number" autocomplete="off" required />
+                    </label>
+                    <label>
+                      License state / region
+                      <input name="driver_license_region" autocomplete="address-level1" required />
+                    </label>
+                  </div>
+
+                  <label>
+                    Address line 1
+                    <input name="address_line1" autocomplete="address-line1" />
+                  </label>
+
+                  <label>
+                    Address line 2
+                    <input name="address_line2" autocomplete="address-line2" />
+                  </label>
+
+                  <div class="form-row">
+                    <label>
+                      City
+                      <input name="city" autocomplete="address-level2" />
+                    </label>
+                    <label>
+                      State / province
+                      <input name="state_province" autocomplete="address-level1" />
+                    </label>
+                  </div>
+
+                  <div class="form-row">
+                    <label>
+                      Postal code
+                      <input name="postal_code" autocomplete="postal-code" />
+                    </label>
+                    <label>
+                      Country
+                      <input name="country" autocomplete="country" value="US" />
+                    </label>
+                  </div>
+
+                  <div class="booking-step-actions split">
+                    <button class="button secondary" type="button" data-step-back>Back</button>
+                    <button class="button primary" type="button" data-step-next>Continue</button>
+                  </div>
+                </section>
+
+                <section class="booking-step" data-booking-step="3" aria-labelledby="bookingStepPaymentTitle" hidden>
+                  <div class="booking-step-header" tabindex="-1">
+                    <p>Step 4 of 4</p>
+                    <h2 id="bookingStepPaymentTitle">Documents &amp; Payment</h2>
+                  </div>
+
+                  <div class="form-row">
+                    <label class="file-field">
+                      Driver license upload
+                      <input type="file" name="driver_license_file" accept=".jpg,.jpeg,.png,.pdf" required />
+                      <small>Upload a clear photo or PDF of the driver's license.</small>
+                      <span class="selected-file-name" data-file-name-for="driver_license_file">No file selected</span>
+                    </label>
+                    <label class="file-field">
+                      Supporting documents
+                      <input type="file" name="supporting_documents" accept=".jpg,.jpeg,.png,.pdf" multiple />
+                      <small>Optional insurance, ID, or other rental support files.</small>
+                      <span class="selected-file-name" data-file-name-for="supporting_documents">No files selected</span>
+                    </label>
+                  </div>
+
+                  <label>
+                    Notes
+                    <textarea name="customer_notes" rows="5" placeholder="Tell us about timing, delivery needs, or questions."></textarea>
+                  </label>
+
+                  <div class="form-row">
+                    <label>
+                      Payment method
+                      <select name="payment_method" required>
+                        <option value="stripe_card">Credit/debit card via Stripe</option>
+                        <option value="stripe_deposit">Deposit authorization via Stripe</option>
+                      </select>
+                    </label>
+                  </div>
+
+                  <label class="checkbox-row">
+                    <input type="checkbox" name="approval_acknowledged" value="Yes" required />
+                    I confirm the rental details and documents are accurate and understand payment will be completed on the next step.
+                  </label>
+
+                  <p class="checkout-helper">Secure checkout powered by Stripe.</p>
+
+                  <div class="booking-step-actions split">
+                    <button class="button secondary" type="button" data-step-back>Back</button>
+                    <button class="button primary" type="submit">Proceed to Secure Payment</button>
+                  </div>
+                </section>
+
+                <p class="form-status" id="formStatus" role="status" aria-live="polite"></p>
+              </div>
+            </div>
+          </form>
 
           <section class="booking-requirements" id="booking-policies" aria-labelledby="booking-requirements-heading">
             <p class="eyebrow">Before you book</p>
@@ -74,175 +330,7 @@
             </p>
           </section>
         </div>
-
-        <form
-          class="booking-form"
-          id="bookingForm"
-          data-success="Thanks. Your booking was created and is ready for payment."
-          data-error="Something went wrong while creating your booking. Please call or email MIR CARS and we will help right away."
-        >
-          <div class="form-row">
-            <label>
-              First name
-              <input name="customer_first_name" autocomplete="given-name" required />
-            </label>
-            <label>
-              Last name
-              <input name="customer_last_name" autocomplete="family-name" required />
-            </label>
-          </div>
-
-          <div class="form-row">
-            <label>
-              Email
-              <input type="email" name="customer_email" autocomplete="email" required />
-            </label>
-            <label>
-              Phone
-              <input name="customer_phone" autocomplete="tel" required />
-            </label>
-          </div>
-
-          <div class="form-row">
-            <label>
-              Preferred vehicle
-              <select name="vehicle" id="vehicleSelect" required></select>
-            </label>
-            <div class="availability-panel" id="availabilityStatus" aria-live="polite">
-              <span>Availability</span>
-              <strong>Select dates to check</strong>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <label>
-              Pick-up date
-              <input type="date" name="pickup_date" required />
-            </label>
-            <label>
-              Pick-up time
-              <input type="time" name="pickup_time" required />
-            </label>
-          </div>
-
-          <div class="form-row">
-            <label>
-              Drop-off date
-              <input type="date" name="return_date" required />
-            </label>
-            <label>
-              Drop-off time
-              <input type="time" name="return_time" required />
-            </label>
-          </div>
-
-          <div class="form-row">
-            <label>
-              Date of birth
-              <input type="date" name="date_of_birth" autocomplete="bday" required />
-            </label>
-            <label>
-              Payment method
-              <select name="payment_method" required>
-                <option value="stripe_card">Credit/debit card via Stripe</option>
-                <option value="stripe_deposit">Deposit authorization via Stripe</option>
-              </select>
-            </label>
-          </div>
-
-          <div class="form-row">
-            <label>
-              Pickup location
-              <select name="pickup_location" required>
-                <option>LAX Airport</option>
-                <option>Glendale pickup</option>
-                <option>Custom Delivery Request</option>
-              </select>
-            </label>
-            <label>
-              Return location
-              <select name="return_location" required>
-                <option>Same as pickup</option>
-                <option>LAX Airport</option>
-                <option>Glendale return</option>
-                <option>Custom Return Request</option>
-              </select>
-            </label>
-          </div>
-
-          <div class="form-row">
-            <label>
-              Driver license number
-              <input name="driver_license_number" autocomplete="off" required />
-            </label>
-            <label>
-              License state / region
-              <input name="driver_license_region" autocomplete="address-level1" required />
-            </label>
-          </div>
-
-          <label>
-            Address line 1
-            <input name="address_line1" autocomplete="address-line1" />
-          </label>
-
-          <label>
-            Address line 2
-            <input name="address_line2" autocomplete="address-line2" />
-          </label>
-
-          <div class="form-row">
-            <label>
-              City
-              <input name="city" autocomplete="address-level2" />
-            </label>
-            <label>
-              State / province
-              <input name="state_province" autocomplete="address-level1" />
-            </label>
-          </div>
-
-          <div class="form-row">
-            <label>
-              Postal code
-              <input name="postal_code" autocomplete="postal-code" />
-            </label>
-            <label>
-              Country
-              <input name="country" autocomplete="country" value="US" />
-            </label>
-          </div>
-
-          <label>
-            Notes
-            <textarea name="customer_notes" rows="5" placeholder="Tell us about timing, delivery needs, or questions."></textarea>
-          </label>
-
-          <div class="form-row">
-            <label class="file-field">
-              Driver license upload
-              <input type="file" name="driver_license_file" accept=".jpg,.jpeg,.png,.pdf" required />
-              <small>Upload a clear photo or PDF of the driver's license.</small>
-            </label>
-            <label class="file-field">
-              Supporting documents
-              <input type="file" name="supporting_documents" accept=".jpg,.jpeg,.png,.pdf" multiple />
-              <small>Optional insurance, ID, or other rental support files.</small>
-            </label>
-          </div>
-
-          <div class="booking-estimate" id="bookingEstimate" aria-live="polite"></div>
-
-          <label class="checkbox-row">
-            <input type="checkbox" name="approval_acknowledged" value="Yes" required />
-            I confirm the rental details and documents are accurate and understand payment will be completed on the next step.
-          </label>
-
-          <button class="button primary" type="submit">Proceed with payment</button>
-          <p class="form-status" id="formStatus" role="status" aria-live="polite"></p>
-        </form>
       </section>
-
     </main>
 
     <footer class="site-footer">

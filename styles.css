@@ -2400,6 +2400,473 @@ address {
   color: var(--muted);
 }
 
+.booking-checkout-section {
+  padding: clamp(28px, 4vw, 48px) clamp(18px, 5vw, 72px) clamp(64px, 8vw, 108px);
+}
+
+.booking-checkout-shell {
+  display: grid;
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  gap: clamp(24px, 4vw, 42px);
+}
+
+.booking-checkout-intro {
+  max-width: 720px;
+}
+
+.booking-checkout-intro h1 {
+  max-width: 680px;
+  margin: 0 0 16px;
+  font-size: clamp(2.25rem, 4.6vw, 4.35rem);
+  line-height: 1;
+}
+
+.booking-checkout-intro p:not(.eyebrow) {
+  max-width: 640px;
+  margin: 0;
+  color: var(--muted);
+  font-size: clamp(1rem, 1.35vw, 1.15rem);
+  line-height: 1.65;
+}
+
+.booking-checkout-form {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.42fr) minmax(0, 0.58fr);
+  align-items: start;
+  gap: clamp(18px, 3vw, 32px);
+  overflow: visible;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.booking-checkout-form::before {
+  display: none;
+}
+
+.booking-summary-panel,
+.booking-step-card {
+  border: 1px solid rgba(226, 234, 242, 0.16);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(148, 166, 181, 0.025) 46%, rgba(255, 255, 255, 0.018)),
+    rgba(12, 14, 16, 0.74);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.booking-summary-panel {
+  position: sticky;
+  top: 104px;
+  z-index: 1;
+  display: grid;
+  gap: 18px;
+  padding: clamp(16px, 2vw, 22px);
+}
+
+.booking-summary-heading {
+  display: grid;
+  gap: 4px;
+}
+
+.booking-summary-heading .eyebrow {
+  margin: 0;
+}
+
+.booking-summary-heading h2 {
+  margin: 0;
+  font-size: clamp(1.3rem, 1.8vw, 1.85rem);
+}
+
+.booking-summary-panel .selected-vehicle-card {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  overflow: visible;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.booking-summary-panel .selected-vehicle-image {
+  min-height: 212px;
+  overflow: hidden;
+  border: 1px solid rgba(226, 234, 242, 0.14);
+  border-radius: var(--radius);
+  background-size: cover;
+}
+
+.booking-summary-panel .selected-vehicle-copy {
+  align-content: start;
+  gap: 8px;
+  padding: 0;
+}
+
+.booking-summary-panel .selected-vehicle-copy strong {
+  font-size: clamp(1.22rem, 1.7vw, 1.55rem);
+}
+
+.booking-summary-panel .selected-vehicle-meta {
+  justify-content: flex-start;
+}
+
+.booking-summary-details {
+  display: grid;
+  gap: 10px;
+  padding-top: 2px;
+}
+
+.summary-detail-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(226, 234, 242, 0.09);
+}
+
+.summary-detail-row span,
+.booking-summary-availability span {
+  color: rgba(238, 243, 247, 0.58);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.summary-detail-row strong,
+.booking-summary-availability strong {
+  color: var(--gold-strong);
+  font-size: 0.92rem;
+  line-height: 1.35;
+  text-align: right;
+}
+
+.booking-summary-availability {
+  display: grid;
+  gap: 5px;
+  padding: 14px;
+  border: 1px solid rgba(226, 234, 242, 0.12);
+  border-radius: var(--radius);
+  background: rgba(5, 6, 7, 0.42);
+}
+
+.booking-summary-availability.available strong {
+  color: #9ff0b8;
+}
+
+.booking-summary-availability.unavailable strong {
+  color: var(--danger);
+}
+
+.booking-summary-availability.checking strong,
+.booking-summary-availability.fallback strong {
+  color: var(--gold-strong);
+}
+
+.booking-step-column {
+  display: grid;
+  min-width: 0;
+  gap: 14px;
+}
+
+.booking-stepper {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 6px;
+  border: 1px solid rgba(226, 234, 242, 0.14);
+  border-radius: var(--radius);
+  background: rgba(5, 6, 7, 0.48);
+  list-style: none;
+}
+
+.booking-step-indicator {
+  display: flex;
+  min-width: 0;
+  min-height: 58px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: rgba(238, 243, 247, 0.58);
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    color 180ms ease;
+}
+
+.booking-step-indicator span {
+  display: grid;
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid rgba(226, 234, 242, 0.2);
+  border-radius: 999px;
+  background: rgba(18, 20, 22, 0.64);
+  color: rgba(238, 243, 247, 0.72);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.booking-step-indicator strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+
+.booking-step-indicator.active {
+  border-color: rgba(244, 248, 251, 0.3);
+  background: rgba(226, 234, 242, 0.1);
+  color: var(--gold-strong);
+}
+
+.booking-step-indicator.active span {
+  border-color: rgba(244, 248, 251, 0.58);
+  background: var(--gold-strong);
+  color: #0d0e0f;
+}
+
+.booking-step-indicator.completed {
+  color: rgba(238, 243, 247, 0.82);
+}
+
+.booking-step-indicator.completed span {
+  border-color: rgba(159, 240, 184, 0.4);
+  color: #9ff0b8;
+}
+
+.booking-step-card {
+  padding: clamp(18px, 2.5vw, 28px);
+}
+
+.booking-step {
+  display: grid;
+  gap: 16px;
+}
+
+.booking-step[hidden] {
+  display: none !important;
+}
+
+.booking-step-header {
+  display: grid;
+  gap: 6px;
+  outline: 0;
+}
+
+.booking-step-header:focus-visible {
+  border-radius: 6px;
+  box-shadow: 0 0 0 3px rgba(244, 248, 251, 0.18);
+}
+
+.booking-step-header p {
+  margin: 0;
+  color: rgba(238, 243, 247, 0.58);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.booking-step-header h2 {
+  margin: 0;
+  font-size: clamp(1.45rem, 2.1vw, 2.15rem);
+}
+
+.booking-checkout-form .form-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.booking-checkout-form label:not(.checkbox-row) {
+  min-height: 0;
+  align-content: start;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(238, 243, 247, 0.76);
+  font-size: 0.88rem;
+  font-weight: 750;
+  text-transform: none;
+}
+
+.booking-checkout-form label:has(textarea) {
+  min-height: 0;
+  padding-top: 0;
+}
+
+.booking-checkout-form input,
+.booking-checkout-form select,
+.booking-checkout-form textarea {
+  width: 100%;
+  height: 46px;
+  min-height: 46px;
+  border: 1px solid rgba(226, 234, 242, 0.16);
+  border-radius: var(--radius);
+  background-color: rgba(5, 6, 7, 0.6);
+  color: var(--text);
+  padding: 0 14px;
+  font-size: 0.96rem;
+  font-weight: 650;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.booking-checkout-form input:hover,
+.booking-checkout-form select:hover,
+.booking-checkout-form textarea:hover {
+  border-color: rgba(226, 234, 242, 0.28);
+  background-color: rgba(8, 10, 12, 0.76);
+}
+
+.booking-checkout-form input:focus,
+.booking-checkout-form select:focus,
+.booking-checkout-form textarea:focus {
+  border-color: rgba(244, 248, 251, 0.46);
+  box-shadow: 0 0 0 3px rgba(244, 248, 251, 0.1);
+}
+
+.booking-checkout-form textarea {
+  height: 128px;
+  min-height: 128px;
+  padding-top: 12px;
+}
+
+.booking-checkout-form input[type="file"] {
+  height: auto;
+  min-height: 86px;
+  padding: 18px;
+  border-style: dashed;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(148, 166, 181, 0.02)),
+    rgba(5, 6, 7, 0.54);
+  color: rgba(238, 243, 247, 0.78);
+  cursor: pointer;
+}
+
+.booking-checkout-form input[type="file"]::file-selector-button {
+  min-height: 34px;
+  margin-right: 12px;
+  border: 1px solid rgba(226, 234, 242, 0.22);
+  border-radius: 6px;
+  background: rgba(226, 234, 242, 0.1);
+  color: var(--gold-strong);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.booking-checkout-form .availability-panel {
+  display: grid;
+  min-height: 68px;
+  align-content: center;
+  gap: 5px;
+  padding: 14px;
+  border: 1px solid rgba(226, 234, 242, 0.13);
+  border-radius: var(--radius);
+  background: rgba(5, 6, 7, 0.46);
+}
+
+.booking-checkout-form .availability-panel span,
+.booking-checkout-form .file-field small {
+  color: rgba(238, 243, 247, 0.6);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.booking-checkout-form .availability-panel strong {
+  font-size: 0.98rem;
+}
+
+.booking-checkout-form .file-field {
+  gap: 8px;
+}
+
+.selected-file-name {
+  color: rgba(238, 243, 247, 0.72);
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.booking-checkout-form .booking-estimate {
+  gap: 0;
+  border-color: rgba(226, 234, 242, 0.12);
+  border-radius: var(--radius);
+  background: rgba(5, 6, 7, 0.4);
+}
+
+.booking-checkout-form .estimate-row,
+.booking-checkout-form .booking-estimate-empty {
+  padding: 12px 14px;
+}
+
+.booking-checkout-form .estimate-row span {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.booking-checkout-form .checkbox-row {
+  min-height: 0;
+  padding: 14px;
+  border-color: rgba(226, 234, 242, 0.13);
+  border-radius: var(--radius);
+  background: rgba(5, 6, 7, 0.48);
+}
+
+.checkout-helper {
+  margin: -2px 0 0;
+  color: rgba(238, 243, 247, 0.62);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.booking-step-actions {
+  display: grid;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.booking-step-actions.split {
+  grid-template-columns: minmax(118px, 0.42fr) minmax(0, 1fr);
+}
+
+.booking-checkout-form .booking-step-actions .button {
+  min-height: 52px;
+  border-radius: var(--radius);
+}
+
+.booking-checkout-form .booking-step-actions .button.secondary {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.11), rgba(142, 160, 176, 0.06)),
+    rgba(5, 6, 7, 0.34);
+  color: rgba(238, 243, 247, 0.86);
+}
+
+.booking-checkout-form .form-status {
+  min-height: 0;
+  padding-top: 2px;
+}
+
+.booking-checkout-shell .booking-requirements {
+  margin-top: 0;
+}
+
 .policy-section {
   position: relative;
   overflow: hidden;
@@ -3174,6 +3641,19 @@ address a:hover {
     grid-template-columns: 1fr;
   }
 
+  .booking-checkout-form {
+    grid-template-columns: 1fr;
+  }
+
+  .booking-summary-panel {
+    position: static;
+  }
+
+  .booking-summary-panel .selected-vehicle-card {
+    grid-template-columns: minmax(240px, 0.46fr) minmax(0, 0.54fr);
+    align-items: center;
+  }
+
   .policy-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -3302,6 +3782,14 @@ address a:hover {
 
   .booking-page-section {
     padding-top: 24px;
+  }
+
+  .booking-checkout-section {
+    padding-top: 24px;
+  }
+
+  .booking-stepper {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .booking-form {
@@ -3472,6 +3960,8 @@ address a:hover {
   .testimonial-grid,
   .selected-vehicle-card,
   .form-row,
+  .booking-checkout-form .form-row,
+  .booking-summary-panel .selected-vehicle-card,
   .booking-requirements-grid,
   .policy-grid {
     grid-template-columns: 1fr;
@@ -3503,6 +3993,42 @@ address a:hover {
   .booking-page-section {
     padding-right: 24px;
     padding-left: 24px;
+  }
+
+  .booking-checkout-section {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  .booking-checkout-intro h1 {
+    font-size: clamp(2.05rem, 10vw, 3.15rem);
+  }
+
+  .booking-summary-panel,
+  .booking-step-card {
+    padding: 16px;
+  }
+
+  .booking-step-indicator {
+    min-height: 52px;
+    padding: 7px;
+  }
+
+  .booking-step-indicator strong {
+    font-size: 0.72rem;
+  }
+
+  .summary-detail-row {
+    display: grid;
+    gap: 4px;
+  }
+
+  .summary-detail-row strong {
+    text-align: left;
+  }
+
+  .booking-step-actions.split {
+    grid-template-columns: 1fr;
   }
 
   .payment-page-section {

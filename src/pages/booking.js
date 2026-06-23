@@ -9,13 +9,18 @@ const vehicleSelect = document.querySelector("#vehicleSelect");
 const selectedVehicleCard = document.querySelector("#selectedVehicleCard");
 const bookingEstimate = document.querySelector("#bookingEstimate");
 const availabilityStatus = document.querySelector("#availabilityStatus");
+const summaryAvailabilityStatus = document.querySelector("#summaryAvailabilityStatus");
+const bookingSummaryDetails = document.querySelector("#bookingSummaryDetails");
 const form = document.querySelector("#bookingForm");
 const status = document.querySelector("#formStatus");
 const submitButton = form.querySelector('button[type="submit"]');
+const stepPanels = [...form.querySelectorAll("[data-booking-step]")];
+const stepIndicators = [...form.querySelectorAll("[data-step-indicator]")];
 
 let vehicles = [];
 let availabilityState = { status: "unknown", key: "" };
 let availabilityRequestId = 0;
+let currentStep = 0;
 
 function selectedVehicle() {
   return findVehicleByRequestValue(vehicles, vehicleSelect.value) || vehicles[0] || null;
@@ -51,13 +56,11 @@ function renderSelectedVehicle() {
   selectedVehicleCard.innerHTML = `
     <div class="selected-vehicle-image" style="background-image: url('${vehicle.images[0].src}')" role="img" aria-label="${escapeHtml(label)}"></div>
     <div class="selected-vehicle-copy">
-      <span>${escapeHtml(vehicle.type)} checkout</span>
+      <span>${escapeHtml(vehicle.type || "MIR CARS")} rental</span>
       <strong>${escapeHtml(label)}</strong>
-      <p>${escapeHtml(vehicle.description)}</p>
       <div class="selected-vehicle-meta">
         <span>${formatMoney(vehicle.rate, vehicle.currency)}/day</span>
         <span>${formatMoney(terms.securityDeposit, vehicle.currency)} deposit</span>
-        <span>${vehicle.supabaseId ? "Database vehicle" : "Fallback vehicle"}</span>
         <a href="${escapeHtml(window.MIR_CARS.vehicleUrl(vehicle))}">View details</a>
       </div>
     </div>
@@ -70,6 +73,14 @@ function renderAvailability(state, message) {
     <span>Availability</span>
     <strong>${escapeHtml(message)}</strong>
   `;
+
+  if (summaryAvailabilityStatus) {
+    summaryAvailabilityStatus.className = `booking-summary-availability ${state}`;
+    summaryAvailabilityStatus.innerHTML = `
+      <span>Availability</span>
+      <strong>${escapeHtml(message)}</strong>
+    `;
+  }
 }
 
 async function refreshAvailability() {
@@ -157,6 +168,157 @@ function renderEstimate() {
       <strong>${formatMoney(estimate.total, estimate.currency)}</strong>
     </div>
   `;
+}
+
+function formatSummaryDate(value) {
+  if (!value) return "";
+
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
+
+function summaryValue(value, fallback = "Not selected") {
+  return escapeHtml(String(value || "").trim() || fallback);
+}
+
+function renderBookingSummaryDetails() {
+  if (!bookingSummaryDetails) return;
+
+  const pickupDate = formatSummaryDate(form.elements.pickup_date.value);
+  const returnDate = formatSummaryDate(form.elements.return_date.value);
+  const pickupTime = form.elements.pickup_time.value;
+  const returnTime = form.elements.return_time.value;
+  const pickupLocation = form.elements.pickup_location.value;
+  const returnLocation = form.elements.return_location.value;
+
+  bookingSummaryDetails.innerHTML = `
+    <div class="summary-detail-row">
+      <span>Pickup</span>
+      <strong>${summaryValue([pickupDate, pickupTime].filter(Boolean).join(" at "))}</strong>
+    </div>
+    <div class="summary-detail-row">
+      <span>Return</span>
+      <strong>${summaryValue([returnDate, returnTime].filter(Boolean).join(" at "))}</strong>
+    </div>
+    <div class="summary-detail-row">
+      <span>Pickup location</span>
+      <strong>${summaryValue(pickupLocation)}</strong>
+    </div>
+    <div class="summary-detail-row">
+      <span>Return location</span>
+      <strong>${summaryValue(returnLocation)}</strong>
+    </div>
+  `;
+}
+
+function renderFileName(input) {
+  const display = form.querySelector(`[data-file-name-for="${input.name}"]`);
+  if (!display) return;
+
+  const fileNames = [...input.files].map((file) => file.name);
+  const fallback = input.multiple ? "No files selected" : "No file selected";
+  display.textContent = fileNames.length ? fileNames.join(", ") : fallback;
+}
+
+function clearFormStatus() {
+  status.classList.remove("success", "error", "loading");
+  status.textContent = "";
+}
+
+function showStep(stepIndex, options = {}) {
+  currentStep = Math.max(0, Math.min(stepPanels.length - 1, stepIndex));
+
+  stepPanels.forEach((panel, index) => {
+    const isActive = index === currentStep;
+    panel.hidden = !isActive;
+    panel.classList.toggle("active", isActive);
+  });
+
+  stepIndicators.forEach((indicator, index) => {
+    indicator.classList.toggle("active", index === currentStep);
+    indicator.classList.toggle("completed", index < currentStep);
+
+    if (index === currentStep) {
+      indicator.setAttribute("aria-current", "step");
+    } else {
+      indicator.removeAttribute("aria-current");
+    }
+  });
+
+  clearFormStatus();
+
+  if (options.focus) {
+    stepPanels[currentStep].querySelector(".booking-step-header")?.focus();
+  }
+}
+
+function stepFields(stepIndex) {
+  return [...stepPanels[stepIndex].querySelectorAll("input, select, textarea")].filter((field) => !field.disabled);
+}
+
+function reportStepInvalid(field, message = "Please complete the required details for this step.") {
+  setFormStatus(status, "error", message);
+  field?.reportValidity();
+  field?.focus();
+}
+
+async function validateStep(stepIndex) {
+  const invalidField = stepFields(stepIndex).find((field) => !field.checkValidity());
+
+  if (invalidField) {
+    reportStepInvalid(invalidField);
+    return false;
+  }
+
+  if (stepIndex === 0) {
+    const pickupDate = form.elements.pickup_date.value;
+    const returnDate = form.elements.return_date.value;
+    const rentalDays = calculateRentalDays(pickupDate, returnDate);
+
+    if (!rentalDays) {
+      reportStepInvalid(form.elements.return_date, "Return date must be after or the same as the pickup date.");
+      return false;
+    }
+
+    const liveAvailability = await refreshAvailability();
+
+    if (liveAvailability.status === "checking") {
+      setFormStatus(status, "error", "Please wait for the live availability check to finish.");
+      return false;
+    }
+
+    if (liveAvailability.status === "unavailable") {
+      setFormStatus(status, "error", "This vehicle is not available for the selected dates. Please choose another vehicle or date range.");
+      return false;
+    }
+  }
+
+  if (stepIndex === 1) {
+    const age = getAge(form.elements.date_of_birth.value);
+
+    if (age !== null && age < 21) {
+      reportStepInvalid(form.elements.date_of_birth, "Drivers must be at least 21 years old.");
+      return false;
+    }
+  }
+
+  return true;
+}
+
+async function goToNextStep() {
+  if (!(await validateStep(currentStep))) return;
+
+  showStep(currentStep + 1, { focus: true });
+}
+
+function goToPreviousStep() {
+  showStep(currentStep - 1, { focus: true });
 }
 
 function validateBooking() {
@@ -271,6 +433,20 @@ function paymentRedirectUrl(bookingNumber, paymentAccessToken) {
 }
 
 function bindBookingForm() {
+  form.querySelectorAll("[data-step-next]").forEach((button) => {
+    button.addEventListener("click", goToNextStep);
+  });
+
+  form.querySelectorAll("[data-step-back]").forEach((button) => {
+    button.addEventListener("click", goToPreviousStep);
+  });
+
+  form.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && currentStep < stepPanels.length - 1 && event.target?.tagName !== "TEXTAREA") {
+      event.preventDefault();
+    }
+  });
+
   ["change", "input"].forEach((eventName) => {
     form.addEventListener(eventName, (event) => {
       if (["vehicle", "pickup_date", "return_date"].includes(event.target.name)) {
@@ -278,11 +454,22 @@ function bindBookingForm() {
         renderEstimate();
         refreshAvailability();
       }
+
+      if (event.target.type === "file") {
+        renderFileName(event.target);
+      }
+
+      renderBookingSummaryDetails();
     });
   });
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
+
+    if (currentStep < stepPanels.length - 1) {
+      await goToNextStep();
+      return;
+    }
 
     const validationError = validateBooking();
     if (validationError) {
@@ -340,7 +527,9 @@ async function initBookingPage() {
   selectVehicleFromUrl();
   renderSelectedVehicle();
   renderEstimate();
+  renderBookingSummaryDetails();
   refreshAvailability();
+  showStep(0);
   bindBookingForm();
 }
 
