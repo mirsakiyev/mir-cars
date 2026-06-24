@@ -851,6 +851,27 @@ grant execute on function public.check_vehicle_availability(uuid, date, date) to
 grant execute on function public.get_payment_checkout_summary(text, text) to anon, authenticated;
 grant execute on function public.mark_booking_payment_pending(text, text) to anon, authenticated;
 
+do $$
+begin
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    grant usage on schema public to service_role;
+
+    grant select on table
+      public.vehicles,
+      public.booking_requests,
+      public.booking_documents,
+      public.payments,
+      public.booking_extension_requests
+    to service_role;
+
+    grant insert on table
+      public.booking_extension_requests,
+      public.contact_requests
+    to service_role;
+  end if;
+end
+$$;
+
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
   'booking-documents',
