@@ -78,7 +78,7 @@ function enhanceSiteHeader() {
 
   if (nav && tripLink && !nav.querySelector("[data-mobile-trip-link]")) {
     const mobileTripLink = tripLink.cloneNode(true);
-    mobileTripLink.classList.add("mobile-nav-action");
+    mobileTripLink.className = "mobile-nav-action";
     mobileTripLink.dataset.mobileTripLink = "true";
     nav.append(mobileTripLink);
   }
