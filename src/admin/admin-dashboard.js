@@ -204,7 +204,9 @@ async function updateRecord(client, table, id, values) {
 async function renderBookings(client) {
   const { data, error } = await client
     .from("booking_requests")
-    .select("*,vehicles(slug,make,model,year,trim,color,category),booking_documents(id,document_type,file_name,file_path,mime_type,size_bytes),payments(*)")
+    .select(
+      "*,vehicles(slug,make,model,year,trim,color,category),booking_documents(id,document_type,file_name,file_path,mime_type,size_bytes),payments(*),booking_extension_requests(id,trip_id,customer_email,customer_phone,requested_return_date,requested_return_time,message,status,created_at),contact_requests(id,request_type,name,email,phone,message,status,created_at)",
+    )
     .order("created_at", { ascending: false });
 
   if (error) throw error;
@@ -237,7 +239,7 @@ async function renderBookings(client) {
             <article class="admin-card" data-booking-id="${booking.id}">
               <div class="admin-card-head">
                 <div>
-                  <span>${escapeHtml(booking.booking_number || "No booking number")}</span>
+                  <span>Trip ID: ${escapeHtml(booking.booking_number || "Not assigned")}</span>
                   <h2>${escapeHtml(`${booking.customer_first_name || ""} ${booking.customer_last_name || ""}`.trim() || "Customer")}</h2>
                 </div>
                 ${statusBadge(booking.booking_status || booking.status)}
@@ -282,6 +284,30 @@ async function renderBookings(client) {
                         })
                         .join("")}</div>`
                     : `<p>No uploaded documents.</p>`
+                }
+              </div>
+              <div class="admin-documents">
+                <strong>Extension requests</strong>
+                ${
+                  booking.booking_extension_requests?.length
+                    ? `<div>${booking.booking_extension_requests
+                        .map(
+                          (request) =>
+                            `<span>${escapeHtml(`${request.requested_return_date || ""} ${request.requested_return_time || ""}`.trim() || "Return TBD")} - ${escapeHtml(request.status || "pending")}${request.message ? ` - ${escapeHtml(request.message)}` : ""}</span>`,
+                        )
+                        .join("")}</div>`
+                    : `<p>No extension requests.</p>`
+                }
+              </div>
+              <div class="admin-documents">
+                <strong>Linked Lost & Found reports</strong>
+                ${
+                  (booking.contact_requests || []).filter((request) => request.request_type === "lost_and_found").length
+                    ? `<div>${(booking.contact_requests || [])
+                        .filter((request) => request.request_type === "lost_and_found")
+                        .map((request) => `<span>${escapeHtml(request.name || "Customer")} - ${escapeHtml(request.status || "new")}</span>`)
+                        .join("")}</div>`
+                    : `<p>No linked Lost & Found reports.</p>`
                 }
               </div>
               ${renderBookingActions(booking)}

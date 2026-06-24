@@ -62,7 +62,9 @@ export function calculateEstimate(vehicle, pickupDateValue, returnDateValue) {
 
 export function generateBookingNumber() {
   const stamp = new Date().toISOString().slice(0, 10).replaceAll("-", "");
-  const random = Math.random().toString(36).slice(2, 8).toUpperCase();
+  const bytes = new Uint8Array(4);
+  crypto.getRandomValues(bytes);
+  const random = [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("").toUpperCase();
 
   return `MIR-${stamp}-${random}`;
 }

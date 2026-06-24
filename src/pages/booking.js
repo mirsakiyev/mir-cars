@@ -1177,6 +1177,8 @@ function bindBookingForm() {
     submitButton.disabled = true;
     setFormStatus(status, "loading", "Creating booking and preparing payment...");
 
+    let redirectingToPayment = false;
+
     try {
       await createBookingRequest(bookingPayload(bookingId, bookingNumber, paymentAccessToken));
       await uploadBookingDocuments({
@@ -1184,17 +1186,21 @@ function bindBookingForm() {
         bookingNumber,
         documents: documentUploads(),
       });
+      const portalUrl = window.MIR_CARS.portalUrl(`?trip=${encodeURIComponent(bookingNumber)}`);
+      redirectingToPayment = true;
       setFormStatusHtml(
         status,
         "success",
-        `Booking created. Your booking number is <strong>${escapeHtml(bookingNumber)}</strong>. Redirecting to payment...`,
+        `Booking created. Your Trip ID is <strong>${escapeHtml(bookingNumber)}</strong>. Save your Trip ID to check your booking status or contact support. <a href="${escapeHtml(portalUrl)}">Open Booking Portal</a>. Redirecting to payment...`,
       );
-      window.location.href = paymentRedirectUrl(bookingNumber, paymentAccessToken);
+      window.setTimeout(() => {
+        window.location.href = paymentRedirectUrl(bookingNumber, paymentAccessToken);
+      }, 2400);
     } catch (error) {
       logClientWarning("Booking request submission failed.", error);
       setFormStatus(status, "error", form.dataset.error);
     } finally {
-      submitButton.disabled = false;
+      if (!redirectingToPayment) submitButton.disabled = false;
     }
   });
 }

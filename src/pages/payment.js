@@ -75,6 +75,7 @@ function renderFallbackCheckout(message) {
 function renderCheckout(summary) {
   const currency = summary.currency || "USD";
   const fullName = [summary.customer_first_name, summary.customer_last_name].filter(Boolean).join(" ") || "Not provided";
+  const portalUrl = window.MIR_CARS.portalUrl(`?trip=${encodeURIComponent(summary.booking_number || bookingNumber)}`);
   const mileageLimit = summary.mileage_limit_per_day
     ? `${summary.mileage_limit_per_day} miles/day`
     : "Included limit not available";
@@ -90,7 +91,7 @@ function renderCheckout(summary) {
         <p class="eyebrow">Booking summary</p>
         <h2>${escapeHtml(displayValue(summary.vehicle_name, "Selected vehicle"))}</h2>
         <div class="payment-summary-grid">
-          ${summaryRow("Booking", displayValue(summary.booking_number))}
+          ${summaryRow("Trip ID", displayValue(summary.booking_number))}
           ${summaryRow("Pickup", formatDateTime(summary.pickup_date, summary.pickup_time))}
           ${summaryRow("Drop-off", formatDateTime(summary.return_date, summary.return_time))}
           ${summaryRow("Pickup location", displayValue(summary.pickup_location))}
@@ -112,6 +113,10 @@ function renderCheckout(summary) {
           MIR CARS does not collect card numbers on this site. When Stripe is connected, this button will send you to
           a secure third-party checkout session.
         </p>
+        <p class="payment-trip-note">
+          Save your Trip ID: <strong>${escapeHtml(displayValue(summary.booking_number))}</strong>.
+        </p>
+        <a class="button secondary" href="${escapeHtml(portalUrl)}">Open Booking Portal</a>
 
         <div class="payment-summary-grid compact">
           ${summaryRow("Customer", fullName)}

@@ -3823,6 +3823,272 @@ address a:hover {
   font-size: 0.86rem;
 }
 
+.portal-page-main {
+  padding-top: clamp(34px, 5vw, 72px);
+}
+
+.portal-hero {
+  margin-bottom: clamp(20px, 3vw, 34px);
+}
+
+.portal-hero h1 {
+  font-size: clamp(2.4rem, 5vw, 4.8rem);
+}
+
+.portal-shell {
+  display: grid;
+  gap: clamp(18px, 3vw, 30px);
+  width: min(1180px, 100%);
+  margin-inline: auto;
+}
+
+.portal-lookup-form {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(260px, 1fr) auto;
+  align-items: end;
+  gap: 14px;
+}
+
+.portal-lookup-form .support-note,
+.portal-lookup-form .form-status {
+  grid-column: 1 / -1;
+}
+
+.portal-lookup-form .button {
+  min-height: 56px;
+  padding-inline: 18px;
+}
+
+.portal-result {
+  display: grid;
+  gap: 18px;
+}
+
+.portal-inline-status {
+  margin: 0;
+}
+
+.portal-summary-card,
+.portal-card {
+  border: 1px solid rgba(226, 234, 242, 0.15);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.046), rgba(255, 255, 255, 0.018) 56%, rgba(142, 160, 176, 0.045)),
+    rgba(13, 15, 17, 0.58);
+  box-shadow: 0 20px 58px rgba(0, 0, 0, 0.22);
+}
+
+.portal-summary-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: clamp(20px, 3vw, 30px);
+}
+
+.portal-summary-card h2 {
+  margin: 0;
+  font-size: clamp(1.9rem, 4vw, 3.2rem);
+  line-height: 1;
+}
+
+.portal-summary-card p:not(.eyebrow) {
+  margin: 10px 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.portal-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  border: 1px solid rgba(159, 240, 184, 0.26);
+  border-radius: 999px;
+  padding: 0 16px;
+  background: rgba(159, 240, 184, 0.08);
+  color: rgb(178, 249, 199);
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.portal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.portal-card {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  padding: clamp(18px, 2.5vw, 28px);
+}
+
+.portal-card h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.4vw, 2.2rem);
+  line-height: 1;
+}
+
+.portal-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.portal-detail-grid {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid rgba(226, 234, 242, 0.1);
+  border-radius: 6px;
+  background: rgba(226, 234, 242, 0.07);
+}
+
+.portal-detail-row,
+.portal-check-item,
+.portal-extension-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 52px;
+  padding: 12px 13px;
+  background: rgba(7, 9, 10, 0.7);
+}
+
+.portal-detail-row span,
+.portal-check-item span,
+.portal-extension-item span {
+  color: rgba(238, 243, 247, 0.62);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.portal-detail-row strong,
+.portal-check-item strong,
+.portal-extension-item strong {
+  color: var(--gold-strong);
+  line-height: 1.35;
+  text-align: right;
+}
+
+.portal-check-list,
+.portal-extension-list {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid rgba(226, 234, 242, 0.1);
+  border-radius: 6px;
+  background: rgba(226, 234, 242, 0.07);
+}
+
+.portal-check-item strong.success {
+  color: rgb(178, 249, 199);
+}
+
+.portal-vehicle-image {
+  min-height: 230px;
+  border: 1px solid rgba(226, 234, 242, 0.1);
+  border-radius: 6px;
+  background-color: rgba(5, 6, 7, 0.74);
+  background-position: center;
+  background-size: cover;
+}
+
+.portal-instructions {
+  border: 1px solid rgba(226, 234, 242, 0.12);
+  border-radius: 6px;
+  padding: 14px;
+  background: rgba(7, 9, 10, 0.48);
+}
+
+.portal-muted {
+  color: var(--muted);
+}
+
+.portal-action-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.portal-action-stack .button,
+.portal-card > .button {
+  min-height: 44px;
+  padding: 0 16px;
+}
+
+.portal-extension-card {
+  grid-column: 1 / -1;
+}
+
+.portal-extension-form {
+  display: grid;
+  gap: 14px;
+}
+
+.portal-extension-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.portal-extension-form label {
+  display: grid;
+  gap: 8px;
+  color: rgba(238, 243, 247, 0.68);
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.portal-extension-form input,
+.portal-extension-form textarea {
+  width: 100%;
+  border: 1px solid rgba(226, 234, 242, 0.16);
+  border-radius: 6px;
+  background: rgba(5, 6, 7, 0.72);
+  color: var(--text);
+  font: inherit;
+  font-weight: 760;
+}
+
+.portal-extension-form input {
+  min-height: 50px;
+  padding: 0 13px;
+}
+
+.portal-extension-form textarea {
+  min-height: 104px;
+  padding: 13px;
+  resize: vertical;
+}
+
+.portal-extension-form .checkbox-row {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  text-transform: none;
+}
+
+.portal-extension-form .checkbox-row input {
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+  margin-top: 2px;
+}
+
+.portal-extension-form .button {
+  min-height: 50px;
+}
+
 .terms-notice {
   margin-bottom: 16px;
   border-color: rgba(159, 240, 184, 0.22);
@@ -4785,6 +5051,17 @@ address a:hover {
   line-height: 1.45;
 }
 
+.payment-trip-note {
+  border: 1px solid rgba(159, 240, 184, 0.18);
+  border-radius: 6px;
+  padding: 13px 14px;
+  background: rgba(159, 240, 184, 0.07);
+}
+
+.payment-trip-note strong {
+  color: rgb(178, 249, 199);
+}
+
 .payment-terms input {
   width: 18px;
   min-width: 18px;
@@ -5100,8 +5377,23 @@ address a:hover {
   .support-layout,
   .support-grid,
   .support-form-shell .support-form,
+  .portal-lookup-form,
+  .portal-grid,
   .agreement-card,
   .support-cta {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-summary-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .portal-status-badge {
+    white-space: normal;
+  }
+
+  .portal-extension-fields {
     grid-template-columns: 1fr;
   }
 

@@ -1,7 +1,6 @@
 import { setFormStatus } from "../lib/dom-utils.js";
 import { logClientWarning } from "../lib/logging.js";
 import { initPublicSite } from "../lib/public-site.js";
-import { createContactRequest } from "../lib/request-service.js";
 
 const form = document.querySelector("#lostFoundForm");
 const status = document.querySelector("#lostFoundStatus");
@@ -10,37 +9,46 @@ function fieldValue(formData, name) {
   return String(formData.get(name) || "").trim();
 }
 
-function reportMessage(formData) {
-  const rows = [
-    "Lost & Found report",
-    `Trip identifier: ${fieldValue(formData, "trip_identifier")}`,
-    `Vehicle, if known: ${fieldValue(formData, "vehicle") || "Not provided"}`,
-    `Rental date: ${fieldValue(formData, "rental_date") || "Not provided"}`,
-    `Item lost: ${fieldValue(formData, "item_lost")}`,
-    `Last known location: ${fieldValue(formData, "last_known_location") || "Not provided"}`,
-    "",
-    "Description:",
-    fieldValue(formData, "description"),
-    "",
-    "Acknowledgement: Customer understands MIR CARS will review this request and contact them if the item is located.",
-  ];
-
-  return rows.join("\n");
-}
-
 function lostFoundPayload(formData) {
   return {
-    request_type: "lost_and_found",
+    tripId: fieldValue(formData, "trip_identifier"),
+    emailOrPhone: fieldValue(formData, "email") || fieldValue(formData, "phone"),
     name: fieldValue(formData, "name"),
     email: fieldValue(formData, "email"),
-    phone: fieldValue(formData, "phone") || null,
-    message: reportMessage(formData),
-    status: "new",
+    phone: fieldValue(formData, "phone"),
+    vehicle: fieldValue(formData, "vehicle"),
+    rentalDate: fieldValue(formData, "rental_date"),
+    itemLost: fieldValue(formData, "item_lost"),
+    description: fieldValue(formData, "description"),
+    lastKnownLocation: fieldValue(formData, "last_known_location"),
+    preferredContactMethod: fieldValue(formData, "preferred_contact_method"),
   };
+}
+
+async function submitLostFoundReport(payload) {
+  const response = await fetch("/.netlify/functions/customer-lost-found", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data.error || "Something went wrong. Please try again or contact MIR CARS directly.");
+  }
+
+  return data;
 }
 
 function bindLostFoundForm() {
   if (!form || !status) return;
+
+  const params = new URLSearchParams(window.location.search);
+  const tripParam = params.get("trip");
+  if (tripParam) {
+    form.elements.trip_identifier.value = tripParam;
+  }
 
   const submitButton = form.querySelector('button[type="submit"]');
 
@@ -53,12 +61,12 @@ function bindLostFoundForm() {
     setFormStatus(status, "loading", "Submitting lost item report...");
 
     try {
-      await createContactRequest(lostFoundPayload(new FormData(form)));
+      const data = await submitLostFoundReport(lostFoundPayload(new FormData(form)));
       form.reset();
-      setFormStatus(status, "success", form.dataset.success);
+      setFormStatus(status, "success", data.message || form.dataset.success);
     } catch (error) {
       logClientWarning("Lost and found submission failed.", error);
-      setFormStatus(status, "error", form.dataset.error);
+      setFormStatus(status, "error", error.message || form.dataset.error);
     } finally {
       submitButton.disabled = false;
     }

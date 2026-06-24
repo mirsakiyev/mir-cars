@@ -80,6 +80,10 @@
     return publicPageUrl("lost-and-found", suffix);
   }
 
+  function portalUrl(suffix = "") {
+    return publicPageUrl("portal", suffix);
+  }
+
   function contactUrl(suffix = "") {
     return publicPageUrl("contact", suffix);
   }
@@ -594,6 +598,7 @@
     termsUrl,
     faqUrl,
     lostAndFoundUrl,
+    portalUrl,
     contactUrl,
   };
 })(typeof window !== "undefined" ? window : globalThis);

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Look up your MIR CARS booking status, trip details, documents, payment, and support options." />
+    <title>Booking Portal | MIR CARS</title>
+    <link rel="icon" href="../favicon.ico" sizes="any" />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+    <link rel="stylesheet" href="../styles.css" />
+    <script type="module" src="../portal.js"></script>
+  </head>
+  <body id="top">
+    <header class="site-header">
+      <a class="brand" href="../index.html#top" aria-label="MIR CARS home">
+        <span>
+          <strong class="mir-lockup brand-name" aria-label="MIR CARS">
+            <span class="mir-lockup-top">MIR</span>
+            <span class="mir-lockup-bottom">CARS</span>
+          </strong>
+          <small>LA Rentals</small>
+        </span>
+      </a>
+
+      <nav class="main-nav" aria-label="Primary navigation">
+        <a href="../fleet.html">Fleet</a>
+        <a href="../index.html#policies">Policies</a>
+        <a href="../index.html#testimonials">Testimonials</a>
+        <a href="../contact/">Contact</a>
+      </nav>
+
+      <a class="header-cta" href="../booking.html">Book now</a>
+    </header>
+
+    <main class="support-page-main portal-page-main">
+      <section class="support-hero portal-hero">
+        <p class="eyebrow">Customer booking portal</p>
+        <h1>View Your Trip</h1>
+        <p>Enter your Trip ID and the email or phone number used on the booking.</p>
+      </section>
+
+      <section class="portal-shell">
+        <form
+          class="contact-form portal-lookup-form"
+          id="portalLookupForm"
+          data-error="We could not find a booking with those details."
+        >
+          <label>
+            Trip ID
+            <input name="trip_id" autocomplete="off" placeholder="MIR-20260623-ABC123" required />
+          </label>
+          <label>
+            Email or phone
+            <input name="verifier" autocomplete="email tel" placeholder="Email or phone used for booking" required />
+          </label>
+          <button class="button primary" type="submit">Open Booking Portal</button>
+          <p class="support-note">For privacy, Trip ID alone is not enough to view booking details.</p>
+          <p class="form-status" id="portalLookupStatus" role="status" aria-live="polite"></p>
+        </form>
+
+        <div class="portal-result" id="portalResult" aria-live="polite" hidden></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-brand">
+        <span class="mir-lockup mir-lockup-inline" aria-label="MIR CARS"><span class="mir-lockup-top">MIR</span><span class="mir-lockup-bottom">CARS</span></span>
+        <span>Los Angeles, California</span>
+      </div>
+      <span class="footer-copyright">&copy; 2026 MIR CARS. All rights reserved.</span>
+    </footer>
+  </body>
+</html>

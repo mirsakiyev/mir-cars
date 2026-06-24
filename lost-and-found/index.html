@@ -48,10 +48,10 @@
           data-error="Something went wrong. Please try again or contact MIR CARS directly."
         >
           <label class="support-wide-field">
-            Trip ID or Reservation Identifier
+            Trip ID
             <input
               name="trip_identifier"
-              placeholder="Enter your trip ID, reservation ID, phone number, or email used for booking"
+              placeholder="MIR-20260623-ABC123"
               required
             />
           </label>
@@ -66,6 +66,14 @@
           <label>
             Phone
             <input name="phone" autocomplete="tel" />
+          </label>
+          <label>
+            Preferred contact method
+            <select name="preferred_contact_method">
+              <option value="email">Email</option>
+              <option value="phone">Phone</option>
+              <option value="either">Either</option>
+            </select>
           </label>
           <label>
             Vehicle, if known

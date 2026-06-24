@@ -11,6 +11,7 @@ function publicLinks() {
     terms: window.MIR_CARS.termsUrl(),
     faq: window.MIR_CARS.faqUrl(),
     lostAndFound: window.MIR_CARS.lostAndFoundUrl(),
+    portal: window.MIR_CARS.portalUrl(),
   };
 }
 
@@ -53,6 +54,7 @@ export function renderPublicFooter() {
         ["Terms", links.terms],
         ["FAQ", links.faq],
         ["Lost & Found", links.lostAndFound],
+        ["Booking Portal", links.portal],
         ["Contact", links.contact],
       ])}
     </div>

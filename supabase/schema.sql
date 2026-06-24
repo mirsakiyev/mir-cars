@@ -96,6 +96,9 @@ create table if not exists public.booking_requests (
   country text default 'US',
   customer_notes text,
   admin_notes text,
+  pickup_instructions text,
+  rental_agreement_url text,
+  agreement_status text default 'not_ready',
   created_at timestamptz default now(),
   updated_at timestamptz default now(),
   constraint booking_requests_status_check check (
@@ -116,6 +119,24 @@ add column if not exists booking_status text default 'pending';
 
 alter table public.booking_requests
 add column if not exists payment_access_token text;
+
+alter table public.booking_requests
+add column if not exists pickup_instructions text;
+
+alter table public.booking_requests
+add column if not exists rental_agreement_url text;
+
+alter table public.booking_requests
+add column if not exists agreement_status text default 'not_ready';
+
+alter table public.booking_requests
+drop constraint if exists booking_requests_agreement_status_check;
+
+alter table public.booking_requests
+add constraint booking_requests_agreement_status_check check (
+  agreement_status is null
+  or agreement_status in ('not_ready', 'pending', 'ready', 'signed')
+);
 
 alter table public.booking_requests
 drop constraint if exists booking_requests_status_check;
@@ -267,6 +288,9 @@ create table if not exists public.contact_requests (
   email text,
   phone text,
   message text,
+  booking_request_id uuid references public.booking_requests(id) on delete set null,
+  trip_id text,
+  preferred_contact_method text,
   request_type text default 'contact',
   status text default 'new',
   created_at timestamptz default now(),
@@ -280,11 +304,36 @@ alter table public.contact_requests
 add column if not exists request_type text default 'contact';
 
 alter table public.contact_requests
+add column if not exists booking_request_id uuid references public.booking_requests(id) on delete set null;
+
+alter table public.contact_requests
+add column if not exists trip_id text;
+
+alter table public.contact_requests
+add column if not exists preferred_contact_method text;
+
+alter table public.contact_requests
 drop constraint if exists contact_requests_request_type_check;
 
 alter table public.contact_requests
 add constraint contact_requests_request_type_check check (
   request_type is null or request_type in ('contact', 'lost_and_found')
+);
+
+create table if not exists public.booking_extension_requests (
+  id uuid primary key default gen_random_uuid(),
+  booking_request_id uuid references public.booking_requests(id) on delete cascade,
+  trip_id text not null,
+  customer_email text,
+  customer_phone text,
+  requested_return_date date not null,
+  requested_return_time time,
+  message text,
+  status text default 'pending',
+  created_at timestamptz default now(),
+  constraint booking_extension_requests_status_check check (
+    status in ('pending', 'approved', 'declined', 'cancelled')
+  )
 );
 
 create table if not exists public.admin_users (
@@ -329,6 +378,18 @@ on public.payments (booking_request_id, created_at desc);
 
 create index if not exists contact_requests_type_created_idx
 on public.contact_requests (request_type, created_at desc);
+
+create index if not exists contact_requests_booking_request_idx
+on public.contact_requests (booking_request_id, created_at desc);
+
+create index if not exists contact_requests_trip_id_idx
+on public.contact_requests (trip_id);
+
+create index if not exists booking_extension_requests_booking_idx
+on public.booking_extension_requests (booking_request_id, created_at desc);
+
+create index if not exists booking_extension_requests_trip_id_idx
+on public.booking_extension_requests (trip_id);
 
 create or replace function public.check_vehicle_availability(
   vehicle_id_input uuid,
@@ -627,6 +688,7 @@ alter table public.booking_requests enable row level security;
 alter table public.booking_documents enable row level security;
 alter table public.payments enable row level security;
 alter table public.contact_requests enable row level security;
+alter table public.booking_extension_requests enable row level security;
 alter table public.admin_users enable row level security;
 
 drop policy if exists "Public can read available vehicles" on public.vehicles;
@@ -747,6 +809,19 @@ to authenticated
 using (public.can_manage_admin_data())
 with check (public.can_manage_admin_data());
 
+drop policy if exists "Admins can read booking extension requests" on public.booking_extension_requests;
+create policy "Admins can read booking extension requests"
+on public.booking_extension_requests for select
+to authenticated
+using (public.is_active_admin());
+
+drop policy if exists "Admins can update booking extension requests" on public.booking_extension_requests;
+create policy "Admins can update booking extension requests"
+on public.booking_extension_requests for update
+to authenticated
+using (public.can_manage_admin_data())
+with check (public.can_manage_admin_data());
+
 drop policy if exists "Admins can read admin users" on public.admin_users;
 create policy "Admins can read admin users"
 on public.admin_users for select
@@ -770,6 +845,7 @@ grant select, update on public.booking_requests to authenticated;
 grant select, update on public.booking_documents to authenticated;
 grant select, update on public.contact_requests to authenticated;
 grant select, update on public.payments to authenticated;
+grant select, update on public.booking_extension_requests to authenticated;
 grant select, update on public.admin_users to authenticated;
 grant execute on function public.check_vehicle_availability(uuid, date, date) to anon, authenticated;
 grant execute on function public.get_payment_checkout_summary(text, text) to anon, authenticated;

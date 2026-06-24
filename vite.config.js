@@ -15,6 +15,7 @@ const extensionlessRoutes = new Map([
   ["/terms", "/terms/index.html"],
   ["/faq", "/faq/index.html"],
   ["/lost-and-found", "/lost-and-found/index.html"],
+  ["/portal", "/portal/index.html"],
   ["/contact", "/contact/index.html"],
   ["/payment-success", "/payment-success.html"],
   ["/payment-cancelled", "/payment-cancelled.html"],
