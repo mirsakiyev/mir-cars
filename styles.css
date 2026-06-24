@@ -4836,15 +4836,14 @@ address a:hover {
 
 .site-footer-shell {
   display: grid;
-  grid-template-columns: minmax(240px, 1.1fr) minmax(140px, 0.55fr) minmax(140px, 0.55fr) minmax(240px, 0.9fr);
+  grid-template-columns: minmax(260px, 1.2fr) minmax(150px, 0.55fr) minmax(150px, 0.55fr);
   gap: clamp(22px, 4vw, 54px);
   width: min(1180px, 100%);
   margin: 0 auto;
 }
 
 .footer-brand-block,
-.footer-link-group,
-.footer-help-card {
+.footer-link-group {
   display: grid;
   align-content: start;
   gap: 12px;
@@ -4861,15 +4860,13 @@ address a:hover {
   font-size: 0.76rem;
 }
 
-.footer-brand-block p,
-.footer-help-card p {
+.footer-brand-block p {
   max-width: 310px;
   margin: 0;
   line-height: 1.65;
 }
 
-.footer-link-group h2,
-.footer-help-card h2 {
+.footer-link-group h2 {
   margin: 0;
   color: var(--gold-strong);
   font-size: 0.78rem;
@@ -4893,20 +4890,6 @@ address a:hover {
 .footer-legal a:focus-visible {
   color: var(--gold-strong);
   transform: translateX(2px);
-}
-
-.footer-help-card {
-  padding: 16px;
-  border: 1px solid rgba(226, 234, 242, 0.1);
-  border-radius: var(--radius);
-  background: rgba(226, 234, 242, 0.035);
-}
-
-.footer-help-card .button {
-  width: fit-content;
-  min-height: 38px;
-  padding-inline: 14px;
-  font-size: 0.72rem;
 }
 
 .footer-legal {

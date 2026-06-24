@@ -11,7 +11,6 @@ function publicLinks() {
     terms: window.MIR_CARS.termsUrl(),
     faq: window.MIR_CARS.faqUrl(),
     lostAndFound: window.MIR_CARS.lostAndFoundUrl(),
-    booking: window.MIR_CARS.bookingUrl(),
   };
 }
 
@@ -48,20 +47,14 @@ export function renderPublicFooter() {
         ["Fleet", links.fleet],
         ["Policies", links.policies],
         ["Testimonials", links.testimonials],
-        ["Contact", links.contact],
       ])}
 
       ${renderFooterLinks("Support", "Footer support links", [
         ["Terms", links.terms],
         ["FAQ", links.faq],
         ["Lost & Found", links.lostAndFound],
+        ["Contact", links.contact],
       ])}
-
-      <section class="footer-help-card" aria-label="Reservation support">
-        <h2>Need help with a reservation?</h2>
-        <p>Send the MIR CARS team a message about bookings, delivery, documents, or support requests.</p>
-        <a class="button secondary" href="${links.contact}">Contact MIR CARS</a>
-      </section>
     </div>
     <div class="footer-legal">
       <span>&copy; <span data-current-year>${currentYear}</span> MIR CARS. All rights reserved.</span>

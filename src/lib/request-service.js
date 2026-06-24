@@ -109,5 +109,5 @@ export async function createContactRequest(payload) {
 function isMissingOptionalContactColumn(error) {
   const message = `${error?.code || ""} ${error?.message || ""} ${error?.details || ""}`;
 
-  return /request_type|schema cache|column/i.test(message);
+  return /request_type/i.test(message);
 }
