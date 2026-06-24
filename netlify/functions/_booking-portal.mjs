@@ -251,7 +251,7 @@ function validateServiceRoleKey(serviceRoleKey) {
   }
 }
 
-export function getSupabaseAdminClient() {
+export function getSupabaseServiceConfig() {
   const supabaseUrl = cleanEnvValue(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL);
   const serviceRoleKey = cleanApiKey(
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE,
@@ -262,6 +262,15 @@ export function getSupabaseAdminClient() {
   }
 
   validateServiceRoleKey(serviceRoleKey);
+
+  return {
+    serviceRoleKey,
+    supabaseUrl: supabaseUrl.replace(/\/+$/, ""),
+  };
+}
+
+export function getSupabaseAdminClient() {
+  const { serviceRoleKey, supabaseUrl } = getSupabaseServiceConfig();
 
   return createClient(supabaseUrl, serviceRoleKey, {
     auth: {
@@ -353,10 +362,137 @@ export async function fetchBookingByTripId(client, tripId) {
 export async function fetchMinimalBookingByTripId(client, tripId) {
   const { data, error } = await client.from("booking_requests").select(minimalBookingSelect).eq("booking_number", tripId).maybeSingle();
 
-  if (error) throw error;
+  if (error) {
+    console.warn("Booking portal switched to direct REST lookup.", {
+      code: error.code || "unknown",
+      message: error.message || "unknown",
+    });
+
+    return fetchMinimalBookingByTripIdRest(tripId);
+  }
+
   if (!data) return null;
 
   return enrichMinimalBooking(client, data);
+}
+
+async function fetchMinimalBookingByTripIdRest(tripId) {
+  const rows = await supabaseRestGet("booking_requests", {
+    booking_number: `eq.${tripId}`,
+    limit: "1",
+    select: minimalBookingSelect.replace(/\s+/g, ""),
+  });
+  const booking = rows[0] || null;
+
+  if (!booking) return null;
+
+  return enrichMinimalBookingRest(booking);
+}
+
+async function enrichMinimalBookingRest(booking) {
+  const [vehicles, documents, payments, extensionRequests] = await Promise.all([
+    booking.vehicle_id
+      ? maybeSupabaseRestGet("vehicles", {
+          id: `eq.${booking.vehicle_id}`,
+          limit: "1",
+          select: "slug,make,model,year,trim,category,color,transmission,fuel_type,seats,daily_rate,deposit_amount,mileage_limit_per_day,currency,image_urls",
+        })
+      : Promise.resolve([]),
+    maybeSupabaseRestGet("booking_documents", {
+      booking_request_id: `eq.${booking.id}`,
+      select: "id,document_type,created_at",
+    }),
+    maybeSupabaseRestGet("payments", {
+      booking_request_id: `eq.${booking.id}`,
+      order: "created_at.desc",
+      select: "*",
+    }),
+    maybeSupabaseRestGet("booking_extension_requests", {
+      booking_request_id: `eq.${booking.id}`,
+      select: "id,requested_return_date,requested_return_time,message,status,created_at",
+    }),
+  ]);
+
+  return {
+    ...booking,
+    agreement_status: "not_ready",
+    booking_documents: documents,
+    booking_extension_requests: extensionRequests,
+    payments,
+    pickup_instructions: null,
+    rental_agreement_url: null,
+    vehicles: vehicles[0] || null,
+  };
+}
+
+async function supabaseRestGet(table, params) {
+  const { serviceRoleKey, supabaseUrl } = getSupabaseServiceConfig();
+  const url = new URL(`${supabaseUrl}/rest/v1/${table}`);
+
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== null && value !== undefined) url.searchParams.set(key, value);
+  }
+
+  let response;
+  try {
+    response = await fetch(url, {
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${serviceRoleKey}`,
+        apikey: serviceRoleKey,
+      },
+    });
+  } catch (error) {
+    const networkError = portalConfigError("SUPABASE_NETWORK", "Could not reach Supabase REST API.");
+    networkError.cause = error;
+    throw networkError;
+  }
+
+  const bodyText = await response.text();
+  const body = parseRestBody(bodyText);
+
+  if (!response.ok) {
+    throw supabaseRestError(response.status, body);
+  }
+
+  return Array.isArray(body) ? body : [];
+}
+
+async function maybeSupabaseRestGet(table, params) {
+  try {
+    return await supabaseRestGet(table, params);
+  } catch (error) {
+    if (error.portalCode?.startsWith("SUPABASE_SCHEMA")) return [];
+    throw error;
+  }
+}
+
+function parseRestBody(bodyText) {
+  if (!bodyText) return null;
+
+  try {
+    return JSON.parse(bodyText);
+  } catch (_error) {
+    return { message: bodyText };
+  }
+}
+
+function supabaseRestError(status, body = {}) {
+  const message = `${body?.code || ""} ${body?.message || ""} ${body?.details || ""} ${body?.hint || ""}`;
+  let code = "SUPABASE_REST";
+
+  if (status === 401 && /invalid api key|api key/i.test(message)) code = "SUPABASE_INVALID_API_KEY";
+  else if (status === 401 && /signature|JWSError|JWS|JWT|invalid/i.test(message)) code = "SUPABASE_JWT_REJECTED";
+  else if (status === 401) code = "SUPABASE_AUTH";
+  else if (status === 403) code = "SUPABASE_PERMISSION";
+  else if (/does not exist|schema cache|could not find|PGRST|relationship|column/i.test(message)) code = "SUPABASE_SCHEMA";
+
+  const error = portalConfigError(code, body?.message || `Supabase REST returned ${status}.`);
+  error.code = body?.code || String(status);
+  error.details = body?.details || "";
+  error.hint = body?.hint || "";
+
+  return error;
 }
 
 async function enrichMinimalBooking(client, booking) {
