@@ -71,22 +71,45 @@ textarea {
   top: 0;
   right: 0;
   left: 0;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 22px;
-  padding: 18px clamp(18px, 4vw, 48px);
+  z-index: 30;
+  isolation: isolate;
+  padding: 0 clamp(18px, 4vw, 42px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(13, 14, 15, 0.84);
-  backdrop-filter: blur(18px);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 58%),
+    rgba(10, 11, 13, 0.94);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(13px) saturate(140%);
+}
+
+.site-header::after {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(244, 248, 251, 0.24), rgba(154, 170, 184, 0.42), transparent);
+  content: "";
+}
+
+.site-header-shell {
+  display: grid;
+  grid-template-columns: minmax(170px, 0.8fr) minmax(360px, 1.2fr) minmax(270px, 0.8fr);
+  min-height: 82px;
+  width: min(1280px, 100%);
+  align-items: center;
+  gap: clamp(18px, 3vw, 34px);
+  margin: 0 auto;
 }
 
 .brand {
   display: inline-flex;
   align-items: center;
   gap: 0;
-  min-width: max-content;
+  min-width: 0;
+  width: fit-content;
+  padding: 8px 0;
 }
 
 .brand strong,
@@ -99,9 +122,11 @@ textarea {
 }
 
 .brand small {
-  margin-top: 5px;
-  color: var(--muted);
-  font-size: 0.76rem;
+  margin-top: 7px;
+  color: rgba(238, 243, 247, 0.64);
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.035em;
 }
 
 .mir-lockup {
@@ -146,7 +171,7 @@ textarea {
 }
 
 .brand-name {
-  font-size: 1.34rem;
+  font-size: 1.56rem;
 }
 
 .mir-lockup-inline {
@@ -179,11 +204,12 @@ textarea {
 
 .main-nav {
   display: flex;
-  gap: clamp(10px, 2vw, 24px);
-  color: var(--muted);
-  font-size: 0.82rem;
-  font-weight: 750;
-  letter-spacing: 0.075em;
+  justify-content: center;
+  gap: clamp(8px, 1.6vw, 20px);
+  color: rgba(238, 243, 247, 0.58);
+  font-size: 0.75rem;
+  font-weight: 820;
+  letter-spacing: 0.105em;
   text-transform: uppercase;
 }
 
@@ -195,7 +221,7 @@ textarea {
   justify-content: center;
   isolation: isolate;
   overflow: hidden;
-  padding: 0 14px;
+  padding: 0 13px;
   border: 1px solid transparent;
   border-radius: var(--radius);
   cursor: pointer;
@@ -210,7 +236,13 @@ textarea {
 .header-actions {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  justify-content: flex-end;
+  gap: 11px;
+}
+
+.mobile-nav-toggle,
+.mobile-nav-action {
+  display: none;
 }
 
 .header-cta,
@@ -253,9 +285,9 @@ textarea {
 
 .main-nav a::after {
   position: absolute;
-  right: 14px;
-  bottom: 7px;
-  left: 14px;
+  right: 13px;
+  bottom: 5px;
+  left: 13px;
   height: 2px;
   border-radius: 999px;
   background: linear-gradient(90deg, transparent, rgba(244, 248, 251, 0.9), rgba(160, 176, 190, 0.68), transparent);
@@ -268,14 +300,29 @@ textarea {
 }
 
 .header-cta {
-  padding: 0 18px;
-  background: transparent;
-  color: var(--gold-strong);
+  min-height: 44px;
+  padding: 0 19px;
+  border-color: rgba(244, 248, 251, 0.82);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(215, 224, 232, 0.92)),
+    #eef3f7;
+  color: #111416;
+  text-shadow: none;
+  box-shadow:
+    0 14px 32px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.86),
+    inset 0 -1px 0 rgba(95, 110, 123, 0.22);
 }
 
 .header-trip-cta {
-  border-color: rgba(226, 234, 242, 0.16);
-  color: rgba(238, 243, 247, 0.72);
+  border-color: rgba(226, 234, 242, 0.24);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.018)),
+    rgba(255, 255, 255, 0.015);
+  color: rgba(238, 243, 247, 0.78);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 10px 28px rgba(0, 0, 0, 0.14);
 }
 
 .header-cta:hover,
@@ -290,8 +337,31 @@ textarea {
     inset 0 -1px 0 rgba(255, 255, 255, 0.08);
 }
 
+.header-cta:not(.header-trip-cta):hover,
+.header-cta:not(.header-trip-cta):focus-visible {
+  border-color: #ffffff;
+  background:
+    linear-gradient(180deg, #ffffff, #e8eef4),
+    #ffffff;
+  color: #080a0c;
+  box-shadow:
+    0 18px 42px rgba(255, 255, 255, 0.1),
+    0 14px 32px rgba(0, 0, 0, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
+}
+
+.header-trip-cta:hover,
+.header-trip-cta:focus-visible {
+  border-color: rgba(244, 248, 251, 0.52);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.035)),
+    rgba(255, 255, 255, 0.035);
+  color: var(--gold-strong);
+}
+
 .main-nav a:hover,
-.main-nav a:focus-visible {
+.main-nav a:focus-visible,
+.main-nav a.active {
   color: var(--gold-strong);
   transform: translateY(-1px);
 }
@@ -303,9 +373,17 @@ textarea {
 }
 
 .main-nav a:hover::after,
-.main-nav a:focus-visible::after {
+.main-nav a:focus-visible::after,
+.main-nav a.active::after {
   transform: scaleX(1);
   opacity: 1;
+}
+
+.main-nav a:focus-visible,
+.header-cta:focus-visible,
+.mobile-nav-toggle:focus-visible {
+  outline: 2px solid rgba(244, 248, 251, 0.76);
+  outline-offset: 3px;
 }
 
 .hero {
@@ -5289,7 +5367,7 @@ address a:hover {
 
 @media (max-width: 820px) {
   html {
-    scroll-padding-top: 116px;
+    scroll-padding-top: 92px;
   }
 
   #top,
@@ -5299,26 +5377,28 @@ address a:hover {
   #contact,
   #booking,
   #booking-policies {
-    scroll-margin-top: 116px;
+    scroll-margin-top: 92px;
   }
 
   body {
-    padding-top: 112px;
+    padding-top: 78px;
   }
 
   .site-header {
     position: fixed;
-    display: grid;
-    grid-template-areas:
-      "brand cta"
-      "nav nav";
-    grid-template-columns: minmax(0, 1fr) auto;
     width: 100%;
-    align-items: center;
-    gap: 10px 14px;
-    padding: 12px 16px 12px;
-    background: rgba(13, 14, 15, 0.96);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
+    padding: 0 14px;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.036), transparent 58%),
+      rgba(10, 11, 13, 0.96);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.34);
+  }
+
+  .site-header-shell {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas: "brand toggle actions";
+    min-height: 76px;
+    gap: 10px;
   }
 
   .brand {
@@ -5326,34 +5406,105 @@ address a:hover {
     min-width: 0;
   }
 
+  .brand-name {
+    font-size: 1.38rem;
+  }
+
+  .brand small {
+    margin-top: 5px;
+    font-size: 0.7rem;
+  }
+
+  .mobile-nav-toggle {
+    grid-area: toggle;
+    display: inline-grid;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    gap: 4px;
+    border: 1px solid rgba(226, 234, 242, 0.2);
+    border-radius: var(--radius);
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.018)),
+      rgba(255, 255, 255, 0.025);
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  .mobile-nav-toggle span {
+    display: block;
+    width: 17px;
+    height: 2px;
+    border-radius: 999px;
+    background: currentColor;
+    transition:
+      transform 180ms ease,
+      opacity 180ms ease;
+  }
+
+  .site-header.is-menu-open .mobile-nav-toggle span:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+  }
+
+  .site-header.is-menu-open .mobile-nav-toggle span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .site-header.is-menu-open .mobile-nav-toggle span:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
+  }
+
   .header-actions {
-    grid-area: cta;
+    grid-area: actions;
     display: inline-flex;
     justify-self: end;
-    gap: 7px;
+    gap: 0;
   }
 
   .header-cta {
     justify-self: end;
-    min-height: 38px;
+    min-height: 40px;
     padding: 0 12px;
-    border-color: rgba(226, 234, 242, 0.32);
-    background:
-      linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(244, 248, 251, 0.065) 52%, rgba(142, 160, 176, 0.13)),
-      rgba(10, 13, 16, 0.2);
+    font-size: 0.68rem;
+  }
+
+  .header-trip-cta {
+    display: none;
   }
 
   .main-nav {
-    grid-area: nav;
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 14px;
+    left: 14px;
+    z-index: 1;
     display: grid;
-    grid-template-columns: 0.8fr 1fr 1.35fr 0.95fr;
-    width: 100%;
-    gap: 2px;
+    grid-template-columns: 1fr;
+    gap: 4px;
     overflow: hidden;
-    padding: 3px;
-    border: 1px solid rgba(226, 234, 242, 0.14);
+    padding: 8px;
+    border: 1px solid rgba(226, 234, 242, 0.16);
     border-radius: var(--radius);
-    background: rgba(5, 6, 7, 0.42);
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.018)),
+      rgba(9, 10, 12, 0.97);
+    box-shadow: 0 22px 48px rgba(0, 0, 0, 0.34);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-8px);
+    transition:
+      opacity 180ms ease,
+      visibility 180ms ease,
+      transform 180ms ease;
+    visibility: hidden;
+    backdrop-filter: blur(13px);
+  }
+
+  .site-header.is-menu-open .main-nav {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+    visibility: visible;
   }
 
   .admin-header {
@@ -5368,12 +5519,20 @@ address a:hover {
   }
 
   .main-nav a {
-    min-height: 34px;
-    padding: 0 5px;
+    min-height: 42px;
+    justify-content: flex-start;
+    padding: 0 12px;
     border-radius: 6px;
-    font-size: clamp(0.58rem, 1.9vw, 0.68rem);
-    letter-spacing: 0.035em;
+    font-size: 0.72rem;
+    letter-spacing: 0.075em;
     white-space: nowrap;
+  }
+
+  .mobile-nav-action {
+    display: inline-flex;
+    border-color: rgba(226, 234, 242, 0.18);
+    background: rgba(255, 255, 255, 0.035);
+    color: rgba(238, 243, 247, 0.8);
   }
 
   .main-nav a::after {
@@ -5551,34 +5710,46 @@ address a:hover {
 
 @media (max-width: 620px) {
   body {
-    padding-top: 102px;
+    padding-top: 72px;
   }
 
   .site-header {
-    gap: 8px 12px;
-    padding: 10px 14px 9px;
+    padding: 0 12px;
+  }
+
+  .site-header-shell {
+    grid-template-columns: minmax(0, 1fr) 38px auto;
+    min-height: 72px;
+    gap: 8px;
+  }
+
+  .main-nav {
+    top: calc(100% + 8px);
+    right: 12px;
+    left: 12px;
   }
 
   .main-nav a {
-    min-height: 31px;
-    padding: 0 2px;
-    font-size: 0.56rem;
-    letter-spacing: 0;
+    min-height: 40px;
+    padding: 0 11px;
+    font-size: 0.7rem;
+    letter-spacing: 0.07em;
   }
 
   .header-cta {
-    min-height: 36px;
-    padding: 0 10px;
-    font-size: 0.68rem;
+    min-height: 38px;
+    padding: 0 11px;
+    font-size: 0.64rem;
     letter-spacing: 0.055em;
   }
 
-  .header-actions {
-    gap: 6px;
+  .mobile-nav-toggle {
+    width: 38px;
+    height: 38px;
   }
 
   .brand-name {
-    font-size: 1.14rem;
+    font-size: 1.24rem;
   }
 
   .brand small {
