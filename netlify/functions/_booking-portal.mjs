@@ -199,19 +199,80 @@ export function parseJsonBody(event) {
   }
 }
 
+function portalConfigError(code, message) {
+  const error = new Error(message);
+  error.portalCode = code;
+  return error;
+}
+
+function cleanEnvValue(value) {
+  const trimmed = String(value || "").trim();
+  const unquoted = trimmed.replace(/^(['"])(.*)\1$/, "$2").trim();
+
+  return unquoted;
+}
+
+function cleanApiKey(value) {
+  return cleanEnvValue(value).replace(/^Bearer\s+/i, "").replace(/\s+/g, "");
+}
+
+function decodeJwtPayload(token) {
+  const [, payload] = String(token || "").split(".");
+  if (!payload) return null;
+
+  try {
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+    return JSON.parse(Buffer.from(padded, "base64").toString("utf8"));
+  } catch (_error) {
+    return null;
+  }
+}
+
+function validateServiceRoleKey(serviceRoleKey) {
+  if (serviceRoleKey.startsWith("sb_secret_")) {
+    throw portalConfigError(
+      "SUPABASE_SECRET_KEY_UNSUPPORTED",
+      "SUPABASE_SERVICE_ROLE_KEY is a new Supabase secret key. Use the legacy service_role JWT key for this function.",
+    );
+  }
+
+  const payload = decodeJwtPayload(serviceRoleKey);
+
+  if (!payload) {
+    throw portalConfigError("SUPABASE_KEY_PARSE", "SUPABASE_SERVICE_ROLE_KEY is not a readable JWT.");
+  }
+
+  if (payload.role !== "service_role") {
+    throw portalConfigError(
+      "SUPABASE_KEY_ROLE",
+      `SUPABASE_SERVICE_ROLE_KEY JWT role is ${payload.role || "missing"}, expected service_role.`,
+    );
+  }
+}
+
 export function getSupabaseAdminClient() {
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const serviceRoleKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE;
+  const supabaseUrl = cleanEnvValue(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL);
+  const serviceRoleKey = cleanApiKey(
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE,
+  );
 
   if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("Supabase service credentials are not configured.");
+    throw portalConfigError("PORTAL_ENV", "Supabase service credentials are not configured.");
   }
+
+  validateServiceRoleKey(serviceRoleKey);
 
   return createClient(supabaseUrl, serviceRoleKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
+    },
+    global: {
+      headers: {
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
+      },
     },
   });
 }

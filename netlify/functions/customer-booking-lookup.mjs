@@ -9,6 +9,8 @@ import {
 } from "./_booking-portal.mjs";
 
 function lookupFailureCode(error) {
+  if (error?.portalCode) return error.portalCode;
+
   const message = `${error?.code || ""} ${error?.message || ""} ${error?.details || ""}`;
 
   if (/service credentials|SUPABASE|environment|env/i.test(message)) return "PORTAL_ENV";
