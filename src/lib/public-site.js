@@ -48,13 +48,13 @@ export function renderPublicFooter() {
         ["Fleet", links.fleet],
         ["Policies", links.policies],
         ["Testimonials", links.testimonials],
+        ["My Trip", links.portal],
       ])}
 
       ${renderFooterLinks("Support", "Footer support links", [
         ["Terms", links.terms],
         ["FAQ", links.faq],
         ["Lost & Found", links.lostAndFound],
-        ["Booking Portal", links.portal],
         ["Contact", links.contact],
       ])}
     </div>

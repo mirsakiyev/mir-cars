@@ -207,6 +207,12 @@ textarea {
     box-shadow 160ms ease;
 }
 
+.header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .header-cta,
 .button,
 .filter-button {
@@ -265,6 +271,11 @@ textarea {
   padding: 0 18px;
   background: transparent;
   color: var(--gold-strong);
+}
+
+.header-trip-cta {
+  border-color: rgba(226, 234, 242, 0.16);
+  color: rgba(238, 243, 247, 0.72);
 }
 
 .header-cta:hover,
@@ -5315,11 +5326,17 @@ address a:hover {
     min-width: 0;
   }
 
-  .header-cta {
+  .header-actions {
     grid-area: cta;
+    display: inline-flex;
+    justify-self: end;
+    gap: 7px;
+  }
+
+  .header-cta {
     justify-self: end;
     min-height: 38px;
-    padding: 0 14px;
+    padding: 0 12px;
     border-color: rgba(226, 234, 242, 0.32);
     background:
       linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(244, 248, 251, 0.065) 52%, rgba(142, 160, 176, 0.13)),
@@ -5551,9 +5568,13 @@ address a:hover {
 
   .header-cta {
     min-height: 36px;
-    padding: 0 12px;
+    padding: 0 10px;
     font-size: 0.68rem;
     letter-spacing: 0.055em;
+  }
+
+  .header-actions {
+    gap: 6px;
   }
 
   .brand-name {
