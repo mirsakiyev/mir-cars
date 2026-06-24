@@ -61,7 +61,8 @@ async function postJson(url, payload) {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(data.error || "Something went wrong. Please try again.");
+    const reference = data.code ? ` Reference: ${data.code}.` : "";
+    throw new Error(`${data.error || "Something went wrong. Please try again."}${reference}`);
   }
 
   return data;
