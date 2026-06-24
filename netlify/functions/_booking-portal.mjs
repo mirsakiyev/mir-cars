@@ -1,5 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
-import { supportContact } from "../../src/lib/site-config.js";
+
+const supportContact = {
+  address: "1137 N Central Ave, Glendale, CA 91202",
+  phoneDisplay: "(747) 744-9777",
+  phoneHref: "tel:+17477449777",
+  email: "rulslan@mircars.com",
+  hours: "Daily hours: 9:00 AM - 7:00 PM",
+};
 
 export const jsonHeaders = {
   "Content-Type": "application/json",
@@ -82,6 +89,7 @@ const portalBookingSelect = `
 
 const baseBookingSelect = `
   id,
+  vehicle_id,
   booking_number,
   status,
   booking_status,
@@ -139,6 +147,32 @@ const baseBookingSelect = `
     refund_amount,
     created_at
   )
+`;
+
+const minimalBookingSelect = `
+  id,
+  vehicle_id,
+  booking_number,
+  status,
+  booking_status,
+  pickup_date,
+  return_date,
+  pickup_time,
+  return_time,
+  pickup_location,
+  return_location,
+  rental_days,
+  daily_rate_snapshot,
+  deposit_snapshot,
+  estimated_subtotal,
+  estimated_total,
+  currency,
+  payment_method,
+  customer_first_name,
+  customer_last_name,
+  customer_email,
+  customer_phone,
+  created_at
 `;
 
 export function jsonResponse(statusCode, body) {
@@ -219,12 +253,15 @@ export async function fetchBookingByTripId(client, tripId) {
 
   if (!error) return data || null;
 
-  if (!shouldUseBaseBookingSelect(error)) throw error;
-
   console.warn("Booking portal used base booking select fallback.", {
     code: error.code || "unknown",
     message: error.message || "unknown",
+    expectedFallback: shouldUseBaseBookingSelect(error),
   });
+
+  if (!shouldUseBaseBookingSelect(error)) {
+    return fetchMinimalBookingByTripId(client, tripId);
+  }
 
   const { data: fallbackData, error: fallbackError } = await client
     .from("booking_requests")
@@ -232,7 +269,14 @@ export async function fetchBookingByTripId(client, tripId) {
     .eq("booking_number", tripId)
     .maybeSingle();
 
-  if (fallbackError) throw fallbackError;
+  if (fallbackError) {
+    console.warn("Booking portal used minimal booking select fallback.", {
+      code: fallbackError.code || "unknown",
+      message: fallbackError.message || "unknown",
+    });
+
+    return fetchMinimalBookingByTripId(client, tripId);
+  }
 
   return fallbackData
     ? {
@@ -243,6 +287,69 @@ export async function fetchBookingByTripId(client, tripId) {
         rental_agreement_url: null,
       }
     : null;
+}
+
+export async function fetchMinimalBookingByTripId(client, tripId) {
+  const { data, error } = await client.from("booking_requests").select(minimalBookingSelect).eq("booking_number", tripId).maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  return enrichMinimalBooking(client, data);
+}
+
+async function enrichMinimalBooking(client, booking) {
+  const [vehicle, documents, payments, extensionRequests] = await Promise.all([
+    maybeFetchVehicle(client, booking.vehicle_id),
+    maybeFetchRows(client.from("booking_documents").select("id,document_type,created_at").eq("booking_request_id", booking.id)),
+    maybeFetchRows(client.from("payments").select("*").eq("booking_request_id", booking.id).order("created_at", { ascending: false })),
+    maybeFetchRows(client.from("booking_extension_requests").select("id,requested_return_date,requested_return_time,message,status,created_at").eq("booking_request_id", booking.id)),
+  ]);
+
+  return {
+    ...booking,
+    agreement_status: "not_ready",
+    booking_documents: documents,
+    booking_extension_requests: extensionRequests,
+    payments,
+    pickup_instructions: null,
+    rental_agreement_url: null,
+    vehicles: vehicle,
+  };
+}
+
+async function maybeFetchVehicle(client, vehicleId) {
+  if (!vehicleId) return null;
+
+  const { data, error } = await client
+    .from("vehicles")
+    .select("slug,make,model,year,trim,category,color,transmission,fuel_type,seats,daily_rate,deposit_amount,mileage_limit_per_day,currency,image_urls")
+    .eq("id", vehicleId)
+    .maybeSingle();
+
+  if (error) {
+    console.warn("Booking portal vehicle enrichment skipped.", {
+      code: error.code || "unknown",
+      message: error.message || "unknown",
+    });
+    return null;
+  }
+
+  return data || null;
+}
+
+async function maybeFetchRows(query) {
+  const { data, error } = await query;
+
+  if (error) {
+    console.warn("Booking portal enrichment query skipped.", {
+      code: error.code || "unknown",
+      message: error.message || "unknown",
+    });
+    return [];
+  }
+
+  return data || [];
 }
 
 function shouldUseBaseBookingSelect(error) {
