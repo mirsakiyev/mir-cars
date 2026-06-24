@@ -7,7 +7,7 @@ export const jsonHeaders = {
 
 const lookupError = "We could not find a booking with those details.";
 
-const bookingSelect = `
+const portalBookingSelect = `
   id,
   booking_number,
   status,
@@ -76,6 +76,67 @@ const bookingSelect = `
     requested_return_time,
     message,
     status,
+    created_at
+  )
+`;
+
+const baseBookingSelect = `
+  id,
+  booking_number,
+  status,
+  booking_status,
+  pickup_date,
+  return_date,
+  pickup_time,
+  return_time,
+  pickup_location,
+  return_location,
+  rental_days,
+  daily_rate_snapshot,
+  deposit_snapshot,
+  estimated_subtotal,
+  estimated_total,
+  currency,
+  payment_method,
+  customer_first_name,
+  customer_last_name,
+  customer_email,
+  customer_phone,
+  created_at,
+  vehicles(
+    slug,
+    make,
+    model,
+    year,
+    trim,
+    category,
+    color,
+    transmission,
+    fuel_type,
+    seats,
+    daily_rate,
+    deposit_amount,
+    mileage_limit_per_day,
+    currency,
+    image_urls
+  ),
+  booking_documents(
+    id,
+    document_type,
+    created_at
+  ),
+  payments(
+    id,
+    payment_provider,
+    payment_status,
+    status,
+    amount_due,
+    amount_paid,
+    currency,
+    security_deposit_amount,
+    security_deposit_status,
+    refund_status,
+    refund_amount,
     created_at
   )
 `;
@@ -154,10 +215,42 @@ function verifierMatchesBooking(booking, verifier) {
 }
 
 export async function fetchBookingByTripId(client, tripId) {
-  const { data, error } = await client.from("booking_requests").select(bookingSelect).eq("booking_number", tripId).maybeSingle();
+  const { data, error } = await client.from("booking_requests").select(portalBookingSelect).eq("booking_number", tripId).maybeSingle();
 
-  if (error) throw error;
-  return data || null;
+  if (!error) return data || null;
+
+  if (!shouldUseBaseBookingSelect(error)) throw error;
+
+  console.warn("Booking portal used base booking select fallback.", {
+    code: error.code || "unknown",
+    message: error.message || "unknown",
+  });
+
+  const { data: fallbackData, error: fallbackError } = await client
+    .from("booking_requests")
+    .select(baseBookingSelect)
+    .eq("booking_number", tripId)
+    .maybeSingle();
+
+  if (fallbackError) throw fallbackError;
+
+  return fallbackData
+    ? {
+        ...fallbackData,
+        agreement_status: "not_ready",
+        booking_extension_requests: [],
+        pickup_instructions: null,
+        rental_agreement_url: null,
+      }
+    : null;
+}
+
+function shouldUseBaseBookingSelect(error) {
+  const message = `${error?.code || ""} ${error?.message || ""} ${error?.details || ""}`;
+
+  return /booking_extension_requests|pickup_instructions|rental_agreement_url|agreement_status|relationship|schema cache|could not find|does not exist|PGRST200|PGRST204/i.test(
+    message,
+  );
 }
 
 export async function findVerifiedBooking(client, payload) {

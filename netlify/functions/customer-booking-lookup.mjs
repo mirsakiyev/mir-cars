@@ -23,7 +23,12 @@ export async function handler(event) {
     return jsonResponse(200, {
       booking: sanitizeBooking(booking),
     });
-  } catch (_error) {
+  } catch (error) {
+    console.warn("Booking portal lookup failed.", {
+      code: error?.code || "unknown",
+      message: error?.message || "unknown",
+    });
+
     return jsonResponse(500, {
       error: "The booking portal is temporarily unavailable. Please contact MIR CARS for help.",
     });
