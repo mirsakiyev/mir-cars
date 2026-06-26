@@ -33,12 +33,29 @@ const vehicleColumns = [
   "image_urls",
 ].join(",");
 
+let timeAvailabilityFallbackLogged = false;
+
 function fallbackVehicles() {
   return window.MIR_CARS?.fallbackVehicles || window.MIR_CARS?.vehicles || [];
 }
 
 function fallbackBySlug(slug) {
   return fallbackVehicles().find((vehicle) => vehicle.slug === slug) || null;
+}
+
+async function fetchAvailableVehicleRows(client) {
+  const { data, error } = await client
+    .from("vehicles")
+    .select(vehicleColumns)
+    .eq("status", "available")
+    .eq("public_visible", true)
+    .is("archived_at", null)
+    .order("sort_order", { ascending: true })
+    .order("year", { ascending: false });
+
+  if (error) throw error;
+
+  return Array.isArray(data) ? data : [];
 }
 
 function safeImageSource(src) {
@@ -155,18 +172,8 @@ export async function loadAvailableVehicles() {
   }
 
   try {
-    const { data, error } = await client
-      .from("vehicles")
-      .select(vehicleColumns)
-      .eq("status", "available")
-      .eq("public_visible", true)
-      .is("archived_at", null)
-      .order("sort_order", { ascending: true })
-      .order("year", { ascending: false });
-
-    if (error) throw error;
-
-    const vehicles = Array.isArray(data) ? data.map(mapDatabaseVehicle) : fallbackVehicles();
+    const rows = await fetchAvailableVehicleRows(client);
+    const vehicles = rows.map(mapDatabaseVehicle);
     window.MIR_CARS?.setVehicles?.(vehicles);
 
     return vehicles;
@@ -176,7 +183,68 @@ export async function loadAvailableVehicles() {
   }
 }
 
-export async function checkVehicleAvailability(vehicleId, pickupDate, returnDate) {
+async function checkAvailabilityRpc(client, vehicleId, startDate, endDate, options = {}) {
+  const basePayload = {
+    vehicle_id_input: vehicleId,
+    pickup_date_input: startDate,
+    return_date_input: endDate,
+  };
+  const pickupTime = options.pickupTime || options.startTime || "";
+  const returnTime = options.returnTime || options.endTime || "";
+
+  if (pickupTime || returnTime) {
+    const { data, error } = await client.rpc("check_vehicle_availability", {
+      ...basePayload,
+      pickup_time_input: pickupTime || null,
+      return_time_input: returnTime || null,
+    });
+
+    if (!error) return { data, error: null };
+
+    if (!timeAvailabilityFallbackLogged) {
+      timeAvailabilityFallbackLogged = true;
+      logClientWarning("Time-aware availability RPC is unavailable. Falling back to date-only availability.", error);
+    }
+  }
+
+  return client.rpc("check_vehicle_availability", basePayload);
+}
+
+export async function loadAvailableVehiclesForDates(startDate, endDate, options = {}) {
+  const client = await getSupabaseClient();
+
+  if (!client) {
+    const error = getSupabaseConfigError() || "Live availability is unavailable right now.";
+    logClientWarning(error);
+    return { vehicles: [], allVehicles: [], error };
+  }
+
+  let fleet = [];
+
+  try {
+    const rows = await fetchAvailableVehicleRows(client);
+    fleet = rows.map(mapDatabaseVehicle);
+    const availabilityChecks = await Promise.all(
+      fleet.map(async (vehicle) => {
+        const { data, error } = await checkAvailabilityRpc(client, vehicle.supabaseId || vehicle.id, startDate, endDate, options);
+
+        if (error) throw error;
+
+        return Boolean(data);
+      }),
+    );
+    const vehicles = fleet.filter((_vehicle, index) => availabilityChecks[index]);
+
+    window.MIR_CARS?.setVehicles?.(vehicles);
+
+    return { vehicles, allVehicles: fleet, error: "" };
+  } catch (error) {
+    logClientWarning("Date-filtered vehicle availability load failed.", error);
+    return { vehicles: [], allVehicles: fleet, error: "Could not check live availability for those dates." };
+  }
+}
+
+export async function checkVehicleAvailability(vehicleId, pickupDate, returnDate, options = {}) {
   const client = await getSupabaseClient();
 
   if (!client || !vehicleId || !pickupDate || !returnDate) {
@@ -184,11 +252,7 @@ export async function checkVehicleAvailability(vehicleId, pickupDate, returnDate
   }
 
   try {
-    const { data, error } = await client.rpc("check_vehicle_availability", {
-      vehicle_id_input: vehicleId,
-      pickup_date_input: pickupDate,
-      return_date_input: returnDate,
-    });
+    const { data, error } = await checkAvailabilityRpc(client, vehicleId, pickupDate, returnDate, options);
 
     if (error) throw error;
 

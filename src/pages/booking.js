@@ -1,5 +1,20 @@
 import "../../vehicle-data.js";
-import { calculateEstimate, calculateRentalDays, formatDailyRate, formatMoney, generateBookingNumber, getAge } from "../lib/booking-utils.js";
+import {
+  AVAILABILITY_END_PARAM,
+  AVAILABILITY_END_TIME_PARAM,
+  AVAILABILITY_START_PARAM,
+  AVAILABILITY_START_TIME_PARAM,
+  calculateEstimate,
+  calculateRentalDays,
+  formatDailyRate,
+  formatMoney,
+  generateBookingNumber,
+  getAge,
+  isDateOnlyString,
+  isTimeString,
+  syncDateInputLimits,
+} from "../lib/booking-utils.js";
+import { initCustomDatePickers } from "../lib/date-picker.js";
 import { escapeHtml, setFormStatus, setFormStatusHtml } from "../lib/dom-utils.js";
 import { refreshHashScroll } from "../lib/hash-scroll.js";
 import { logClientWarning } from "../lib/logging.js";
@@ -262,6 +277,21 @@ function setTimePickerOpen(picker, isOpen) {
 
 function timePickerTriggerFor(name) {
   return form.elements[name]?.closest("[data-time-picker]")?.querySelector(".time-picker-trigger");
+}
+
+function datePickerTriggerFor(name) {
+  return form.elements[name]?.closest("[data-date-picker]")?.querySelector("[data-date-trigger]");
+}
+
+function syncBookingDateControls(options = {}) {
+  const pickupInput = form.elements.pickup_date;
+  const returnInput = form.elements.return_date;
+
+  if (options.clearInvalidReturn && pickupInput?.value && returnInput?.value && returnInput.value < pickupInput.value) {
+    returnInput.value = "";
+  }
+
+  syncDateInputLimits(pickupInput, returnInput);
 }
 
 function numberOrNull(value) {
@@ -536,6 +566,22 @@ function selectVehicleFromUrl() {
   }
 }
 
+function applyTripSearchFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const startDate = params.get(AVAILABILITY_START_PARAM);
+  const endDate = params.get(AVAILABILITY_END_PARAM);
+  const startTime = params.get(AVAILABILITY_START_TIME_PARAM);
+  const endTime = params.get(AVAILABILITY_END_TIME_PARAM);
+
+  if (isDateOnlyString(startDate)) form.elements.pickup_date.value = startDate;
+  if (isDateOnlyString(endDate)) form.elements.return_date.value = endDate;
+  if (isTimeString(startTime)) form.elements.pickup_time.value = startTime;
+  if (isTimeString(endTime)) form.elements.return_time.value = endTime;
+
+  syncBookingDateControls({ clearInvalidReturn: true });
+  timePickers.forEach((picker) => syncTimePicker(picker));
+}
+
 function renderSelectedVehicle() {
   const vehicle = selectedVehicle();
 
@@ -609,8 +655,10 @@ async function refreshAvailability() {
   const vehicle = selectedVehicle();
   const pickupDate = form.elements.pickup_date.value;
   const returnDate = form.elements.return_date.value;
+  const pickupTime = form.elements.pickup_time.value;
+  const returnTime = form.elements.return_time.value;
   const rentalDays = calculateRentalDays(pickupDate, returnDate);
-  const key = `${vehicle?.supabaseId || vehicle?.slug || "none"}:${pickupDate}:${returnDate}`;
+  const key = `${vehicle?.supabaseId || vehicle?.slug || "none"}:${pickupDate}:${pickupTime}:${returnDate}:${returnTime}`;
 
   availabilityState = { status: "unknown", key };
 
@@ -640,7 +688,10 @@ async function refreshAvailability() {
   availabilityState = { status: "checking", key };
   renderAvailability("checking", "Checking live dates...");
 
-  const result = await checkVehicleAvailability(vehicle.supabaseId, pickupDate, returnDate);
+  const result = await checkVehicleAvailability(vehicle.supabaseId, pickupDate, returnDate, {
+    pickupTime,
+    returnTime,
+  });
 
   if (requestId !== availabilityRequestId) return availabilityState;
 
@@ -827,6 +878,18 @@ async function validateStep(stepIndex) {
       return false;
     }
 
+    if (!pickupDate) {
+      setFormStatus(status, "error", "Pickup date is required.");
+      datePickerTriggerFor("pickup_date")?.focus();
+      return false;
+    }
+
+    if (!returnDate) {
+      setFormStatus(status, "error", "Return date is required.");
+      datePickerTriggerFor("return_date")?.focus();
+      return false;
+    }
+
     if (!form.elements.pickup_time.value) {
       setFormStatus(status, "error", "Pickup time is required.");
       timePickerTriggerFor("pickup_time")?.focus();
@@ -839,8 +902,15 @@ async function validateStep(stepIndex) {
       return false;
     }
 
+    if (pickupDate === returnDate && form.elements.return_time.value <= form.elements.pickup_time.value) {
+      setFormStatus(status, "error", "Return time must be after pickup time for same-day trips.");
+      timePickerTriggerFor("return_time")?.focus();
+      return false;
+    }
+
     if (!rentalDays) {
-      reportStepInvalid(form.elements.return_date, "Return date must be after or the same as the pickup date.");
+      setFormStatus(status, "error", "Return date must be after or the same as the pickup date.");
+      datePickerTriggerFor("return_date")?.focus();
       return false;
     }
 
@@ -891,6 +961,8 @@ function validateBooking() {
   const data = new FormData(form);
   const pickupDate = String(data.get("pickup_date") || "");
   const returnDate = String(data.get("return_date") || "");
+  const pickupTime = String(data.get("pickup_time") || "");
+  const returnTime = String(data.get("return_time") || "");
   const rentalDays = calculateRentalDays(pickupDate, returnDate);
   const age = getAge(String(data.get("date_of_birth") || ""));
 
@@ -900,7 +972,12 @@ function validateBooking() {
   if (!String(data.get("customer_phone") || "").trim()) return "Phone is required.";
   if (!pickupDate) return "Pick-up date is required.";
   if (!returnDate) return "Drop-off date is required.";
+  if (!pickupTime) return "Pickup time is required.";
+  if (!returnTime) return "Return time is required.";
   if (!rentalDays) return "Drop-off date must be after or the same as the pick-up date.";
+  if (pickupDate === returnDate && returnTime <= pickupTime) {
+    return "Return time must be after pickup time for same-day trips.";
+  }
   if (hasPendingCustomLocation("pickup")) return "Please search and map the custom pickup address.";
   if (hasPendingCustomLocation("return")) return "Please search and map the custom return address.";
   if (!String(data.get("date_of_birth") || "").trim()) return "Date of birth is required.";
@@ -1017,6 +1094,23 @@ function paymentRedirectUrl(bookingNumber, paymentAccessToken) {
 }
 
 function bindBookingForm() {
+  syncBookingDateControls();
+
+  form.elements.pickup_date?.addEventListener("input", () => {
+    syncBookingDateControls({ clearInvalidReturn: true });
+  });
+
+  form.elements.return_date?.addEventListener("input", () => {
+    syncBookingDateControls();
+  });
+
+  form.querySelectorAll("[data-date-trigger]").forEach((trigger) => {
+    trigger.addEventListener("click", () => {
+      timePickers.forEach((picker) => setTimePickerOpen(picker, false));
+      setVehiclePickerOpen(false);
+    });
+  });
+
   timePickers.forEach((picker) => {
     const trigger = picker.querySelector(".time-picker-trigger");
 
@@ -1127,7 +1221,7 @@ function bindBookingForm() {
         renderEstimate();
       }
 
-      if (["vehicle", "pickup_date", "return_date"].includes(event.target.name)) {
+      if (["vehicle", "pickup_date", "return_date", "pickup_time", "return_time"].includes(event.target.name)) {
         renderSelectedVehicle();
         renderEstimate();
         refreshAvailability();
@@ -1207,6 +1301,7 @@ function bindBookingForm() {
 
 async function initBookingPage() {
   initPublicSite();
+  initCustomDatePickers();
 
   document.querySelectorAll("[data-home-link]").forEach((link) => {
     link.href = window.MIR_CARS.homeUrl(link.dataset.homeLink);
@@ -1216,6 +1311,7 @@ async function initBookingPage() {
   populateVehicleSelect();
   populateLocationSelects();
   selectVehicleFromUrl();
+  applyTripSearchFromUrl();
   renderVehiclePickerOptions();
   syncVehiclePickerSelection();
   syncLocationFields();

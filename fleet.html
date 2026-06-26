@@ -49,6 +49,41 @@
       <section class="fleet-page-controls" aria-label="Fleet filters and sorting">
         <div class="fleet-tools">
           <div class="fleet-controls" id="fleetFilters" aria-label="Vehicle types"></div>
+          <form class="fleet-date-filter" id="fleetDateFilter" aria-describedby="fleetAvailabilitySummary fleetDateMessage">
+            <label class="date-filter-field date-filter-combo">
+              <span>Start</span>
+              <span class="date-picker-shell" data-date-picker>
+                <input type="hidden" name="startDate" data-date-input />
+                <button class="date-picker-trigger" type="button" data-date-trigger aria-haspopup="dialog" aria-expanded="false" aria-label="Choose start date">
+                  <span data-date-display>Start date</span>
+                </button>
+              </span>
+              <span class="time-select-shell" data-time-select>
+                <input type="hidden" name="startTime" data-time-input />
+                <button class="time-select-trigger" type="button" data-time-trigger aria-haspopup="dialog" aria-expanded="false" aria-label="Choose start time">
+                  <span data-time-display>Start time</span>
+                </button>
+              </span>
+            </label>
+            <label class="date-filter-field date-filter-combo">
+              <span>End</span>
+              <span class="date-picker-shell" data-date-picker>
+                <input type="hidden" name="endDate" data-date-input />
+                <button class="date-picker-trigger" type="button" data-date-trigger aria-haspopup="dialog" aria-expanded="false" aria-label="Choose end date">
+                  <span data-date-display>End date</span>
+                </button>
+              </span>
+              <span class="time-select-shell" data-time-select>
+                <input type="hidden" name="endTime" data-time-input />
+                <button class="time-select-trigger" type="button" data-time-trigger aria-haspopup="dialog" aria-expanded="false" aria-label="Choose end time">
+                  <span data-time-display>End time</span>
+                </button>
+              </span>
+            </label>
+            <button class="button primary" type="submit" disabled>Show Available</button>
+            <button class="button secondary" type="button" data-clear-dates hidden>Clear dates</button>
+            <span class="date-search-message" id="fleetDateMessage" aria-live="polite"></span>
+          </form>
           <label class="sort-control">
             Sort
             <select id="fleetSort" aria-label="Sort fleet">
@@ -58,6 +93,7 @@
             </select>
           </label>
         </div>
+        <p class="fleet-availability-summary" id="fleetAvailabilitySummary" aria-live="polite" hidden></p>
       </section>
 
       <section class="fleet-grid fleet-grid-full" id="fleetGrid" aria-live="polite"></section>

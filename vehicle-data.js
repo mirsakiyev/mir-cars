@@ -55,7 +55,11 @@
   }
 
   function fleetUrl(suffix = "") {
-    return fromSiteRoot(`fleet.html${suffix}`);
+    if (isFilePage && siteRoot) {
+      return fromSiteRoot(`fleet.html${suffix}`);
+    }
+
+    return `/fleet${suffix}`;
   }
 
   function publicPageUrl(path, suffix = "") {

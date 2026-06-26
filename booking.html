@@ -118,9 +118,21 @@
                   </div>
 
                   <div class="form-row">
-                    <label>
+                    <label class="booking-date-field">
                       Pickup date
-                      <input type="date" name="pickup_date" required />
+                      <span class="date-picker-shell" data-date-picker>
+                        <input type="hidden" name="pickup_date" data-date-input required />
+                        <button
+                          class="date-picker-trigger"
+                          type="button"
+                          data-date-trigger
+                          aria-haspopup="dialog"
+                          aria-expanded="false"
+                          aria-label="Choose pickup date"
+                        >
+                          <span data-date-display>Select date</span>
+                        </button>
+                      </span>
                     </label>
                     <div class="time-picker-field" data-time-picker>
                       <span class="time-picker-label" id="pickupTimeLabel">Pickup time</span>
@@ -163,9 +175,21 @@
                   </div>
 
                   <div class="form-row">
-                    <label>
+                    <label class="booking-date-field">
                       Return date
-                      <input type="date" name="return_date" required />
+                      <span class="date-picker-shell" data-date-picker>
+                        <input type="hidden" name="return_date" data-date-input required />
+                        <button
+                          class="date-picker-trigger"
+                          type="button"
+                          data-date-trigger
+                          aria-haspopup="dialog"
+                          aria-expanded="false"
+                          aria-label="Choose return date"
+                        >
+                          <span data-date-display>Select date</span>
+                        </button>
+                      </span>
                     </label>
                     <div class="time-picker-field" data-time-picker>
                       <span class="time-picker-label" id="returnTimeLabel">Return time</span>

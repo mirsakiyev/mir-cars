@@ -3,6 +3,11 @@
   publish = "dist"
 
 [[redirects]]
+  from = "/fleet"
+  to = "/fleet.html"
+  status = 200
+
+[[redirects]]
   from = "/admin/login"
   to = "/admin/login/"
   status = 301

@@ -28,7 +28,7 @@
       </a>
 
       <nav class="main-nav" aria-label="Primary navigation">
-        <a href="fleet.html">Fleet</a>
+        <a href="/fleet">Fleet</a>
         <a href="#policies">Policies</a>
         <a href="#testimonials">Testimonials</a>
         <a href="contact/">Contact</a>
@@ -51,9 +51,42 @@
             Reserve refined vehicles for business, travel, events, and everyday drives across Los Angeles.
           </p>
 
+          <form class="quick-request trip-date-search hero-date-search" id="heroDateSearch" aria-label="Trip availability search" aria-describedby="heroDateSearchMessage">
+            <label class="trip-date-field trip-combo-field" aria-label="Trip start">
+              <span class="date-picker-shell" data-date-picker>
+                <input type="hidden" name="startDate" data-date-input required />
+                <button class="date-picker-trigger" type="button" data-date-trigger aria-haspopup="dialog" aria-expanded="false" aria-label="Choose trip start date">
+                  <span data-date-display>Select start date</span>
+                </button>
+              </span>
+              <span class="time-select-shell" data-time-select>
+                <input type="hidden" name="startTime" data-time-input />
+                <button class="time-select-trigger" type="button" data-time-trigger aria-haspopup="dialog" aria-expanded="false" aria-label="Choose trip start time">
+                  <span data-time-display>Start time</span>
+                </button>
+              </span>
+            </label>
+            <label class="trip-date-field trip-combo-field" aria-label="Trip end">
+              <span class="date-picker-shell" data-date-picker>
+                <input type="hidden" name="endDate" data-date-input required />
+                <button class="date-picker-trigger" type="button" data-date-trigger aria-haspopup="dialog" aria-expanded="false" aria-label="Choose trip end date">
+                  <span data-date-display>Select end date</span>
+                </button>
+              </span>
+              <span class="time-select-shell" data-time-select>
+                <input type="hidden" name="endTime" data-time-input />
+                <button class="time-select-trigger" type="button" data-time-trigger aria-haspopup="dialog" aria-expanded="false" aria-label="Choose trip end time">
+                  <span data-time-display>End time</span>
+                </button>
+              </span>
+            </label>
+            <button class="button primary" type="submit" disabled>View Cars</button>
+            <p class="date-search-message" id="heroDateSearchMessage" aria-live="polite"></p>
+          </form>
+
           <div class="hero-actions">
             <a class="button hero-action hero-booking-cta" href="booking.html">Book Now</a>
-            <a class="button primary hero-action" href="fleet.html">Explore Vehicles</a>
+            <a class="button primary hero-action" href="/fleet">Explore Vehicles</a>
           </div>
         </div>
       </section>

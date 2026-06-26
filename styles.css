@@ -696,7 +696,7 @@ h3 {
   gap: 10px;
   width: min(100%, 360px);
   margin-top: 34px;
-  overflow: hidden;
+  overflow: visible;
   padding: 10px;
   border: 1px solid rgba(226, 234, 242, 0.2);
   border-radius: var(--radius);
@@ -865,6 +865,439 @@ textarea:focus {
   background:
     linear-gradient(145deg, rgba(255, 255, 255, 0.24), rgba(244, 248, 251, 0.1) 48%, rgba(142, 160, 176, 0.2)),
     rgba(12, 16, 20, 0.58);
+}
+
+.trip-date-search {
+  grid-template-columns: minmax(220px, 272px) minmax(220px, 272px) minmax(76px, 92px);
+  width: min(100%, 654px);
+  margin-top: 24px;
+  gap: 6px;
+  padding: 6px;
+}
+
+.date-search-helper,
+.date-search-message {
+  position: relative;
+  z-index: 1;
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.date-search-helper {
+  padding: 2px 6px 0;
+  color: rgba(238, 243, 247, 0.64);
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+.date-search-message {
+  min-height: 0;
+  padding: 0 6px 1px;
+  color: #ffaaa4;
+  font-size: 0.78rem;
+  font-weight: 720;
+  letter-spacing: 0;
+  line-height: 1.35;
+}
+
+.date-search-message:empty {
+  display: none;
+}
+
+.hero-date-search label,
+.hero-date-search .button {
+  min-height: 34px;
+}
+
+.hero-date-search label {
+  padding: 0;
+  border-right-color: rgba(226, 234, 242, 0.09);
+}
+
+.trip-combo-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 88px;
+  align-items: center;
+  gap: 6px;
+}
+
+.hero-date-search .date-picker-trigger {
+  min-height: 32px;
+  padding: 0 30px 0 10px;
+  font-size: 0.82rem;
+}
+
+.hero-date-search .button {
+  min-width: 0;
+  align-self: center;
+  padding: 0 10px;
+  font-size: 0.66rem;
+  letter-spacing: 0.055em;
+  line-height: 1.15;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+  transform: none;
+}
+
+.button:disabled::after {
+  display: none;
+}
+
+.date-picker-shell {
+  position: relative;
+  z-index: 8;
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.date-picker-trigger {
+  display: flex;
+  width: 100%;
+  min-height: 34px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid rgba(226, 234, 242, 0.24);
+  border-radius: 6px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01)),
+    rgba(3, 4, 5, 0.72);
+  color: rgba(238, 243, 247, 0.72);
+  cursor: pointer;
+  padding: 0 10px;
+  font-size: 0.88rem;
+  font-weight: 760;
+  letter-spacing: 0;
+  line-height: 1;
+  text-align: left;
+}
+
+.date-picker-trigger::after {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-right: 1.5px solid rgba(238, 243, 247, 0.7);
+  border-bottom: 1.5px solid rgba(238, 243, 247, 0.7);
+  content: "";
+  transform: rotate(45deg) translateY(-2px);
+}
+
+.date-picker-trigger:hover,
+.date-picker-trigger:focus-visible,
+.date-picker-shell.is-open .date-picker-trigger {
+  border-color: rgba(244, 248, 251, 0.42);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.018)),
+    rgba(7, 9, 11, 0.82);
+  color: var(--text);
+  outline: none;
+}
+
+.date-picker-trigger.has-value {
+  color: var(--gold-strong);
+}
+
+.time-select-shell {
+  position: relative;
+  z-index: 8;
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.time-select-trigger {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: 34px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(226, 234, 242, 0.24);
+  border-radius: 6px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01)),
+    rgba(3, 4, 5, 0.72);
+  color: rgba(238, 243, 247, 0.72);
+  cursor: pointer;
+  padding: 0 26px 0 9px;
+  font-size: 0.8rem;
+  font-weight: 760;
+  letter-spacing: 0;
+  line-height: 1;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.time-select-trigger::before {
+  position: absolute;
+  top: calc(50% - 4px);
+  right: 14px;
+  z-index: 1;
+  width: 4px;
+  height: 6px;
+  border-bottom: 1.4px solid currentColor;
+  border-left: 1.4px solid currentColor;
+  content: "";
+  opacity: 0.78;
+}
+
+.time-select-trigger::after {
+  position: absolute;
+  top: 50%;
+  right: 9px;
+  width: 13px;
+  height: 13px;
+  border: 1.4px solid currentColor;
+  border-radius: 999px;
+  content: "";
+  opacity: 0.78;
+  transform: translateY(-50%);
+}
+
+.time-select-trigger:hover,
+.time-select-trigger:focus-visible,
+.time-select-shell.is-open .time-select-trigger {
+  border-color: rgba(244, 248, 251, 0.42);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.018)),
+    rgba(7, 9, 11, 0.82);
+  color: var(--text);
+  outline: none;
+}
+
+.time-select-trigger.has-value {
+  color: var(--gold-strong);
+}
+
+.hero-date-search .time-select-trigger {
+  min-height: 32px;
+  font-size: 0.76rem;
+}
+
+.time-select-popover {
+  position: fixed;
+  top: var(--time-select-top, 0);
+  left: var(--time-select-left, 0);
+  z-index: 120;
+  display: grid;
+  width: min(var(--time-select-width, 190px), calc(100vw - 24px));
+  max-height: var(--time-select-max-height, 260px);
+  overflow-y: auto;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid rgba(226, 234, 242, 0.2);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(145deg, rgba(226, 234, 242, 0.08), transparent 38%, rgba(122, 139, 154, 0.08)),
+    rgba(8, 10, 12, 0.96);
+  box-shadow:
+    0 24px 54px rgba(0, 0, 0, 0.46),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  color: var(--text);
+  text-transform: none;
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(150%);
+}
+
+.time-select-popover[hidden] {
+  display: none;
+}
+
+.time-select-option {
+  min-height: 32px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(238, 243, 247, 0.82);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 760;
+  text-align: center;
+}
+
+.time-select-option:hover,
+.time-select-option:focus-visible,
+.time-select-option.is-selected {
+  border-color: rgba(244, 248, 251, 0.34);
+  background: rgba(226, 234, 242, 0.1);
+  color: var(--gold-strong);
+  outline: none;
+}
+
+.date-picker-popover {
+  position: fixed;
+  top: var(--date-picker-top, 0);
+  left: var(--date-picker-left, 0);
+  z-index: 120;
+  width: min(var(--date-picker-width, 310px), calc(100vw - 24px));
+  max-height: var(--date-picker-max-height, calc(100vh - 24px));
+  overflow-y: auto;
+  padding: 12px;
+  border: 1px solid rgba(226, 234, 242, 0.2);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(145deg, rgba(226, 234, 242, 0.08), transparent 38%, rgba(122, 139, 154, 0.08)),
+    rgba(8, 10, 12, 0.96);
+  box-shadow:
+    0 24px 54px rgba(0, 0, 0, 0.46),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  color: var(--text);
+  text-transform: none;
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(150%);
+}
+
+.date-picker-popover[hidden] {
+  display: none;
+}
+
+.date-picker-head {
+  display: grid;
+  grid-template-columns: 34px 1fr 34px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.date-picker-head strong {
+  color: var(--gold-strong);
+  font-size: 0.92rem;
+  font-weight: 850;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.date-picker-nav {
+  display: inline-grid;
+  min-height: 34px;
+  width: 34px;
+  place-items: center;
+  border: 1px solid rgba(226, 234, 242, 0.16);
+  border-radius: 6px;
+  background: rgba(226, 234, 242, 0.055);
+  cursor: pointer;
+}
+
+.date-picker-nav::before {
+  width: 8px;
+  height: 8px;
+  border-bottom: 1.6px solid rgba(238, 243, 247, 0.82);
+  border-left: 1.6px solid rgba(238, 243, 247, 0.82);
+  content: "";
+  transform: translateX(2px) rotate(45deg);
+}
+
+.date-picker-nav-next::before {
+  transform: translateX(-2px) rotate(-135deg);
+}
+
+.date-picker-nav:hover,
+.date-picker-nav:focus-visible,
+.date-picker-footer button:hover,
+.date-picker-footer button:focus-visible {
+  border-color: rgba(244, 248, 251, 0.36);
+  background: rgba(226, 234, 242, 0.1);
+  outline: none;
+}
+
+.date-picker-nav:disabled,
+.date-picker-footer button:disabled,
+.date-picker-day:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+}
+
+.date-picker-weekdays,
+.date-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.date-picker-weekdays {
+  margin-bottom: 5px;
+}
+
+.date-picker-weekdays span {
+  color: rgba(238, 243, 247, 0.5);
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.date-picker-day {
+  min-height: 32px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(238, 243, 247, 0.82);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 760;
+}
+
+.date-picker-day:hover,
+.date-picker-day:focus-visible {
+  border-color: rgba(244, 248, 251, 0.3);
+  background: rgba(226, 234, 242, 0.085);
+  color: var(--gold-strong);
+  outline: none;
+}
+
+.date-picker-day.is-muted {
+  color: rgba(238, 243, 247, 0.36);
+}
+
+.date-picker-day.is-today {
+  border-color: rgba(226, 234, 242, 0.22);
+}
+
+.date-picker-day.is-selected {
+  border-color: rgba(244, 248, 251, 0.64);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.28), rgba(226, 234, 242, 0.11)),
+    rgba(226, 234, 242, 0.12);
+  color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.date-picker-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(226, 234, 242, 0.1);
+}
+
+.date-picker-footer span {
+  color: rgba(238, 243, 247, 0.58);
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+.date-picker-footer button {
+  min-height: 30px;
+  border: 1px solid rgba(226, 234, 242, 0.16);
+  border-radius: 6px;
+  background: rgba(226, 234, 242, 0.055);
+  color: var(--gold-strong);
+  cursor: pointer;
+  padding: 0 10px;
+  font-size: 0.7rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .secondary {
@@ -1103,11 +1536,158 @@ textarea:focus {
   text-transform: none;
 }
 
+.fleet-date-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  min-height: 42px;
+  padding: 5px;
+  border: 1px solid rgba(226, 234, 242, 0.14);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(226, 234, 242, 0.05), transparent 36%, rgba(122, 139, 154, 0.055)),
+    rgba(7, 8, 9, 0.44);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.date-filter-field {
+  display: grid;
+  grid-template-columns: auto minmax(128px, 148px);
+  min-height: 34px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 0 0 9px;
+  border: 1px solid rgba(226, 234, 242, 0.12);
+  border-radius: 6px;
+  background: rgba(3, 4, 5, 0.38);
+}
+
+.date-filter-combo {
+  grid-template-columns: auto minmax(118px, 142px) 84px;
+}
+
+.date-filter-field > span:first-child {
+  color: rgba(238, 243, 247, 0.58);
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.date-filter-field .date-picker-trigger {
+  min-height: 32px;
+  border: 0;
+  border-left: 1px solid rgba(226, 234, 242, 0.1);
+  border-radius: 0 6px 6px 0;
+  background-color: rgba(5, 6, 7, 0.72);
+  padding: 0 9px;
+  font-size: 0.82rem;
+  font-weight: 760;
+}
+
+.date-filter-field .time-select-trigger {
+  min-height: 32px;
+  border: 0;
+  border-left: 1px solid rgba(226, 234, 242, 0.1);
+  border-radius: 0 6px 6px 0;
+  background-color: rgba(5, 6, 7, 0.72);
+  padding-right: 25px;
+  font-size: 0.76rem;
+  font-weight: 760;
+}
+
+.fleet-date-filter .button {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 6px;
+  font-size: 0.69rem;
+  letter-spacing: 0.065em;
+  white-space: nowrap;
+}
+
+.fleet-date-filter .secondary {
+  border-color: rgba(226, 234, 242, 0.18);
+  background: rgba(226, 234, 242, 0.045);
+  color: rgba(238, 243, 247, 0.82);
+}
+
+.fleet-date-filter .date-search-message {
+  flex-basis: 100%;
+  min-height: 14px;
+  padding: 0 3px;
+  font-size: 0.74rem;
+}
+
+.fleet-availability-summary {
+  margin: 10px 0 0;
+  color: rgba(238, 243, 247, 0.7);
+  font-size: 0.88rem;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.fleet-availability-summary.is-error {
+  color: #ffaaa4;
+}
+
 .fleet-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
   padding: 0 clamp(18px, 5vw, 72px) clamp(72px, 9vw, 128px);
+}
+
+.fleet-empty-state {
+  grid-column: 1 / -1;
+  display: grid;
+  min-height: 250px;
+  align-content: center;
+  justify-items: start;
+  gap: 12px;
+  padding: clamp(28px, 4vw, 44px);
+  border: 1px solid rgba(226, 234, 242, 0.14);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(226, 234, 242, 0.06), transparent 42%, rgba(122, 139, 154, 0.05)),
+    rgba(15, 17, 19, 0.72);
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.11);
+}
+
+.fleet-empty-state span {
+  color: rgba(238, 243, 247, 0.56);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.085em;
+  text-transform: uppercase;
+}
+
+.fleet-empty-state h2 {
+  max-width: 720px;
+  margin: 0;
+  font-size: clamp(1.45rem, 3vw, 2.35rem);
+  letter-spacing: 0;
+  line-height: 1.08;
+}
+
+.fleet-empty-state p {
+  max-width: 560px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.fleet-empty-state .button {
+  margin-top: 4px;
+  min-height: 40px;
+  padding: 0 14px;
 }
 
 .vehicle-card {
@@ -3002,6 +3582,59 @@ address {
   display: grid;
   gap: 8px;
   min-width: 0;
+}
+
+.booking-date-field .date-picker-shell {
+  z-index: 5;
+}
+
+.booking-checkout-form .booking-date-field .date-picker-trigger {
+  position: relative;
+  min-height: 46px;
+  padding: 8px 44px 8px 14px;
+  border-color: rgba(226, 234, 242, 0.16);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(142, 160, 176, 0.018)),
+    rgba(5, 6, 7, 0.6);
+  color: rgba(238, 243, 247, 0.72);
+  font-size: 0.96rem;
+  font-weight: 800;
+}
+
+.booking-checkout-form .booking-date-field .date-picker-trigger::before {
+  position: absolute;
+  top: calc(50% - 5px);
+  right: 17px;
+  width: 9px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  content: "";
+  opacity: 0.82;
+}
+
+.booking-checkout-form .booking-date-field .date-picker-trigger::after {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  width: 14px;
+  height: 14px;
+  border: 1.8px solid currentColor;
+  border-radius: 3px;
+  content: "";
+  opacity: 0.82;
+  transform: translateY(-50%);
+}
+
+.booking-checkout-form .booking-date-field .date-picker-trigger:hover,
+.booking-checkout-form .booking-date-field .date-picker-trigger:focus-visible,
+.booking-checkout-form .booking-date-field .date-picker-shell.is-open .date-picker-trigger {
+  border-color: rgba(244, 248, 251, 0.42);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(142, 160, 176, 0.03)),
+    rgba(8, 10, 12, 0.82);
+  box-shadow: 0 0 0 3px rgba(244, 248, 251, 0.08);
 }
 
 .time-picker-label {
@@ -5772,6 +6405,10 @@ address a:hover {
     gap: 8px;
   }
 
+  .trip-date-search {
+    width: min(100%, 420px);
+  }
+
   .quick-request label,
   .quick-request .button {
     min-height: 64px;
@@ -5781,6 +6418,15 @@ address a:hover {
     border-right: 0;
     border-bottom: 1px solid rgba(226, 234, 242, 0.12);
     padding-right: 15px;
+  }
+
+  .hero-date-search label,
+  .hero-date-search .button {
+    min-height: 34px;
+  }
+
+  .hero-date-search label {
+    padding: 0;
   }
 
   .feature-list {
@@ -5816,6 +6462,18 @@ address a:hover {
   .fleet-tools,
   .fleet-controls {
     justify-content: flex-start;
+  }
+
+  .fleet-date-filter {
+    width: 100%;
+  }
+
+  .date-filter-field {
+    flex: 1 1 178px;
+  }
+
+  .fleet-date-filter .button {
+    flex: 1 1 145px;
   }
 
   .fleet-page-controls .sort-control {
@@ -5944,6 +6602,30 @@ address a:hover {
 
   .vehicle-image {
     min-height: 0;
+  }
+
+  .fleet-date-filter {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .date-filter-field {
+    grid-template-columns: 1fr;
+    padding: 9px;
+  }
+
+  .date-filter-field .date-picker-trigger {
+    border-left: 0;
+    border-radius: 6px;
+  }
+
+  .date-filter-field .time-select-trigger {
+    border-left: 0;
+    border-radius: 6px;
+  }
+
+  .fleet-date-filter .button {
+    width: 100%;
   }
 
   .booking-requirements-grid {
