@@ -8,6 +8,7 @@ import {
   calculateRentalDays,
   formatDailyRate,
   formatMoney,
+  formatTimeDisplay,
   generateBookingNumber,
   getAge,
   isDateOnlyString,
@@ -29,6 +30,7 @@ import {
   loadDeliveryPricingConfig,
   openStreetMapEmbedUrl,
 } from "../lib/location-service.js";
+import { initCustomTimeSelects } from "../lib/time-select.js";
 import { bindCarouselControls } from "../lib/vehicle-card.js";
 import { checkVehicleAvailability, findVehicleByRequestValue, loadAvailableVehicles } from "../lib/vehicle-service.js";
 
@@ -47,7 +49,6 @@ const status = document.querySelector("#formStatus");
 const submitButton = form.querySelector('button[type="submit"]');
 const stepPanels = [...form.querySelectorAll("[data-booking-step]")];
 const stepIndicators = [...form.querySelectorAll("[data-step-indicator]")];
-const timePickers = [...form.querySelectorAll("[data-time-picker]")];
 const locationFeePreview = document.querySelector("#locationFeePreview");
 const customLocationFields = document.querySelector("#customLocationFields");
 
@@ -161,122 +162,12 @@ function selectVehicleFromPicker(value) {
   setVehiclePickerOpen(false);
 }
 
-function padTime(value) {
-  return String(value).padStart(2, "0");
+function refreshTimeSelect(input) {
+  input?.dispatchEvent(new Event("time-select:refresh"));
 }
 
-function parseTimeValue(value) {
-  const match = /^(\d{2}):(\d{2})$/.exec(value || "");
-  if (!match) return null;
-
-  const hour24 = Number(match[1]);
-  const minute = Number(match[2]);
-  if (!Number.isInteger(hour24) || !Number.isInteger(minute) || hour24 > 23 || minute > 59) return null;
-
-  return {
-    hour12: hour24 % 12 || 12,
-    minute,
-    period: hour24 >= 12 ? "PM" : "AM",
-  };
-}
-
-function timeState(picker) {
-  const input = picker.querySelector(".native-time-input");
-  const parsed = parseTimeValue(input?.value);
-
-  if (parsed) return parsed;
-
-  return {
-    hour12: Number(picker.dataset.timeHour || 12),
-    minute: Number(picker.dataset.timeMinute || 0),
-    period: picker.dataset.timePeriod || "AM",
-  };
-}
-
-function timeValueFromState(state) {
-  const hour24 = state.period === "PM" ? (state.hour12 % 12) + 12 : state.hour12 % 12;
-
-  return `${padTime(hour24)}:${padTime(state.minute)}`;
-}
-
-function formatTimeLabel(value) {
-  const parsed = parseTimeValue(value);
-  if (!parsed) return { main: "--:--", sub: "Choose time", numeric: "--:--" };
-
-  const numeric = `${parsed.hour12}:${padTime(parsed.minute)} ${parsed.period}`;
-
-  return {
-    main: `${parsed.hour12}:${padTime(parsed.minute)}`,
-    sub: parsed.period,
-    numeric,
-  };
-}
-
-function syncTimePicker(picker) {
-  const input = picker.querySelector(".native-time-input");
-  const display = picker.querySelector("[data-time-display]");
-  const periodDisplay = picker.querySelector("[data-time-period]");
-  const numeric = picker.querySelector("[data-time-numeric]");
-  const hourSlider = picker.querySelector('[data-time-slider="hour"]');
-  const minuteSlider = picker.querySelector('[data-time-slider="minute"]');
-  const hourSliderValue = picker.querySelector('[data-time-slider-value="hour"]');
-  const minuteSliderValue = picker.querySelector('[data-time-slider-value="minute"]');
-  const state = timeState(picker);
-  const label = formatTimeLabel(input?.value);
-
-  if (display) display.textContent = label.main;
-  if (periodDisplay) periodDisplay.textContent = label.sub;
-  if (numeric) numeric.textContent = label.numeric;
-
-  picker.dataset.timeHour = String(state.hour12);
-  picker.dataset.timeMinute = String(state.minute);
-  picker.dataset.timePeriod = state.period;
-
-  if (hourSlider) hourSlider.value = String(state.hour12);
-  if (minuteSlider) minuteSlider.value = String(state.minute);
-  if (hourSliderValue) hourSliderValue.textContent = String(state.hour12);
-  if (minuteSliderValue) minuteSliderValue.textContent = padTime(state.minute);
-
-  picker.querySelectorAll("[data-time-period-option]").forEach((button) => {
-    button.classList.toggle("active", button.dataset.timePeriodOption === state.period);
-  });
-}
-
-function setTimePickerValue(picker, state, options = {}) {
-  const input = picker.querySelector(".native-time-input");
-  if (!input) return;
-
-  picker.dataset.timeHour = String(state.hour12);
-  picker.dataset.timeMinute = String(state.minute);
-  picker.dataset.timePeriod = state.period;
-  input.value = timeValueFromState(state);
-  syncTimePicker(picker);
-
-  if (options.dispatch !== false) {
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-    input.dispatchEvent(new Event("change", { bubbles: true }));
-  }
-}
-
-function setTimePickerOpen(picker, isOpen) {
-  const panel = picker.querySelector(".time-picker-panel");
-  const trigger = picker.querySelector(".time-picker-trigger");
-  if (!panel || !trigger) return;
-
-  panel.hidden = !isOpen;
-  trigger.setAttribute("aria-expanded", String(isOpen));
-
-  if (isOpen) {
-    timePickers.forEach((otherPicker) => {
-      if (otherPicker !== picker) setTimePickerOpen(otherPicker, false);
-    });
-    setVehiclePickerOpen(false);
-    syncTimePicker(picker);
-  }
-}
-
-function timePickerTriggerFor(name) {
-  return form.elements[name]?.closest("[data-time-picker]")?.querySelector(".time-picker-trigger");
+function timeSelectTriggerFor(name) {
+  return form.elements[name]?.closest("[data-time-select]")?.querySelector("[data-time-trigger]");
 }
 
 function datePickerTriggerFor(name) {
@@ -579,7 +470,8 @@ function applyTripSearchFromUrl() {
   if (isTimeString(endTime)) form.elements.return_time.value = endTime;
 
   syncBookingDateControls({ clearInvalidReturn: true });
-  timePickers.forEach((picker) => syncTimePicker(picker));
+  refreshTimeSelect(form.elements.pickup_time);
+  refreshTimeSelect(form.elements.return_time);
 }
 
 function renderSelectedVehicle() {
@@ -767,9 +659,7 @@ function formatSummaryDate(value) {
 }
 
 function formatSummaryTime(value) {
-  const label = formatTimeLabel(value);
-
-  return label.numeric === "--:--" ? "" : label.numeric;
+  return isTimeString(value) ? formatTimeDisplay(value) : "";
 }
 
 function summaryValue(value, fallback = "Not selected") {
@@ -849,7 +739,7 @@ function showStep(stepIndex, options = {}) {
 
 function stepFields(stepIndex) {
   return [...stepPanels[stepIndex].querySelectorAll("input, select, textarea")].filter(
-    (field) => !field.disabled && !field.classList.contains("native-vehicle-select") && !field.classList.contains("native-time-input"),
+    (field) => !field.disabled && field.type !== "hidden" && !field.classList.contains("native-vehicle-select"),
   );
 }
 
@@ -892,19 +782,19 @@ async function validateStep(stepIndex) {
 
     if (!form.elements.pickup_time.value) {
       setFormStatus(status, "error", "Pickup time is required.");
-      timePickerTriggerFor("pickup_time")?.focus();
+      timeSelectTriggerFor("pickup_time")?.focus();
       return false;
     }
 
     if (!form.elements.return_time.value) {
       setFormStatus(status, "error", "Return time is required.");
-      timePickerTriggerFor("return_time")?.focus();
+      timeSelectTriggerFor("return_time")?.focus();
       return false;
     }
 
     if (pickupDate === returnDate && form.elements.return_time.value <= form.elements.pickup_time.value) {
       setFormStatus(status, "error", "Return time must be after pickup time for same-day trips.");
-      timePickerTriggerFor("return_time")?.focus();
+      timeSelectTriggerFor("return_time")?.focus();
       return false;
     }
 
@@ -1106,46 +996,11 @@ function bindBookingForm() {
 
   form.querySelectorAll("[data-date-trigger]").forEach((trigger) => {
     trigger.addEventListener("click", () => {
-      timePickers.forEach((picker) => setTimePickerOpen(picker, false));
       setVehiclePickerOpen(false);
     });
   });
 
-  timePickers.forEach((picker) => {
-    const trigger = picker.querySelector(".time-picker-trigger");
-
-    syncTimePicker(picker);
-
-    trigger?.addEventListener("click", () => {
-      setTimePickerOpen(picker, picker.querySelector(".time-picker-panel")?.hidden !== false);
-    });
-
-    picker.querySelectorAll("[data-time-slider]").forEach((slider) => {
-      slider.addEventListener("input", () => {
-        const state = timeState(picker);
-
-        if (slider.dataset.timeSlider === "hour") {
-          state.hour12 = Number(slider.value);
-        } else {
-          state.minute = Number(slider.value);
-        }
-
-        setTimePickerValue(picker, state);
-      });
-    });
-
-    picker.querySelectorAll("[data-time-period-option]").forEach((button) => {
-      button.addEventListener("click", () => {
-        setTimePickerValue(picker, {
-          ...timeState(picker),
-          period: button.dataset.timePeriodOption,
-        });
-      });
-    });
-  });
-
   vehiclePickerTrigger?.addEventListener("click", () => {
-    timePickers.forEach((picker) => setTimePickerOpen(picker, false));
     setVehiclePickerOpen(vehiclePickerPanel?.hidden !== false);
   });
 
@@ -1170,25 +1025,12 @@ function bindBookingForm() {
     setVehiclePickerOpen(false);
   });
 
-  document.addEventListener("click", (event) => {
-    if (event.target.closest("[data-time-picker]")) return;
-
-    timePickers.forEach((picker) => setTimePickerOpen(picker, false));
-  });
-
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
 
     if (vehiclePickerPanel?.hidden === false) {
       setVehiclePickerOpen(false);
       vehiclePickerTrigger?.focus();
-      return;
-    }
-
-    const openTimePicker = timePickers.find((picker) => picker.querySelector(".time-picker-panel")?.hidden === false);
-    if (openTimePicker) {
-      setTimePickerOpen(openTimePicker, false);
-      openTimePicker.querySelector(".time-picker-trigger")?.focus();
     }
   });
 
@@ -1302,6 +1144,7 @@ function bindBookingForm() {
 async function initBookingPage() {
   initPublicSite();
   initCustomDatePickers();
+  initCustomTimeSelects();
 
   document.querySelectorAll("[data-home-link]").forEach((link) => {
     link.href = window.MIR_CARS.homeUrl(link.dataset.homeLink);

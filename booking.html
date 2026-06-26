@@ -134,44 +134,23 @@
                         </button>
                       </span>
                     </label>
-                    <div class="time-picker-field" data-time-picker>
-                      <span class="time-picker-label" id="pickupTimeLabel">Pickup time</span>
-                      <input class="native-time-input" id="pickupTimeInput" type="time" name="pickup_time" required aria-hidden="true" tabindex="-1" />
-                      <button
-                        class="time-picker-trigger"
-                        id="pickupTimeTrigger"
-                        type="button"
-                        aria-haspopup="dialog"
-                        aria-expanded="false"
-                        aria-controls="pickupTimePanel"
-                        aria-labelledby="pickupTimeLabel pickupTimeDisplay"
-                      >
-                        <span id="pickupTimeDisplay" data-time-display>--:--</span>
-                        <small data-time-period>Choose time</small>
-                      </button>
-                      <div class="time-picker-panel" id="pickupTimePanel" hidden>
-                        <div class="time-slider-display">
-                          <strong data-time-numeric>--:--</strong>
-                          <span>Slide to set time</span>
-                        </div>
-                        <div class="time-slider-grid" aria-label="Pickup time sliders">
-                          <label class="time-slider-control">
-                            <span>Hour</span>
-                            <input type="range" min="1" max="12" step="1" value="12" data-time-slider="hour" aria-label="Pickup hour" />
-                            <strong data-time-slider-value="hour">12</strong>
-                          </label>
-                          <label class="time-slider-control">
-                            <span>Minute</span>
-                            <input type="range" min="0" max="59" step="1" value="0" data-time-slider="minute" aria-label="Pickup minute" />
-                            <strong data-time-slider-value="minute">00</strong>
-                          </label>
-                        </div>
-                        <div class="time-picker-period" aria-label="Time period">
-                          <button class="active" type="button" data-time-period-option="AM">AM</button>
-                          <button type="button" data-time-period-option="PM">PM</button>
-                        </div>
-                      </div>
-                    </div>
+                    <label class="booking-time-field">
+                      Pickup time
+                      <span class="time-select-shell booking-time-select" data-time-select>
+                        <input id="pickupTimeInput" type="hidden" name="pickup_time" data-time-input required />
+                        <button
+                          class="time-select-trigger"
+                          id="pickupTimeTrigger"
+                          type="button"
+                          data-time-trigger
+                          aria-haspopup="dialog"
+                          aria-expanded="false"
+                          aria-label="Choose pickup time"
+                        >
+                          <span id="pickupTimeDisplay" data-time-display>Choose pickup time</span>
+                        </button>
+                      </span>
+                    </label>
                   </div>
 
                   <div class="form-row">
@@ -191,44 +170,23 @@
                         </button>
                       </span>
                     </label>
-                    <div class="time-picker-field" data-time-picker>
-                      <span class="time-picker-label" id="returnTimeLabel">Return time</span>
-                      <input class="native-time-input" id="returnTimeInput" type="time" name="return_time" required aria-hidden="true" tabindex="-1" />
-                      <button
-                        class="time-picker-trigger"
-                        id="returnTimeTrigger"
-                        type="button"
-                        aria-haspopup="dialog"
-                        aria-expanded="false"
-                        aria-controls="returnTimePanel"
-                        aria-labelledby="returnTimeLabel returnTimeDisplay"
-                      >
-                        <span id="returnTimeDisplay" data-time-display>--:--</span>
-                        <small data-time-period>Choose time</small>
-                      </button>
-                      <div class="time-picker-panel" id="returnTimePanel" hidden>
-                        <div class="time-slider-display">
-                          <strong data-time-numeric>--:--</strong>
-                          <span>Slide to set time</span>
-                        </div>
-                        <div class="time-slider-grid" aria-label="Return time sliders">
-                          <label class="time-slider-control">
-                            <span>Hour</span>
-                            <input type="range" min="1" max="12" step="1" value="12" data-time-slider="hour" aria-label="Return hour" />
-                            <strong data-time-slider-value="hour">12</strong>
-                          </label>
-                          <label class="time-slider-control">
-                            <span>Minute</span>
-                            <input type="range" min="0" max="59" step="1" value="0" data-time-slider="minute" aria-label="Return minute" />
-                            <strong data-time-slider-value="minute">00</strong>
-                          </label>
-                        </div>
-                        <div class="time-picker-period" aria-label="Time period">
-                          <button class="active" type="button" data-time-period-option="AM">AM</button>
-                          <button type="button" data-time-period-option="PM">PM</button>
-                        </div>
-                      </div>
-                    </div>
+                    <label class="booking-time-field">
+                      Return time
+                      <span class="time-select-shell booking-time-select" data-time-select>
+                        <input id="returnTimeInput" type="hidden" name="return_time" data-time-input required />
+                        <button
+                          class="time-select-trigger"
+                          id="returnTimeTrigger"
+                          type="button"
+                          data-time-trigger
+                          aria-haspopup="dialog"
+                          aria-expanded="false"
+                          aria-label="Choose return time"
+                        >
+                          <span id="returnTimeDisplay" data-time-display>Choose return time</span>
+                        </button>
+                      </span>
+                    </label>
                   </div>
 
                   <div class="form-row">

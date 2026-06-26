@@ -654,7 +654,7 @@ h3 {
 }
 
 .hero-action {
-  min-height: 58px;
+  min-height: 48px;
   padding-inline: 28px;
 }
 
@@ -868,8 +868,8 @@ textarea:focus {
 }
 
 .trip-date-search {
-  grid-template-columns: minmax(220px, 272px) minmax(220px, 272px) minmax(76px, 92px);
-  width: min(100%, 654px);
+  grid-template-columns: minmax(220px, 272px) minmax(220px, 272px) 34px;
+  width: min(100%, 602px);
   margin-top: 24px;
   gap: 6px;
   padding: 6px;
@@ -917,7 +917,7 @@ textarea:focus {
 
 .trip-combo-field {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 88px;
+  grid-template-columns: minmax(0, 1fr) 100px;
   align-items: center;
   gap: 6px;
 }
@@ -935,6 +935,51 @@ textarea:focus {
   font-size: 0.66rem;
   letter-spacing: 0.055em;
   line-height: 1.15;
+}
+
+.hero-date-search .date-search-submit {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  min-height: 34px;
+  padding: 0;
+  border-radius: 7px;
+}
+
+.lookup-icon {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 16px;
+  height: 16px;
+  color: currentColor;
+  opacity: 0.88;
+}
+
+.lookup-icon::before,
+.lookup-icon::after {
+  position: absolute;
+  content: "";
+}
+
+.lookup-icon::before {
+  top: 2px;
+  left: 2px;
+  width: 8px;
+  height: 8px;
+  border: 1.7px solid currentColor;
+  border-radius: 999px;
+}
+
+.lookup-icon::after {
+  top: 10.5px;
+  left: 10px;
+  width: 5.8px;
+  height: 1.7px;
+  border-radius: 999px;
+  background: currentColor;
+  transform: rotate(45deg);
+  transform-origin: left center;
 }
 
 .button:disabled {
@@ -1035,17 +1080,27 @@ textarea:focus {
   white-space: nowrap;
 }
 
+.time-select-trigger [data-time-display] {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .time-select-trigger::before {
   position: absolute;
-  top: calc(50% - 4px);
-  right: 14px;
+  top: 50%;
+  right: 9px;
   z-index: 1;
-  width: 4px;
-  height: 6px;
-  border-bottom: 1.4px solid currentColor;
-  border-left: 1.4px solid currentColor;
+  width: 13px;
+  height: 13px;
+  background:
+    linear-gradient(currentColor, currentColor) center 3px / 1.3px 4.8px no-repeat,
+    linear-gradient(currentColor, currentColor) 6.5px center / 4.4px 1.3px no-repeat;
   content: "";
   opacity: 0.78;
+  transform: translateY(-50%);
 }
 
 .time-select-trigger::after {
@@ -1078,7 +1133,23 @@ textarea:focus {
 
 .hero-date-search .time-select-trigger {
   min-height: 32px;
-  font-size: 0.76rem;
+  padding: 0 24px 0 8px;
+  font-size: 0.74rem;
+}
+
+.hero-date-search .time-select-trigger::before {
+  right: 7px;
+  width: 12px;
+  height: 12px;
+  background:
+    linear-gradient(currentColor, currentColor) center 2.7px / 1.2px 4.5px no-repeat,
+    linear-gradient(currentColor, currentColor) 6px center / 4px 1.2px no-repeat;
+}
+
+.hero-date-search .time-select-trigger::after {
+  right: 7px;
+  width: 12px;
+  height: 12px;
 }
 
 .time-select-popover {
@@ -3635,6 +3706,59 @@ address {
     linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(142, 160, 176, 0.03)),
     rgba(8, 10, 12, 0.82);
   box-shadow: 0 0 0 3px rgba(244, 248, 251, 0.08);
+}
+
+.booking-time-field {
+  position: relative;
+  z-index: 5;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.booking-time-select {
+  z-index: 5;
+}
+
+.booking-checkout-form .booking-time-field .time-select-trigger {
+  min-height: 46px;
+  padding: 8px 44px 8px 14px;
+  border-color: rgba(226, 234, 242, 0.16);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(142, 160, 176, 0.018)),
+    rgba(5, 6, 7, 0.6);
+  color: rgba(238, 243, 247, 0.72);
+  font-size: 0.96rem;
+  font-weight: 800;
+}
+
+.booking-checkout-form .booking-time-field .time-select-trigger::before {
+  top: 50%;
+  right: 15px;
+  width: 15px;
+  height: 15px;
+  background:
+    linear-gradient(currentColor, currentColor) center 3.6px / 1.5px 5.5px no-repeat,
+    linear-gradient(currentColor, currentColor) 7.5px center / 5px 1.5px no-repeat;
+}
+
+.booking-checkout-form .booking-time-field .time-select-trigger::after {
+  right: 15px;
+  width: 15px;
+  height: 15px;
+  border-width: 1.8px;
+}
+
+.booking-checkout-form .booking-time-field .time-select-trigger:hover,
+.booking-checkout-form .booking-time-field .time-select-trigger:focus-visible,
+.booking-checkout-form .booking-time-field .time-select-shell.is-open .time-select-trigger {
+  border-color: rgba(244, 248, 251, 0.42);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(142, 160, 176, 0.03)),
+    rgba(8, 10, 12, 0.82);
+  box-shadow: 0 0 0 3px rgba(244, 248, 251, 0.08);
+  outline: none;
 }
 
 .time-picker-label {
