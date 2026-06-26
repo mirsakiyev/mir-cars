@@ -10,6 +10,12 @@ export function formatMoney(amount, currency = "USD") {
   }).format(Number(amount));
 }
 
+export function formatDailyRate(rate, currency = "USD") {
+  const money = formatMoney(rate, currency);
+
+  return money === "TBD" ? money : `${money}/day`;
+}
+
 export function parseDateValue(value) {
   if (!value) return null;
 

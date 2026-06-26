@@ -1,3 +1,4 @@
+import { formatDailyRate } from "./booking-utils.js";
 import { getSupabaseClient, getSupabaseConfigError } from "./supabase-client.js";
 import { logClientInfo, logClientWarning } from "./logging.js";
 
@@ -136,7 +137,7 @@ export function mapDatabaseVehicle(row) {
         ["Powertrain", row.fuel_type || "TBD"],
         ["Seating", row.seats ? `${row.seats} passengers` : "TBD"],
         ["Rental fit", type],
-        ["Daily rate", dailyRate ? `$${dailyRate}/day` : "TBD"],
+        ["Daily rate", dailyRate ? formatDailyRate(dailyRate, row.currency || fallback?.currency || "USD") : "TBD"],
       ],
       highlights: ["Live availability workflow", "MIR CARS rental support", "Document upload before payment"],
       bestFor: ["Los Angeles rentals", "Complete checkout", "Daily and extended trips"],

@@ -161,6 +161,20 @@
     return `$${Number(amount).toLocaleString("en-US")}`;
   }
 
+  function formatDailyRate(rate, currency = "USD") {
+    if (rate === null || rate === undefined || Number.isNaN(Number(rate))) return "TBD";
+
+    if (currency !== "USD") {
+      return `${new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency,
+        maximumFractionDigits: 0,
+      }).format(Number(rate))}/day`;
+    }
+
+    return `${formatCurrency(rate)}/day`;
+  }
+
   function getVehicleRentalTerms(vehicle) {
     const terms = rentalClasses[vehicle.rentalClass] || rentalClasses.economy;
 
@@ -202,7 +216,7 @@
       color: "White",
       type: "SUV",
       rentalClass: "premiumEv",
-      rate: 199,
+      rate: 150,
       images: fleetImages("acura-zdx-2025-white", 5),
       description: "EV luxury crossover styling with quiet electric power and a refined cabin feel.",
       specs: ["5 seats", "Electric EV", "Crossover", "150 mi/day"],
@@ -216,7 +230,6 @@
           ["Powertrain", "All-electric"],
           ["Seating", "5 passengers"],
           ["Rental fit", "Premium EV crossover"],
-          ["Daily rate", "$199/day"],
         ],
         highlights: ["Quiet EV drive", "Premium two-row cabin", "Strong curb presence", "Smooth city and highway manners"],
         bestFor: ["Executive errands", "Hotel delivery", "Quiet airport runs", "Stylish daily rental"],
@@ -243,7 +256,6 @@
           ["Powertrain", "2.0L turbo gas"],
           ["Output", "255 hp class"],
           ["Seating", "5 passengers"],
-          ["Daily rate", "$139/day"],
         ],
         highlights: ["Sport sedan handling", "Premium cabin feel", "Compact LA-friendly size", "Business-ready styling"],
         bestFor: ["Business meetings", "Date nights", "Solo travel", "Premium daily rental"],
@@ -270,7 +282,6 @@
           ["Powertrain", "2.0L turbo gas"],
           ["Seating", "4 passengers"],
           ["Roof", "Power soft top"],
-          ["Daily rate", "$189/day"],
         ],
         highlights: ["Power convertible roof", "Premium coupe profile", "Great coastal-drive energy", "Refined two-door cabin"],
         bestFor: ["Malibu drives", "Date nights", "Photo-friendly trips", "Weekend rentals"],
@@ -297,7 +308,6 @@
           ["Powertrain", "Gas performance coupe"],
           ["Drive type", "Rear-wheel drive"],
           ["Seating", "4 passengers"],
-          ["Daily rate", "$179/day"],
         ],
         highlights: ["Iconic coupe shape", "Rear-drive feel", "Strong event presence", "Sporty cabin layout"],
         bestFor: ["Date nights", "Sunset routes", "Weekend drives", "Statement arrivals"],
@@ -324,7 +334,6 @@
           ["Powertrain", "Two-motor hybrid"],
           ["Output", "200 total system hp"],
           ["EPA rating", "50/47/49 mpg"],
-          ["Daily rate", "$89/day"],
         ],
         highlights: ["Hybrid efficiency", "Compact city size", "Comfortable five-seat cabin", "Easy long-stay choice"],
         bestFor: ["Longer rentals", "Daily errands", "Fuel-saving trips", "Easy city parking"],
@@ -351,7 +360,6 @@
           ["Powertrain", "Two-motor hybrid"],
           ["Output", "200 total system hp"],
           ["EPA rating", "50/47/49 mpg"],
-          ["Daily rate", "$89/day"],
         ],
         highlights: ["Hybrid efficiency", "Light modern exterior", "Compact sedan footprint", "Comfortable daily-use cabin"],
         bestFor: ["Airport errands", "Longer rentals", "Budget-conscious trips", "City driving"],
@@ -378,7 +386,6 @@
           ["Powertrain", "Gas compact sedan"],
           ["Seating", "5 passengers"],
           ["Rental fit", "Economy daily"],
-          ["Daily rate", "$79/day"],
         ],
         highlights: ["Strong rental value", "Modern compact design", "Easy parking", "Comfortable for daily use"],
         bestFor: ["Extended stays", "Errands", "Budget-friendly rentals", "Simple transportation"],
@@ -405,7 +412,6 @@
           ["Powertrain", "3.6L V6 gas"],
           ["Output", "285 hp class"],
           ["Drive type", "4x4 SUV"],
-          ["Daily rate", "$159/day"],
         ],
         highlights: ["Rugged 4x4 character", "Tall SUV visibility", "Beach-weekend personality", "Distinctive blue exterior"],
         bestFor: ["Beach routes", "Weekend plans", "Casual group drives", "Outdoor-style trips"],
@@ -432,7 +438,6 @@
           ["Powertrain", "Gas luxury SUV"],
           ["Seating", "7 passengers"],
           ["Rental fit", "Executive full-size SUV"],
-          ["Daily rate", "$249/day"],
         ],
         highlights: ["Flagship SUV presence", "Three-row flexibility", "Luxury ride quality", "Great airport arrival car"],
         bestFor: ["Family travel", "Executive pickup", "LAX delivery", "Premium group rental"],
@@ -459,7 +464,6 @@
           ["Powertrain", "2.0L turbo mild hybrid"],
           ["Output", "255 hp"],
           ["Seating", "5 passengers"],
-          ["Daily rate", "$169/day"],
         ],
         highlights: ["Luxury sedan cabin", "Premium badge presence", "Balanced comfort and power", "Clean executive look"],
         bestFor: ["Business meetings", "Luxury daily rental", "Dinner reservations", "Airport pickup"],
@@ -486,7 +490,6 @@
           ["Powertrain", "Gas compact sedan"],
           ["Drivetrain", "Front-wheel drive"],
           ["Cargo", "14.3 cu ft class"],
-          ["Daily rate", "$75/day"],
         ],
         highlights: ["Lowest fleet rate", "Simple compact sedan", "Easy parking", "Comfortable daily cabin"],
         bestFor: ["Budget rentals", "Errands", "Longer practical stays", "Simple city driving"],
@@ -513,7 +516,6 @@
           ["Powertrain", "2.5L hybrid"],
           ["Output", "225 hp class"],
           ["Seating", "5 passengers"],
-          ["Daily rate", "$99/day"],
         ],
         highlights: ["Midsize comfort", "Hybrid efficiency", "Smooth commuting feel", "Great value-to-space ratio"],
         bestFor: ["Business trips", "Family visits", "Comfortable commutes", "Longer reservations"],
@@ -540,7 +542,6 @@
           ["Powertrain", "2.0L gas"],
           ["Output", "169 hp"],
           ["EPA estimate", "Up to 32/41/35 mpg"],
-          ["Daily rate", "$79/day"],
         ],
         highlights: ["Reliable compact choice", "Efficient gas engine", "Easy city handling", "Strong longer-rental value"],
         bestFor: ["Daily errands", "Budget rentals", "Extended stays", "Simple commutes"],
@@ -567,7 +568,6 @@
           ["Powertrain", "2.0L turbo gas"],
           ["Seating", "5 passengers"],
           ["Cargo", "26.5 cu ft class"],
-          ["Daily rate", "$109/day"],
         ],
         highlights: ["Compact SUV utility", "Useful cargo space", "Comfortable five-seat layout", "Good family value"],
         bestFor: ["Small-family trips", "Errands with luggage", "Longer LA stays", "Practical SUV rental"],
@@ -588,6 +588,7 @@
     getVehicleRequestLabel,
     compareVehicleLabels,
     formatCurrency,
+    formatDailyRate,
     getVehicleRentalTerms,
     getRelatedVehicles,
     vehicleUrl,

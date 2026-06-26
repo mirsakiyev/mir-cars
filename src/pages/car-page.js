@@ -1,5 +1,5 @@
 import "../../vehicle-data.js";
-import { formatMoney } from "../lib/booking-utils.js";
+import { formatDailyRate, formatMoney } from "../lib/booking-utils.js";
 import { escapeHtml } from "../lib/dom-utils.js";
 import { initPublicSite } from "../lib/public-site.js";
 import { bindCarouselControls } from "../lib/vehicle-card.js";
@@ -66,7 +66,7 @@ function renderCarousel(vehicleData) {
 function renderRentalRates(vehicleData) {
   const terms = window.MIR_CARS.getVehicleRentalTerms(vehicleData);
   const rates = [
-    ["Daily", `${formatMoney(terms.dailyRate, vehicleData.currency)}/day`, "150 miles included"],
+    ["Daily", formatDailyRate(terms.dailyRate, vehicleData.currency), "150 miles included"],
     ["Weekly", `${formatMoney(terms.weeklyRate, vehicleData.currency)}/week`, "Class-based weekly rate"],
     ["Monthly", `${formatMoney(terms.monthlyRate, vehicleData.currency)}/month`, "Extended rental rate"],
     ["Security deposit", formatMoney(terms.securityDeposit, vehicleData.currency), "Refundable deposit"],
@@ -137,7 +137,7 @@ function renderRelatedVehicleCard(relatedVehicle) {
         </div>
         <div class="card-actions">
           <span class="price related-price-stack">
-            <strong>${formatMoney(relatedVehicle.rate, relatedVehicle.currency)}/day</strong>
+            <strong>${formatDailyRate(relatedVehicle.rate, relatedVehicle.currency)}</strong>
             <small>${formatMoney(terms.weeklyRate, relatedVehicle.currency)}/week</small>
           </span>
           <a class="button secondary" href="${escapeHtml(window.MIR_CARS.vehicleUrl(relatedVehicle))}">Details</a>
@@ -172,6 +172,7 @@ function renderVehiclePage(vehicleData) {
   const rentalTerms = window.MIR_CARS.getVehicleRentalTerms(vehicleData);
   const detailStats = [
     ...vehicleData.detail.stats.filter(([name]) => name !== "Daily rate"),
+    ["Daily rate", formatDailyRate(vehicleData.rate, vehicleData.currency)],
     ["Rental class", rentalTerms.classLabel],
   ];
 
@@ -187,7 +188,7 @@ function renderVehiclePage(vehicleData) {
         <p class="hero-copy">${escapeHtml(vehicleData.detail.tagline)}</p>
         <div class="vehicle-detail-actions">
           <a class="button primary" href="${escapeHtml(requestUrl(vehicleData))}">Book this vehicle</a>
-          <span class="detail-price">${formatMoney(vehicleData.rate, vehicleData.currency)}/day</span>
+          <span class="detail-price">${formatDailyRate(vehicleData.rate, vehicleData.currency)}</span>
         </div>
       </div>
       ${renderCarousel(vehicleData)}

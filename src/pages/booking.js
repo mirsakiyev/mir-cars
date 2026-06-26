@@ -1,5 +1,5 @@
 import "../../vehicle-data.js";
-import { calculateEstimate, calculateRentalDays, formatMoney, generateBookingNumber, getAge } from "../lib/booking-utils.js";
+import { calculateEstimate, calculateRentalDays, formatDailyRate, formatMoney, generateBookingNumber, getAge } from "../lib/booking-utils.js";
 import { escapeHtml, setFormStatus, setFormStatusHtml } from "../lib/dom-utils.js";
 import { refreshHashScroll } from "../lib/hash-scroll.js";
 import { logClientWarning } from "../lib/logging.js";
@@ -115,7 +115,7 @@ function renderVehiclePickerOptions() {
           <span class="vehicle-picker-thumb" style="background-image: url('${escapeHtml(image?.src || "")}')" role="img" aria-label="${escapeHtml(label)}"></span>
           <span class="vehicle-picker-option-copy">
             <strong>${escapeHtml(label)}</strong>
-            <small>${escapeHtml(vehicle.type || "MIR CARS")} - ${formatMoney(vehicle.rate, vehicle.currency)}/day</small>
+            <small>${escapeHtml(vehicle.type || "MIR CARS")} - ${formatDailyRate(vehicle.rate, vehicle.currency)}</small>
           </span>
         </button>
       `;
@@ -581,7 +581,7 @@ function renderSelectedVehicle() {
       <span>${escapeHtml(vehicle.type || "MIR CARS")} rental</span>
       <strong>${escapeHtml(label)}</strong>
       <div class="selected-vehicle-meta">
-        <span>${formatMoney(vehicle.rate, vehicle.currency)}/day</span>
+        <span>${formatDailyRate(vehicle.rate, vehicle.currency)}</span>
         <span>${formatMoney(terms.securityDeposit, vehicle.currency)} deposit</span>
         <a href="${escapeHtml(window.MIR_CARS.vehicleUrl(vehicle))}">View details</a>
       </div>

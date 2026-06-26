@@ -1,4 +1,4 @@
-import { formatMoney } from "./booking-utils.js";
+import { formatDailyRate } from "./booking-utils.js";
 import { escapeHtml } from "./dom-utils.js";
 
 function bookingHref(vehicle) {
@@ -8,9 +8,10 @@ function bookingHref(vehicle) {
 }
 
 export function renderVehicleCard(vehicle, options = {}) {
-  const actionLabel = options.actionLabel || "Request";
+  const actionLabel = options.actionLabel || "Request Booking";
   const actionHref = options.actionHref || bookingHref(vehicle);
   const label = window.MIR_CARS.getVehicleRequestLabel(vehicle);
+  const dailyRate = formatDailyRate(vehicle.rate, vehicle.currency);
 
   return `
     <article class="vehicle-card${options.className ? ` ${escapeHtml(options.className)}` : ""}">
@@ -48,8 +49,11 @@ export function renderVehicleCard(vehicle, options = {}) {
           ${vehicle.specs.map((spec) => `<span>${escapeHtml(spec)}</span>`).join("")}
         </div>
         <div class="card-actions">
-          <span class="price">${formatMoney(vehicle.rate, vehicle.currency)}/day</span>
-          <a class="button secondary" href="${escapeHtml(actionHref)}">${escapeHtml(actionLabel)}</a>
+          <span class="price">
+            <span class="price-prefix">From</span>
+            <strong class="price-value">${escapeHtml(dailyRate)}</strong>
+          </span>
+          <a class="button primary" href="${escapeHtml(actionHref)}">${escapeHtml(actionLabel)}</a>
         </div>
       </div>
     </article>

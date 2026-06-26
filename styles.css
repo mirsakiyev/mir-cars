@@ -1113,6 +1113,9 @@ textarea:focus {
 .vehicle-card {
   position: relative;
   isolation: isolate;
+  display: flex;
+  height: 100%;
+  flex-direction: column;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius);
@@ -1312,11 +1315,13 @@ textarea:focus {
 }
 
 .vehicle-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   padding: 18px;
 }
 
 .vehicle-meta,
-.vehicle-specs,
 .card-actions {
   display: flex;
   align-items: center;
@@ -1324,43 +1329,92 @@ textarea:focus {
   gap: 12px;
 }
 
-.vehicle-meta span,
-.vehicle-specs span {
-  color: var(--muted);
-  font-size: 0.82rem;
+.vehicle-meta span {
+  min-width: 0;
+  color: rgba(238, 243, 247, 0.58);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.075em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.vehicle-meta span:last-child {
+  color: rgba(244, 248, 251, 0.84);
+  text-align: right;
 }
 
 .vehicle-body h3 {
-  margin: 12px 0 8px;
+  margin: 14px 0 0;
+  color: var(--gold-strong);
+  font-size: 1.18rem;
+  font-weight: 850;
+  line-height: 1.14;
 }
 
 .vehicle-body p {
-  min-height: 54px;
-  color: var(--muted);
-  line-height: 1.5;
+  min-height: 60px;
+  margin: 10px 0 0;
+  color: rgba(174, 184, 194, 0.86);
+  font-size: 0.94rem;
+  line-height: 1.55;
 }
 
 .vehicle-specs {
+  display: flex;
   flex-wrap: wrap;
   justify-content: flex-start;
-  margin: 18px 0;
+  gap: 8px;
+  margin: 18px 0 22px;
 }
 
 .vehicle-specs span {
-  padding: 7px 9px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 6px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 999px;
+  background: rgba(5, 6, 7, 0.24);
+  color: rgba(238, 243, 247, 0.62);
+  font-size: 0.72rem;
+  font-weight: 750;
+  line-height: 1;
 }
 
 .price {
+  display: grid;
+  gap: 4px;
   color: var(--gold-strong);
   font-weight: 800;
+  line-height: 1;
+}
+
+.price-prefix {
+  color: rgba(174, 184, 194, 0.7);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.price-value {
+  color: var(--gold-strong);
+  font-size: 1.14rem;
+  font-weight: 900;
+}
+
+.card-actions {
+  align-items: flex-end;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid rgba(226, 234, 242, 0.12);
 }
 
 .card-actions .button {
-  min-height: 38px;
-  padding-inline: 14px;
-  font-size: 0.74rem;
+  flex-shrink: 0;
+  min-height: 40px;
+  padding-inline: 15px;
+  border-color: rgba(226, 234, 242, 0.34);
+  font-size: 0.7rem;
+  white-space: nowrap;
 }
 
 .vehicle-page-main {
