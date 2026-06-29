@@ -131,7 +131,6 @@ function renderRelatedVehicleCard(relatedVehicle) {
           <span>${escapeHtml(relatedVehicle.type)}</span>
         </div>
         <h3>${escapeHtml(relatedVehicle.title)}</h3>
-        <p>${escapeHtml(relatedVehicle.description)}</p>
         <div class="vehicle-specs">
           ${relatedVehicle.specs.map((spec) => `<span>${escapeHtml(spec)}</span>`).join("")}
         </div>

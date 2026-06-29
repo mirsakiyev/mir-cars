@@ -44,7 +44,6 @@ export function renderVehicleCard(vehicle, options = {}) {
           <span>${escapeHtml(vehicle.type)}</span>
         </div>
         <h3>${escapeHtml(vehicle.title)}</h3>
-        <p>${escapeHtml(vehicle.description)}</p>
         <div class="vehicle-specs">
           ${vehicle.specs.map((spec) => `<span>${escapeHtml(spec)}</span>`).join("")}
         </div>

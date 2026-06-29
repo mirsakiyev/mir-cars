@@ -1,8 +1,8 @@
 import { getSupabaseClient, getSupabaseConfigError } from "./supabase-client.js";
 import { normalizeTripId } from "./booking-utils.js";
 
-const placeholderStripeKey = "pk_test_REPLACE_LATER";
-const stripePublishableKey = import.meta.env?.VITE_STRIPE_PUBLISHABLE_KEY || placeholderStripeKey;
+const placeholderPaymentKey = "pk_test_REPLACE_LATER";
+const paymentPublishableKey = import.meta.env?.VITE_STRIPE_PUBLISHABLE_KEY || placeholderPaymentKey;
 
 async function requireClient() {
   const client = await getSupabaseClient();
@@ -16,8 +16,8 @@ async function requireClient() {
 
 export function stripeFrontendConfig() {
   return {
-    publishableKey: stripePublishableKey,
-    isConfigured: Boolean(stripePublishableKey) && stripePublishableKey !== placeholderStripeKey,
+    publishableKey: paymentPublishableKey,
+    isConfigured: Boolean(paymentPublishableKey) && paymentPublishableKey !== placeholderPaymentKey,
   };
 }
 
@@ -62,7 +62,7 @@ export async function requestCheckoutSessionPlaceholder(payload) {
     return {
       configured: false,
       skipped: true,
-      message: "Stripe checkout function is not active in this local environment yet.",
+      message: "Secure checkout function is not active in this local environment yet.",
       error,
     };
   }

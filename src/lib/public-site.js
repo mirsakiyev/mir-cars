@@ -149,7 +149,6 @@ export function renderPublicFooter() {
     </div>
     <div class="footer-legal">
       <span>&copy; <span data-current-year>${currentYear}</span> MIR CARS. All rights reserved.</span>
-      <a href="${links.terms}">Terms of Use</a>
     </div>
   `;
 }

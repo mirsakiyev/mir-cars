@@ -8,15 +8,15 @@ const status = document.body.dataset.paymentResult || "success";
 
 const states = {
   success: {
-    eyebrow: "Payment success placeholder",
+    eyebrow: "Payment success",
     title: "Payment success page is ready.",
-    message: "Stripe will redirect successful MIR CARS checkout sessions here after live payment processing is connected.",
+    message: "Successful MIR CARS checkout sessions will return here after live payment processing is connected.",
     tone: "success",
   },
   cancelled: {
-    eyebrow: "Payment failed / cancelled placeholder",
+    eyebrow: "Payment not completed",
     title: "Payment was not completed.",
-    message: "Stripe will redirect cancelled or failed checkout sessions here after live payment processing is connected.",
+    message: "Cancelled or failed checkout sessions will return here after live payment processing is connected.",
     tone: "error",
   },
 };

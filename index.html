@@ -5,13 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="MIR CARS is a premium Los Angeles car rental service with live availability, document upload, curated vehicles, and Stripe-ready checkout."
+      content="MIR CARS is a premium Los Angeles car rental service with live availability, document upload, curated vehicles, and secure checkout."
     />
     <title>MIR CARS | LA Rentals </title>
     <link rel="icon" href="favicon.ico" sizes="any" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="preconnect" href="https://images.unsplash.com" />
     <link rel="stylesheet" href="styles.css" />
     <script type="module" src="script.js"></script>
   </head>
@@ -28,7 +26,7 @@
       </a>
 
       <nav class="main-nav" aria-label="Primary navigation">
-        <a href="/fleet">Fleet</a>
+        <a href="fleet.html">Fleet</a>
         <a href="#policies">Policies</a>
         <a href="#testimonials">Testimonials</a>
         <a href="contact/">Contact</a>
@@ -47,9 +45,6 @@
             <span class="wordmark-bottom">CARS</span>
             <span class="wordmark-city">Los Angeles</span>
           </h1>
-          <p class="hero-copy">
-            Reserve refined vehicles for business, travel, events, and everyday drives across Los Angeles.
-          </p>
 
           <form class="quick-request trip-date-search hero-date-search" id="heroDateSearch" aria-label="Trip availability search" aria-describedby="heroDateSearchMessage">
             <label class="trip-date-field trip-combo-field" aria-label="Trip start">
@@ -80,76 +75,22 @@
                 </button>
               </span>
             </label>
-            <button class="button primary date-search-submit" type="submit" disabled aria-label="View available cars">
-              <span class="lookup-icon" aria-hidden="true"></span>
+            <button class="button primary date-search-submit hero-explore-submit" type="submit" disabled>
+              Explore Vehicles
             </button>
             <p class="date-search-message" id="heroDateSearchMessage" aria-live="polite"></p>
           </form>
-
-          <div class="hero-actions">
-            <a class="button hero-action hero-booking-cta" href="booking.html">Book Now</a>
-            <a class="button primary hero-action" href="/fleet">Explore Vehicles</a>
-          </div>
         </div>
-      </section>
-
-      <section class="trust-strip" aria-label="Rental highlights">
-        <div class="trust-intro">
-          <span>MIR CARS standard</span>
-          <strong>Curated rentals with a complete checkout flow.</strong>
-        </div>
-        <article class="trust-item">
-          <strong>14</strong>
-          <span>Vehicles</span>
-          <p>A focused fleet for daily, weekly, and extended LA rentals.</p>
-        </article>
-        <article class="trust-item">
-          <strong>24h</strong>
-          <span>Live flow</span>
-          <p>Vehicle, dates, documents, deposit, and payment step in one booking path.</p>
-        </article>
-        <article class="trust-item">
-          <strong>Stripe/Zelle</strong>
-          <span>Payments</span>
-          <p>Flexible checkout options after availability is checked.</p>
-        </article>
-        <article class="trust-item">
-          <strong>Los Angeles</strong>
-          <span>Pickup/Delivery</span>
-          <p>Local pickup and delivery options around the LA area.</p>
-        </article>
       </section>
 
       <section class="section section-intro" id="fleet">
         <div>
           <p class="eyebrow">Featured vehicles</p>
           <h2>Featured vehicles</h2>
-          <p class="section-copy">A rotating preview of standout rentals from the MIR CARS fleet.</p>
         </div>
       </section>
 
       <section class="fleet-grid" id="fleetGrid" aria-live="polite"></section>
-
-      <section class="feature-band">
-        <div>
-          <p class="eyebrow">Booking workflow</p>
-          <h2>Built for real rental operations and customer checkout.</h2>
-        </div>
-        <div class="feature-list">
-          <article>
-            <h3>Select details</h3>
-            <p>Guests choose a vehicle, pickup window, return window, and delivery details.</p>
-          </article>
-          <article>
-            <h3>Upload documents</h3>
-            <p>Driver license and supporting documents are stored with the booking record.</p>
-          </article>
-          <article>
-            <h3>Proceed to payment</h3>
-            <p>The checkout step is ready for Stripe deposit holds, partial payment, or full payment.</p>
-          </article>
-        </div>
-      </section>
 
       <section class="section policy-section" id="policies">
         <div>
@@ -183,31 +124,20 @@
         </div>
         <div class="testimonial-grid">
           <article>
-            <p>“Pickup was smooth, the car was spotless, and the team confirmed every detail before the trip.”</p>
+            <p>"Pickup was smooth, the car was spotless, and the team confirmed every detail before the trip."</p>
             <span>Business rental / Glendale</span>
           </article>
           <article>
-          <p>“The booking process felt personal and easy. We knew exactly what to bring before we arrived.”</p>
+          <p>"The booking process felt personal and easy. We knew exactly what to bring before we arrived."</p>
             <span>Weekend rental / Los Angeles</span>
           </article>
           <article>
-            <p>“Great communication, clean vehicle, and flexible timing for our airport plans.”</p>
+            <p>"Great communication, clean vehicle, and flexible timing for our airport plans."</p>
             <span>LAX delivery request</span>
           </article>
         </div>
       </section>
 
-      <section class="contact-section contact-cta-section" id="contact">
-        <div class="contact-card">
-          <p class="eyebrow">Need help?</p>
-          <h2>Contact MIR CARS for reservation, vehicle, delivery, or support questions.</h2>
-          <p>Use the dedicated Contact page to send a message or submit a Lost &amp; Found report.</p>
-          <div class="contact-cta-actions">
-            <a class="button primary" href="contact/">Contact MIR CARS</a>
-            <a class="button secondary" href="lost-and-found/">Lost &amp; Found</a>
-          </div>
-        </div>
-      </section>
     </main>
 
     <footer class="site-footer">

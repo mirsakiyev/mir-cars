@@ -66,8 +66,8 @@ Customer Documents & Approvals
 - Rental agreement checkbox approval
 
 Payments & Deposits
-- Stripe deposit or full-payment flow
-- Zelle/manual payment instructions
+- Secure deposit or full-payment flow
+- Manual payment instructions
 - Deposit/hold workflow
 - Damage/security deposit tracking
 - Automatic invoice or payment link generation

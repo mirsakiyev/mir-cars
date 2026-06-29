@@ -82,7 +82,7 @@ function latestPayment(payments = []) {
   return [...payments].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))[0] || null;
 }
 
-function stripeReferences(payment) {
+function paymentReferences(payment) {
   if (!payment) return "";
 
   return [
@@ -117,7 +117,7 @@ function renderBookingPaymentPanel(payment, booking) {
       <div class="admin-card-head compact">
         <div>
           <span>Payment</span>
-          <h3>${escapeHtml(payment.payment_provider || payment.provider || "stripe")}</h3>
+          <h3>Secure checkout</h3>
         </div>
         ${statusBadge(payment.payment_status || payment.status)}
       </div>
@@ -134,12 +134,12 @@ function renderBookingPaymentPanel(payment, booking) {
         <span><strong>Failure reason</strong>${escapeHtml(payment.payment_failed_reason || "None")}</span>
       </div>
       ${
-        stripeReferences(payment) || payment.stripe_receipt_url
-          ? `<div class="admin-stripe-refs">
-              ${stripeReferences(payment) ? `<span>${escapeHtml(stripeReferences(payment))}</span>` : ""}
-              ${payment.stripe_receipt_url ? `<a href="${escapeHtml(payment.stripe_receipt_url)}" target="_blank" rel="noopener">Stripe receipt</a>` : ""}
+        paymentReferences(payment) || payment.stripe_receipt_url
+          ? `<div class="admin-payment-refs">
+              ${paymentReferences(payment) ? `<span>${escapeHtml(paymentReferences(payment))}</span>` : ""}
+              ${payment.stripe_receipt_url ? `<a href="${escapeHtml(payment.stripe_receipt_url)}" target="_blank" rel="noopener">Payment receipt</a>` : ""}
             </div>`
-          : `<p>No Stripe references yet.</p>`
+          : `<p>No payment references yet.</p>`
       }
     </div>
   `;
@@ -1290,13 +1290,13 @@ async function renderPayments(client) {
           <tr>
             <th>Booking</th>
             <th>Customer</th>
-            <th>Provider / type</th>
+            <th>Payment / type</th>
             <th>Due</th>
             <th>Paid</th>
             <th>Payment status</th>
             <th>Deposit</th>
             <th>Refund</th>
-            <th>Stripe refs</th>
+            <th>Payment refs</th>
             <th>Failure / receipt</th>
           </tr>
         </thead>
@@ -1317,7 +1317,7 @@ async function renderPayments(client) {
                     <small>${escapeHtml(payment.booking_requests?.customer_email || "")}</small>
                   </td>
                   <td>
-                    <strong>${escapeHtml(payment.payment_provider || payment.provider || "stripe")}</strong>
+                    <strong>Secure checkout</strong>
                     <small>${escapeHtml(payment.payment_type || "")}</small>
                   </td>
                   <td>${formatMoney(payment.amount_due ?? payment.amount, payment.currency)}</td>
@@ -1339,7 +1339,7 @@ async function renderPayments(client) {
                       ${statusOptions(refundStatuses, payment.refund_status)}
                     </select>
                   </td>
-                  <td>${escapeHtml(stripeReferences(payment) || "No Stripe refs yet")}</td>
+                  <td>${escapeHtml(paymentReferences(payment) || "No payment refs yet")}</td>
                   <td>
                     <span>${escapeHtml(payment.payment_failed_reason || "No failure reason")}</span>
                     ${

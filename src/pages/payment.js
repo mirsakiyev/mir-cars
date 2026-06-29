@@ -108,10 +108,10 @@ function renderCheckout(summary) {
 
       <aside class="payment-card payment-checkout-card">
         <p class="eyebrow">Secure checkout</p>
-        <h2>Payment will be handled by Stripe.</h2>
+        <h2>Continue with secure payment.</h2>
         <p>
-          MIR CARS does not collect card numbers on this site. When Stripe is connected, this button will send you to
-          a secure third-party checkout session.
+          MIR CARS does not collect card numbers on this site. When secure checkout is active, this button will continue
+          to the protected payment step.
         </p>
         <p class="payment-trip-note">
           Save your Trip ID: <strong>${escapeHtml(displayValue(summary.booking_number))}</strong>.
@@ -122,8 +122,8 @@ function renderCheckout(summary) {
           ${summaryRow("Customer", fullName)}
           ${summaryRow("Email", displayValue(summary.customer_email))}
           ${summaryRow("Phone", displayValue(summary.customer_phone))}
-          ${summaryRow("Provider", "Stripe")}
-          ${summaryRow("Stripe key", stripeConfig.isConfigured ? "Publishable key configured" : "Placeholder key")}
+          ${summaryRow("Checkout", "Secure payment")}
+          ${summaryRow("Payment setup", stripeConfig.isConfigured ? "Configured" : "Pending activation")}
         </div>
 
         <label class="payment-terms">
@@ -151,7 +151,7 @@ async function handleContinueToPayment() {
   }
 
   button.disabled = true;
-  setFormStatus(status, "loading", "Preparing secure payment placeholder...");
+  setFormStatus(status, "loading", "Preparing secure payment...");
 
   try {
     const pendingResult = await markBookingPaymentPending({ bookingNumber, paymentToken });
@@ -166,7 +166,7 @@ async function handleContinueToPayment() {
     setFormStatus(
       status,
       "success",
-      "Stripe payment integration is not active yet. This booking is saved as payment pending.",
+      "Secure payment is not active yet. This booking is saved as payment pending.",
     );
   } catch (error) {
     logClientWarning("Payment placeholder update failed.", error);
@@ -184,9 +184,9 @@ async function initPaymentPage() {
   if (result === "success") {
     renderResultState({
       tone: "success",
-      eyebrow: "Payment success placeholder",
+      eyebrow: "Payment success",
       title: "Payment success page is ready.",
-      message: "Stripe will redirect successful payments here after live checkout is connected.",
+      message: "Successful checkout sessions will return here after live payment processing is connected.",
     });
     return;
   }
@@ -194,9 +194,9 @@ async function initPaymentPage() {
   if (result === "cancelled" || result === "failed") {
     renderResultState({
       tone: "error",
-      eyebrow: "Payment failed / cancelled placeholder",
+      eyebrow: "Payment not completed",
       title: "Payment was not completed.",
-      message: "Stripe will redirect failed or cancelled checkouts here after live checkout is connected.",
+      message: "Cancelled or failed checkout sessions will return here after live payment processing is connected.",
     });
     return;
   }
