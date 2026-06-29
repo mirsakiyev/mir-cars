@@ -21,6 +21,12 @@ export async function createBookingRequest(payload) {
   if (error) throw error;
 }
 
+export function isDuplicateBookingNumberError(error) {
+  const message = `${error?.code || ""} ${error?.message || ""} ${error?.details || ""}`;
+
+  return error?.code === "23505" && /booking_number|booking_requests_booking_number|duplicate key|unique constraint/i.test(message);
+}
+
 function safeFileName(fileName) {
   const safeName = fileName
     .normalize("NFKD")

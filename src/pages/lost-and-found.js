@@ -1,3 +1,4 @@
+import { normalizeTripId } from "../lib/booking-utils.js";
 import { setFormStatus } from "../lib/dom-utils.js";
 import { logClientWarning } from "../lib/logging.js";
 import { initPublicSite } from "../lib/public-site.js";
@@ -9,9 +10,16 @@ function fieldValue(formData, name) {
   return String(formData.get(name) || "").trim();
 }
 
+function normalizeTripIdInput(input) {
+  if (!input) return "";
+
+  input.value = normalizeTripId(input.value);
+  return input.value;
+}
+
 function lostFoundPayload(formData) {
   return {
-    tripId: fieldValue(formData, "trip_identifier"),
+    tripId: normalizeTripId(fieldValue(formData, "trip_identifier")),
     emailOrPhone: fieldValue(formData, "email") || fieldValue(formData, "phone"),
     name: fieldValue(formData, "name"),
     email: fieldValue(formData, "email"),
@@ -47,15 +55,20 @@ function bindLostFoundForm() {
   const params = new URLSearchParams(window.location.search);
   const tripParam = params.get("trip");
   if (tripParam) {
-    form.elements.trip_identifier.value = tripParam;
+    form.elements.trip_identifier.value = normalizeTripId(tripParam);
   }
 
   const submitButton = form.querySelector('button[type="submit"]');
+  form.elements.trip_identifier?.addEventListener("input", () => {
+    normalizeTripIdInput(form.elements.trip_identifier);
+  });
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     if (!form.reportValidity()) return;
+
+    normalizeTripIdInput(form.elements.trip_identifier);
 
     submitButton.disabled = true;
     setFormStatus(status, "loading", "Submitting lost item report...");

@@ -10,12 +10,45 @@ begin
 end;
 $$;
 
+create or replace function public.normalize_booking_number(value text)
+returns text
+language sql
+immutable
+as $$
+  select nullif(upper(regexp_replace(trim(coalesce(value, '')), '\s+', '', 'g')), '');
+$$;
+
 create or replace function public.generate_booking_number()
 returns text
 language plpgsql
 as $$
+declare
+  allowed_chars constant text := 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  candidate text;
+  random_bytes bytea;
+  attempt integer;
+  byte_index integer;
 begin
-  return 'MIR-' || to_char(now(), 'YYYYMMDD') || '-' || upper(substr(encode(gen_random_bytes(4), 'hex'), 1, 8));
+  for attempt in 1..24 loop
+    candidate := '';
+    random_bytes := gen_random_bytes(5);
+
+    for byte_index in 0..4 loop
+      candidate := candidate || substr(allowed_chars, (get_byte(random_bytes, byte_index) % length(allowed_chars)) + 1, 1);
+    end loop;
+
+    if to_regclass('public.booking_requests') is null
+      or not exists (
+        select 1
+        from public.booking_requests
+        where booking_number = candidate
+      )
+    then
+      return candidate;
+    end if;
+  end loop;
+
+  raise exception 'Could not generate a unique Trip ID after multiple attempts.';
 end;
 $$;
 
@@ -24,7 +57,9 @@ returns trigger
 language plpgsql
 as $$
 begin
-  if new.booking_number is null or length(trim(new.booking_number)) = 0 then
+  new.booking_number = public.normalize_booking_number(new.booking_number);
+
+  if new.booking_number is null then
     new.booking_number = public.generate_booking_number();
   end if;
 
@@ -427,7 +462,7 @@ as $$
     order by p.created_at desc
     limit 1
   ) latest_payment on true
-  where br.booking_number = booking_number_input
+  where br.booking_number = public.normalize_booking_number(booking_number_input)
     and br.payment_access_token = payment_access_token_input
   limit 1;
 $$;
@@ -454,7 +489,7 @@ begin
   select *
   into booking_row
   from public.booking_requests
-  where booking_requests.booking_number = booking_number_input
+  where booking_requests.booking_number = public.normalize_booking_number(booking_number_input)
     and booking_requests.payment_access_token = payment_access_token_input
   limit 1;
 
@@ -1038,7 +1073,7 @@ as $$
     order by p.created_at desc
     limit 1
   ) latest_payment on true
-  where br.booking_number = booking_number_input
+  where br.booking_number = public.normalize_booking_number(booking_number_input)
     and br.payment_access_token = payment_access_token_input
   limit 1;
 $$;

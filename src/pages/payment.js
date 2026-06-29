@@ -1,4 +1,4 @@
-import { formatMoney } from "../lib/booking-utils.js";
+import { formatMoney, normalizeTripId } from "../lib/booking-utils.js";
 import { escapeHtml, setFormStatus } from "../lib/dom-utils.js";
 import { logClientWarning } from "../lib/logging.js";
 import { initPublicSite } from "../lib/public-site.js";
@@ -10,7 +10,7 @@ import {
 } from "../lib/payment-service.js";
 
 const params = new URLSearchParams(window.location.search);
-const bookingNumber = params.get("booking") || "";
+const bookingNumber = normalizeTripId(params.get("booking") || "");
 const paymentToken = params.get("token") || "";
 const rawFallbackAmount = params.get("amount");
 const fallbackAmount = rawFallbackAmount ? Number(rawFallbackAmount) : Number.NaN;
@@ -64,7 +64,7 @@ function renderFallbackCheckout(message) {
       <h2>We could not load the full secure booking summary.</h2>
       <p>${escapeHtml(message)}</p>
       <div class="payment-summary-grid">
-        ${summaryRow("Booking", bookingNumber || "Missing booking number")}
+        ${summaryRow("Trip ID", bookingNumber || "Missing Trip ID")}
         ${summaryRow("Total due today", amountLabel, { strong: true })}
       </div>
       <a class="button primary" href="booking.html">Return to booking</a>
@@ -202,7 +202,7 @@ async function initPaymentPage() {
   }
 
   if (!bookingNumber || !paymentToken) {
-    renderFallbackCheckout("The payment link is missing its booking number or secure payment token.");
+    renderFallbackCheckout("The payment link is missing its Trip ID or secure payment token.");
     return;
   }
 

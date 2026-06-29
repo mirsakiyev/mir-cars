@@ -1,4 +1,4 @@
-import { formatMoney } from "../lib/booking-utils.js";
+import { formatMoney, normalizeTripId } from "../lib/booking-utils.js";
 import { initCustomDatePickers } from "../lib/date-picker.js";
 import { escapeHtml, setFormStatus } from "../lib/dom-utils.js";
 import { initPublicSite } from "../lib/public-site.js";
@@ -14,6 +14,13 @@ let currentVerifier = "";
 
 function fieldValue(formData, name) {
   return String(formData.get(name) || "").trim();
+}
+
+function normalizeTripIdInput(input) {
+  if (!input) return "";
+
+  input.value = normalizeTripId(input.value);
+  return input.value;
 }
 
 function displayValue(value, fallback = "Pending") {
@@ -309,9 +316,13 @@ function bindLookupForm() {
   const params = new URLSearchParams(window.location.search);
   const tripParam = params.get("trip");
   if (tripParam) {
-    lookupForm.elements.trip_id.value = tripParam;
+    lookupForm.elements.trip_id.value = normalizeTripId(tripParam);
     lookupForm.elements.verifier.focus();
   }
+
+  lookupForm.elements.trip_id?.addEventListener("input", () => {
+    normalizeTripIdInput(lookupForm.elements.trip_id);
+  });
 
   lookupForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -319,7 +330,7 @@ function bindLookupForm() {
     if (!lookupForm.reportValidity()) return;
 
     const formData = new FormData(lookupForm);
-    const tripId = fieldValue(formData, "trip_id");
+    const tripId = normalizeTripIdInput(lookupForm.elements.trip_id) || normalizeTripId(fieldValue(formData, "trip_id"));
     currentVerifier = fieldValue(formData, "verifier");
     const submitButton = lookupForm.querySelector('button[type="submit"]');
 

@@ -6,6 +6,12 @@ export const AVAILABILITY_START_PARAM = "startDate";
 export const AVAILABILITY_END_PARAM = "endDate";
 export const AVAILABILITY_START_TIME_PARAM = "startTime";
 export const AVAILABILITY_END_TIME_PARAM = "endTime";
+export const BOOKING_NUMBER_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+export const BOOKING_NUMBER_LENGTH = 5;
+export const BOOKING_NUMBER_MAX_ATTEMPTS = 12;
+
+const NEW_TRIP_ID_PATTERN = /^[A-Z0-9]{5}$/;
+const LEGACY_TRIP_ID_PATTERN = /^MIR-[0-9]{8}-[A-Z0-9]{6,8}$/;
 
 export function formatMoney(amount, currency = "USD") {
   if (amount === null || amount === undefined || Number.isNaN(Number(amount))) return "TBD";
@@ -36,6 +42,27 @@ export function todayDateString(date = new Date()) {
   const day = String(date.getDate()).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
+}
+
+export function normalizeTripId(value) {
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, "");
+}
+
+export function isNewTripIdFormat(value) {
+  return NEW_TRIP_ID_PATTERN.test(normalizeTripId(value));
+}
+
+export function isLegacyTripIdFormat(value) {
+  return LEGACY_TRIP_ID_PATTERN.test(normalizeTripId(value));
+}
+
+export function isAcceptedTripId(value) {
+  const tripId = normalizeTripId(value);
+
+  return isNewTripIdFormat(tripId) || isLegacyTripIdFormat(tripId);
 }
 
 export function isDateOnlyString(value) {
@@ -214,13 +241,62 @@ export function calculateEstimate(vehicle, pickupDateValue, returnDateValue) {
   };
 }
 
-export function generateBookingNumber() {
-  const stamp = new Date().toISOString().slice(0, 10).replaceAll("-", "");
-  const bytes = new Uint8Array(4);
-  crypto.getRandomValues(bytes);
-  const random = [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("").toUpperCase();
+function secureRandomIndex(limit) {
+  const cryptoProvider = globalThis.crypto;
 
-  return `MIR-${stamp}-${random}`;
+  if (!cryptoProvider?.getRandomValues) {
+    throw new Error("Secure random Trip ID generation is unavailable.");
+  }
+
+  const byte = new Uint8Array(1);
+  const maxUnbiasedValue = Math.floor(256 / limit) * limit;
+
+  do {
+    cryptoProvider.getRandomValues(byte);
+  } while (byte[0] >= maxUnbiasedValue);
+
+  return byte[0] % limit;
+}
+
+export function generateBookingNumber() {
+  let bookingNumber = "";
+
+  for (let index = 0; index < BOOKING_NUMBER_LENGTH; index += 1) {
+    bookingNumber += BOOKING_NUMBER_CHARACTERS[secureRandomIndex(BOOKING_NUMBER_CHARACTERS.length)];
+  }
+
+  return bookingNumber;
+}
+
+export async function createUniqueBookingNumber(commitCandidate, options = {}) {
+  if (typeof commitCandidate !== "function") {
+    throw new Error("Trip ID creation requires an insert callback.");
+  }
+
+  const maxAttempts = Number.isInteger(options.maxAttempts) && options.maxAttempts > 0 ? options.maxAttempts : BOOKING_NUMBER_MAX_ATTEMPTS;
+  const generateCandidate = options.generateCandidate || generateBookingNumber;
+  const isDuplicate = options.isDuplicate || (() => false);
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const bookingNumber = normalizeTripId(generateCandidate());
+
+    if (!isNewTripIdFormat(bookingNumber)) {
+      throw new Error("Generated Trip ID did not match the required 5-character format.");
+    }
+
+    try {
+      await commitCandidate(bookingNumber, attempt);
+      return bookingNumber;
+    } catch (error) {
+      if (!isDuplicate(error, bookingNumber, attempt)) throw error;
+
+      if (typeof options.onDuplicate === "function") {
+        options.onDuplicate(error, bookingNumber, attempt);
+      }
+    }
+  }
+
+  throw new Error(`Could not generate a unique Trip ID after ${maxAttempts} attempts.`);
 }
 
 export function getAge(dateOfBirthValue) {

@@ -6,10 +6,10 @@ import {
   AVAILABILITY_START_TIME_PARAM,
   calculateEstimate,
   calculateRentalDays,
+  createUniqueBookingNumber,
   formatDailyRate,
   formatMoney,
   formatTimeDisplay,
-  generateBookingNumber,
   getAge,
   isDateOnlyString,
   isTimeString,
@@ -20,7 +20,7 @@ import { escapeHtml, setFormStatus, setFormStatusHtml } from "../lib/dom-utils.j
 import { refreshHashScroll } from "../lib/hash-scroll.js";
 import { logClientWarning } from "../lib/logging.js";
 import { initPublicSite } from "../lib/public-site.js";
-import { createBookingRequest, uploadBookingDocuments } from "../lib/request-service.js";
+import { createBookingRequest, isDuplicateBookingNumberError, uploadBookingDocuments } from "../lib/request-service.js";
 import {
   CUSTOM_PICKUP_VALUE,
   CUSTOM_RETURN_VALUE,
@@ -1114,7 +1114,6 @@ function bindBookingForm() {
     }
 
     const bookingId = generateId();
-    const bookingNumber = generateBookingNumber();
     const paymentAccessToken = generatePaymentAccessToken();
 
     submitButton.disabled = true;
@@ -1123,7 +1122,15 @@ function bindBookingForm() {
     let redirectingToPayment = false;
 
     try {
-      await createBookingRequest(bookingPayload(bookingId, bookingNumber, paymentAccessToken));
+      const bookingNumber = await createUniqueBookingNumber(
+        (candidate) => createBookingRequest(bookingPayload(bookingId, candidate, paymentAccessToken)),
+        {
+          isDuplicate: isDuplicateBookingNumberError,
+          onDuplicate: (_error, candidate, attempt) => {
+            logClientWarning(`Trip ID collision detected for ${candidate}; retrying (${attempt}).`);
+          },
+        },
+      );
       await uploadBookingDocuments({
         bookingId,
         bookingNumber,

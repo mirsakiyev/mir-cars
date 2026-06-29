@@ -1,4 +1,5 @@
 import { getSupabaseClient, getSupabaseConfigError } from "./supabase-client.js";
+import { normalizeTripId } from "./booking-utils.js";
 
 const placeholderStripeKey = "pk_test_REPLACE_LATER";
 const stripePublishableKey = import.meta.env?.VITE_STRIPE_PUBLISHABLE_KEY || placeholderStripeKey;
@@ -23,7 +24,7 @@ export function stripeFrontendConfig() {
 export async function loadPaymentCheckoutSummary({ bookingNumber, paymentToken }) {
   const client = await requireClient();
   const { data, error } = await client.rpc("get_payment_checkout_summary", {
-    booking_number_input: bookingNumber,
+    booking_number_input: normalizeTripId(bookingNumber),
     payment_access_token_input: paymentToken,
   });
 
@@ -35,7 +36,7 @@ export async function loadPaymentCheckoutSummary({ bookingNumber, paymentToken }
 export async function markBookingPaymentPending({ bookingNumber, paymentToken }) {
   const client = await requireClient();
   const { data, error } = await client.rpc("mark_booking_payment_pending", {
-    booking_number_input: bookingNumber,
+    booking_number_input: normalizeTripId(bookingNumber),
     payment_access_token_input: paymentToken,
   });
 
