@@ -54,7 +54,7 @@
           <form class="quick-request trip-date-search hero-date-search" id="heroDateSearch" aria-label="Trip availability search" aria-describedby="heroDateSearchMessage">
             <label class="trip-date-field trip-combo-field" aria-label="Trip start">
               <span class="date-picker-shell" data-date-picker>
-                <input type="hidden" name="startDate" data-date-input required />
+                <input type="hidden" name="startDate" data-date-input data-date-default-min="today" required />
                 <button class="date-picker-trigger" type="button" data-date-trigger aria-haspopup="dialog" aria-expanded="false" aria-label="Choose trip start date">
                   <span data-date-display>Select start date</span>
                 </button>
@@ -68,7 +68,7 @@
             </label>
             <label class="trip-date-field trip-combo-field" aria-label="Trip end">
               <span class="date-picker-shell" data-date-picker>
-                <input type="hidden" name="endDate" data-date-input required />
+                <input type="hidden" name="endDate" data-date-input data-date-default-min="today" required />
                 <button class="date-picker-trigger" type="button" data-date-trigger aria-haspopup="dialog" aria-expanded="false" aria-label="Choose trip end date">
                   <span data-date-display>Select end date</span>
                 </button>

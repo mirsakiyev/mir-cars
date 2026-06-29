@@ -3659,7 +3659,8 @@ address {
   z-index: 5;
 }
 
-.booking-checkout-form .booking-date-field .date-picker-trigger {
+.booking-checkout-form .booking-date-field .date-picker-trigger,
+.portal-extension-form .booking-date-field .date-picker-trigger {
   position: relative;
   min-height: 46px;
   padding: 8px 44px 8px 14px;
@@ -3673,7 +3674,8 @@ address {
   font-weight: 800;
 }
 
-.booking-checkout-form .booking-date-field .date-picker-trigger::before {
+.booking-checkout-form .booking-date-field .date-picker-trigger::before,
+.portal-extension-form .booking-date-field .date-picker-trigger::before {
   position: absolute;
   top: calc(50% - 5px);
   right: 17px;
@@ -3685,7 +3687,8 @@ address {
   opacity: 0.82;
 }
 
-.booking-checkout-form .booking-date-field .date-picker-trigger::after {
+.booking-checkout-form .booking-date-field .date-picker-trigger::after,
+.portal-extension-form .booking-date-field .date-picker-trigger::after {
   position: absolute;
   top: 50%;
   right: 14px;
@@ -3700,7 +3703,10 @@ address {
 
 .booking-checkout-form .booking-date-field .date-picker-trigger:hover,
 .booking-checkout-form .booking-date-field .date-picker-trigger:focus-visible,
-.booking-checkout-form .booking-date-field .date-picker-shell.is-open .date-picker-trigger {
+.booking-checkout-form .booking-date-field .date-picker-shell.is-open .date-picker-trigger,
+.portal-extension-form .booking-date-field .date-picker-trigger:hover,
+.portal-extension-form .booking-date-field .date-picker-trigger:focus-visible,
+.portal-extension-form .booking-date-field .date-picker-shell.is-open .date-picker-trigger {
   border-color: rgba(244, 248, 251, 0.42);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(142, 160, 176, 0.03)),
@@ -3720,7 +3726,8 @@ address {
   z-index: 5;
 }
 
-.booking-checkout-form .booking-time-field .time-select-trigger {
+.booking-checkout-form .booking-time-field .time-select-trigger,
+.portal-extension-form .booking-time-field .time-select-trigger {
   min-height: 46px;
   padding: 8px 44px 8px 14px;
   border-color: rgba(226, 234, 242, 0.16);
@@ -3733,7 +3740,8 @@ address {
   font-weight: 800;
 }
 
-.booking-checkout-form .booking-time-field .time-select-trigger::before {
+.booking-checkout-form .booking-time-field .time-select-trigger::before,
+.portal-extension-form .booking-time-field .time-select-trigger::before {
   top: 50%;
   right: 15px;
   width: 15px;
@@ -3743,7 +3751,8 @@ address {
     linear-gradient(currentColor, currentColor) 7.5px center / 5px 1.5px no-repeat;
 }
 
-.booking-checkout-form .booking-time-field .time-select-trigger::after {
+.booking-checkout-form .booking-time-field .time-select-trigger::after,
+.portal-extension-form .booking-time-field .time-select-trigger::after {
   right: 15px;
   width: 15px;
   height: 15px;
@@ -3752,7 +3761,10 @@ address {
 
 .booking-checkout-form .booking-time-field .time-select-trigger:hover,
 .booking-checkout-form .booking-time-field .time-select-trigger:focus-visible,
-.booking-checkout-form .booking-time-field .time-select-shell.is-open .time-select-trigger {
+.booking-checkout-form .booking-time-field .time-select-shell.is-open .time-select-trigger,
+.portal-extension-form .booking-time-field .time-select-trigger:hover,
+.portal-extension-form .booking-time-field .time-select-trigger:focus-visible,
+.portal-extension-form .booking-time-field .time-select-shell.is-open .time-select-trigger {
   border-color: rgba(244, 248, 251, 0.42);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(142, 160, 176, 0.03)),

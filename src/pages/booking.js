@@ -826,10 +826,17 @@ async function validateStep(stepIndex) {
   }
 
   if (stepIndex === 1) {
+    if (!form.elements.date_of_birth.value) {
+      setFormStatus(status, "error", "Date of birth is required.");
+      datePickerTriggerFor("date_of_birth")?.focus();
+      return false;
+    }
+
     const age = getAge(form.elements.date_of_birth.value);
 
     if (age !== null && age < 21) {
-      reportStepInvalid(form.elements.date_of_birth, "Drivers must be at least 21 years old.");
+      setFormStatus(status, "error", "Drivers must be at least 21 years old.");
+      datePickerTriggerFor("date_of_birth")?.focus();
       return false;
     }
   }

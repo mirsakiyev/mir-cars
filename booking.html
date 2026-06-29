@@ -121,7 +121,7 @@
                     <label class="booking-date-field">
                       Pickup date
                       <span class="date-picker-shell" data-date-picker>
-                        <input type="hidden" name="pickup_date" data-date-input required />
+                        <input type="hidden" name="pickup_date" data-date-input data-date-default-min="today" required />
                         <button
                           class="date-picker-trigger"
                           type="button"
@@ -157,7 +157,7 @@
                     <label class="booking-date-field">
                       Return date
                       <span class="date-picker-shell" data-date-picker>
-                        <input type="hidden" name="return_date" data-date-input required />
+                        <input type="hidden" name="return_date" data-date-input data-date-default-min="today" required />
                         <button
                           class="date-picker-trigger"
                           type="button"
@@ -298,9 +298,21 @@
                   </div>
 
                   <div class="form-row">
-                    <label>
+                    <label class="booking-date-field">
                       Date of birth
-                      <input type="date" name="date_of_birth" autocomplete="bday" required />
+                      <span class="date-picker-shell" data-date-picker data-date-picker-empty="Select date of birth">
+                        <input type="hidden" name="date_of_birth" autocomplete="bday" data-date-input data-date-max="today" required />
+                        <button
+                          class="date-picker-trigger"
+                          type="button"
+                          data-date-trigger
+                          aria-haspopup="dialog"
+                          aria-expanded="false"
+                          aria-label="Choose date of birth"
+                        >
+                          <span data-date-display>dd/mm/yyyy</span>
+                        </button>
+                      </span>
                     </label>
                   </div>
 

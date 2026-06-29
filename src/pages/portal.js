@@ -1,7 +1,9 @@
 import { formatMoney } from "../lib/booking-utils.js";
+import { initCustomDatePickers } from "../lib/date-picker.js";
 import { escapeHtml, setFormStatus } from "../lib/dom-utils.js";
 import { initPublicSite } from "../lib/public-site.js";
 import { supportContact } from "../lib/site-config.js";
+import { initCustomTimeSelects } from "../lib/time-select.js";
 
 const lookupForm = document.querySelector("#portalLookupForm");
 const lookupStatus = document.querySelector("#portalLookupStatus");
@@ -247,13 +249,37 @@ function renderBookingPortal(booking, message = "") {
           ${extensionRequestsList(booking.extensionRequests)}
           <form class="portal-extension-form" data-extension-form>
             <div class="portal-extension-fields">
-              <label>
+              <label class="booking-date-field">
                 Requested return date
-                <input type="date" name="requested_return_date" required />
+                <span class="date-picker-shell" data-date-picker>
+                  <input type="hidden" name="requested_return_date" data-date-input data-date-default-min="today" required />
+                  <button
+                    class="date-picker-trigger"
+                    type="button"
+                    data-date-trigger
+                    aria-haspopup="dialog"
+                    aria-expanded="false"
+                    aria-label="Choose requested return date"
+                  >
+                    <span data-date-display>dd/mm/yyyy</span>
+                  </button>
+                </span>
               </label>
-              <label>
+              <label class="booking-time-field">
                 Requested return time
-                <input type="time" name="requested_return_time" />
+                <span class="time-select-shell booking-time-select" data-time-select>
+                  <input type="hidden" name="requested_return_time" data-time-input />
+                  <button
+                    class="time-select-trigger"
+                    type="button"
+                    data-time-trigger
+                    aria-haspopup="dialog"
+                    aria-expanded="false"
+                    aria-label="Choose requested return time"
+                  >
+                    <span data-time-display>Choose return time</span>
+                  </button>
+                </span>
               </label>
             </div>
             <label>
@@ -272,6 +298,9 @@ function renderBookingPortal(booking, message = "") {
       )}
     </div>
   `;
+
+  initCustomDatePickers(portalResult);
+  initCustomTimeSelects(portalResult);
 }
 
 function bindLookupForm() {
@@ -331,6 +360,13 @@ function bindPortalActions() {
     const status = extensionForm.querySelector("[data-extension-status]");
     const submitButton = extensionForm.querySelector('button[type="submit"]');
     const formData = new FormData(extensionForm);
+    const requestedReturnDate = fieldValue(formData, "requested_return_date");
+
+    if (!requestedReturnDate) {
+      setFormStatus(status, "error", "Requested return date is required.");
+      extensionForm.querySelector('[name="requested_return_date"]')?.closest("[data-date-picker]")?.querySelector("[data-date-trigger]")?.focus();
+      return;
+    }
 
     submitButton.disabled = true;
     setFormStatus(status, "loading", "Sending extension request...");
@@ -339,7 +375,7 @@ function bindPortalActions() {
       const data = await postJson("/.netlify/functions/customer-extension-request", {
         tripId: currentBooking.tripId,
         emailOrPhone: currentVerifier,
-        requestedReturnDate: fieldValue(formData, "requested_return_date"),
+        requestedReturnDate,
         requestedReturnTime: fieldValue(formData, "requested_return_time"),
         message: fieldValue(formData, "message"),
       });

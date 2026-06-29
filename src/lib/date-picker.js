@@ -57,6 +57,17 @@ function viewMonthForPicker(picker, input) {
   return startOfMonth(dateFromValue(input.value) || dateFromValue(input.min) || new Date());
 }
 
+function pickerMinValue(input) {
+  return input.min || (input.dataset.dateDefaultMin === "today" ? todayDateString() : "");
+}
+
+function syncRelativeLimits(input) {
+  if (!input) return;
+
+  if (input.dataset.dateMin === "today") input.min = todayDateString();
+  if (input.dataset.dateMax === "today") input.max = todayDateString();
+}
+
 function setViewMonth(picker, date) {
   picker.dataset.viewMonth = monthKey(startOfMonth(date));
 }
@@ -97,14 +108,17 @@ function renderCalendar(picker) {
   const { input, popover } = pickerParts(picker);
   if (!input || !popover) return;
 
+  syncRelativeLimits(input);
+
   const viewMonth = viewMonthForPicker(picker, input);
-  const minValue = input.min || todayDateString();
+  const minValue = pickerMinValue(input);
   const maxValue = input.max || "";
   const selectedValue = isDateOnlyString(input.value) ? input.value : "";
   const todayValue = todayDateString();
   const firstDay = startOfMonth(viewMonth);
   const gridStart = new Date(firstDay);
   const previousMonthLastDate = valueFromDate(new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 0));
+  const nextMonthFirstDate = valueFromDate(new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 1));
 
   gridStart.setDate(firstDay.getDate() - firstDay.getDay());
 
@@ -114,7 +128,7 @@ function renderCalendar(picker) {
 
     const value = valueFromDate(day);
     const isOutsideMonth = day.getMonth() !== viewMonth.getMonth();
-    const isDisabled = value < minValue || (maxValue && value > maxValue);
+    const isDisabled = (minValue && value < minValue) || (maxValue && value > maxValue);
     const isSelected = value === selectedValue;
     const isToday = value === todayValue;
 
@@ -131,9 +145,9 @@ function renderCalendar(picker) {
 
   popover.innerHTML = `
     <div class="date-picker-head">
-      <button class="date-picker-nav" type="button" data-date-prev aria-label="Previous month" ${previousMonthLastDate < minValue ? "disabled" : ""}></button>
+      <button class="date-picker-nav" type="button" data-date-prev aria-label="Previous month" ${minValue && previousMonthLastDate < minValue ? "disabled" : ""}></button>
       <strong>${monthFormatter.format(viewMonth)}</strong>
-      <button class="date-picker-nav date-picker-nav-next" type="button" data-date-next aria-label="Next month"></button>
+      <button class="date-picker-nav date-picker-nav-next" type="button" data-date-next aria-label="Next month" ${maxValue && nextMonthFirstDate > maxValue ? "disabled" : ""}></button>
     </div>
     <div class="date-picker-weekdays" aria-hidden="true">
       ${dayLabels.map((label) => `<span>${label}</span>`).join("")}
@@ -142,8 +156,8 @@ function renderCalendar(picker) {
       ${dayButtons}
     </div>
     <div class="date-picker-footer">
-      <span>${selectedValue ? formatDateOnlyDisplay(selectedValue) : "Select a trip date"}</span>
-      <button type="button" data-date-today ${todayValue < minValue ? "disabled" : ""}>Today</button>
+      <span>${selectedValue ? formatDateOnlyDisplay(selectedValue) : picker.dataset.datePickerEmpty || "Select a trip date"}</span>
+      <button type="button" data-date-today ${(minValue && todayValue < minValue) || (maxValue && todayValue > maxValue) ? "disabled" : ""}>Today</button>
     </div>
   `;
 }
@@ -224,6 +238,8 @@ function bindPicker(picker) {
 
   const { input, trigger } = pickerParts(picker);
   if (!input || !trigger) return;
+
+  syncRelativeLimits(input);
 
   if (!picker.dataset.datePickerPopover) {
     pickerId += 1;
