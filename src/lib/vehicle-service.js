@@ -34,6 +34,18 @@ const vehicleColumns = [
 ].join(",");
 
 let timeAvailabilityFallbackLogged = false;
+const publicVehicleLoadTimeoutMs = 4500;
+
+function withPublicVehicleTimeout(promise, message) {
+  let timeoutId;
+  const timeout = new Promise((_resolve, reject) => {
+    timeoutId = globalThis.setTimeout(() => reject(new Error(message)), publicVehicleLoadTimeoutMs);
+  });
+
+  return Promise.race([promise, timeout]).finally(() => {
+    globalThis.clearTimeout(timeoutId);
+  });
+}
 
 function fallbackVehicles() {
   return window.MIR_CARS?.fallbackVehicles || window.MIR_CARS?.vehicles || [];
@@ -189,7 +201,7 @@ export async function loadAvailableVehicles() {
   }
 
   try {
-    const rows = await fetchAvailableVehicleRows(client);
+    const rows = await withPublicVehicleTimeout(fetchAvailableVehicleRows(client), "Live vehicle inventory timed out.");
     const vehicles = rows.map(mapDatabaseVehicle);
     window.MIR_CARS?.setVehicles?.(vehicles);
 
@@ -285,7 +297,10 @@ export async function loadVehicleBySlug(slug) {
 
   if (client) {
     try {
-      const { data, error } = await client.from("vehicles").select(vehicleColumns).eq("slug", slug).maybeSingle();
+      const { data, error } = await withPublicVehicleTimeout(
+        client.from("vehicles").select(vehicleColumns).eq("slug", slug).maybeSingle(),
+        "Live vehicle detail timed out.",
+      );
 
       if (error) throw error;
       if (data?.status === "available" && data.public_visible !== false && !data.archived_at) return mapDatabaseVehicle(data);

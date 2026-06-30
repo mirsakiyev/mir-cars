@@ -148,15 +148,13 @@ function renderRelatedVehicleCard(relatedVehicle) {
 
 function renderRelatedVehicles(vehicleData) {
   const relatedVehicles = window.MIR_CARS.getRelatedVehicles(vehicleData);
-  const hasSameType = relatedVehicles.some((relatedVehicle) => relatedVehicle.type === vehicleData.type);
-  const heading = hasSameType ? `More ${vehicleData.type} rentals first.` : "More MIR CARS rentals.";
 
   return `
     <section class="related-vehicles" aria-labelledby="relatedVehiclesTitle">
       <div class="related-vehicles-header">
         <div>
           <p class="eyebrow">Explore other vehicles</p>
-          <h2 id="relatedVehiclesTitle">${escapeHtml(heading)}</h2>
+          <h2 id="relatedVehiclesTitle">Discover more rentals</h2>
         </div>
       </div>
       <div class="related-vehicles-row" aria-label="Other MIR CARS rentals">

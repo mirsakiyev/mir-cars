@@ -1,4 +1,5 @@
 import "../../vehicle-data.js";
+import { initCustomSelects } from "./custom-select.js";
 import { bindReliableHashScroll } from "./hash-scroll.js";
 
 function publicLinks() {
@@ -131,6 +132,7 @@ function initMarketingReveals() {
     ".policy-section",
     ".testimonials-section",
     ".booking-requirements",
+    ".booking-resource-links",
     ".booking-info-grid",
     ".booking-policy-section",
     ".support-grid",
@@ -237,5 +239,6 @@ export function initPublicSite() {
   bindReliableHashScroll();
   enhanceSiteHeader();
   renderPublicFooter();
+  initCustomSelects();
   initMarketingReveals();
 }

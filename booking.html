@@ -147,7 +147,7 @@
                           aria-expanded="false"
                           aria-label="Choose pickup time"
                         >
-                          <span id="pickupTimeDisplay" data-time-display>Choose pickup time</span>
+                          <span id="pickupTimeDisplay" data-time-display>Choose time</span>
                         </button>
                       </span>
                     </label>
@@ -183,7 +183,7 @@
                           aria-expanded="false"
                           aria-label="Choose return time"
                         >
-                          <span id="returnTimeDisplay" data-time-display>Choose return time</span>
+                          <span id="returnTimeDisplay" data-time-display>Choose time</span>
                         </button>
                       </span>
                     </label>
@@ -192,7 +192,7 @@
                   <div class="form-row">
                     <label>
                       Pickup location
-                      <select name="pickup_location" id="pickupLocationSelect" required>
+                      <select name="pickup_location" id="pickupLocationSelect" required data-custom-select>
                         <option>LAX Airport</option>
                         <option>Glendale pickup</option>
                         <option>Custom Delivery Request</option>
@@ -200,7 +200,7 @@
                     </label>
                     <label>
                       Return location
-                      <select name="return_location" id="returnLocationSelect" required>
+                      <select name="return_location" id="returnLocationSelect" required data-custom-select>
                         <option>Same as pickup</option>
                         <option>LAX Airport</option>
                         <option>Glendale return</option>
@@ -298,20 +298,21 @@
                   </div>
 
                   <div class="form-row">
-                    <label class="booking-date-field">
+                    <label class="dob-field">
                       Date of birth
-                      <span class="date-picker-shell" data-date-picker data-date-picker-empty="Select date of birth">
-                        <input type="hidden" name="date_of_birth" autocomplete="bday" data-date-input data-date-max="today" required />
-                        <button
-                          class="date-picker-trigger"
-                          type="button"
-                          data-date-trigger
-                          aria-haspopup="dialog"
-                          aria-expanded="false"
-                          aria-label="Choose date of birth"
-                        >
-                          <span data-date-display>dd/mm/yyyy</span>
-                        </button>
+                      <span class="dob-input-shell">
+                        <input
+                          class="dob-input"
+                          id="dateOfBirthDisplay"
+                          type="text"
+                          inputmode="numeric"
+                          autocomplete="bday"
+                          placeholder="dd/mm/yyyy"
+                          pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}"
+                          data-dob-display
+                          required
+                        />
+                        <input type="hidden" name="date_of_birth" id="dateOfBirthInput" data-dob-input />
                       </span>
                     </label>
                   </div>
@@ -406,7 +407,7 @@
                   <div class="form-row">
                     <label>
                       Payment method
-                      <select name="payment_method" required>
+                      <select name="payment_method" required data-custom-select>
                         <option value="stripe_card">Credit/debit card</option>
                         <option value="stripe_deposit">Deposit authorization</option>
                       </select>
@@ -415,14 +416,19 @@
 
                   <label class="checkbox-row">
                     <input type="checkbox" name="approval_acknowledged" value="Yes" required />
-                    I confirm the rental details and documents are accurate and understand payment will be completed on the next step.
+                    <span>
+                      I confirm that all rental details and submitted documents are accurate, and I agree to the
+                      <a href="/terms/#terms-of-service">MIR CARS Terms of Service</a>
+                      and
+                      <a href="/terms/#privacy-policy">Privacy Policy</a>.
+                    </span>
                   </label>
 
                   <p class="checkout-helper">Secure checkout continues on the next step.</p>
 
                   <div class="booking-step-actions split">
                     <button class="button secondary" type="button" data-step-back>Back</button>
-                    <button class="button primary" type="submit">Proceed to Secure Payment</button>
+                    <button class="button primary" type="submit">Proceed to Payment</button>
                   </div>
                 </section>
 
@@ -431,30 +437,22 @@
             </div>
           </form>
 
-          <section class="booking-requirements" id="booking-policies" aria-labelledby="booking-requirements-heading">
-            <p class="eyebrow">Before you book</p>
-            <h2 id="booking-requirements-heading">Rental requirements.</h2>
-            <div class="booking-requirements-grid">
-              <article>
-                <h3>Driver</h3>
-                <p>Age 25+, valid license, proof of insurance, and matching payment method required.</p>
-              </article>
-              <article>
-                <h3>Payment</h3>
-                <p>Deposit or card authorization is prepared for the checkout step.</p>
-              </article>
-              <article>
-                <h3>Mileage</h3>
-                <p>Daily rentals include 150 miles. Overage is billed after return.</p>
-              </article>
-              <article>
-                <h3>Vehicle care</h3>
-                <p>No smoking, racing, off-road use, or unauthorized drivers.</p>
-              </article>
+          <section class="booking-resource-links" id="booking-policies" aria-labelledby="booking-resource-links-heading">
+            <div>
+              <p class="eyebrow">Before you book</p>
+              <h2 id="booking-resource-links-heading">Review rental policies.</h2>
+              <p>See the quick rental rules or read the full Terms of Use before completing your reservation.</p>
             </div>
-            <p class="booking-requirements-note">
-              Bring your physical license, insurance, and payment method at pickup.
-            </p>
+            <div class="booking-resource-link-grid" aria-label="Rental policy resources">
+              <a class="booking-resource-link" href="policies/">
+                <span>Policies and rules</span>
+                <strong>View rental standards, mileage, deposits, and vehicle care.</strong>
+              </a>
+              <a class="booking-resource-link" href="terms/">
+                <span>Full Terms of Use</span>
+                <strong>Read the complete terms of service and privacy policy.</strong>
+              </a>
+            </div>
           </section>
         </div>
       </section>

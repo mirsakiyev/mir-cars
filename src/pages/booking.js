@@ -14,6 +14,7 @@ import {
   isDateOnlyString,
   isTimeString,
   syncDateInputLimits,
+  todayDateString,
 } from "../lib/booking-utils.js";
 import { initCustomDatePickers } from "../lib/date-picker.js";
 import { escapeHtml, setFormStatus, setFormStatusHtml } from "../lib/dom-utils.js";
@@ -51,6 +52,7 @@ const stepPanels = [...form.querySelectorAll("[data-booking-step]")];
 const stepIndicators = [...form.querySelectorAll("[data-step-indicator]")];
 const locationFeePreview = document.querySelector("#locationFeePreview");
 const customLocationFields = document.querySelector("#customLocationFields");
+const dateOfBirthDisplay = document.querySelector("[data-dob-display]");
 
 let vehicles = [];
 let deliveryConfig = null;
@@ -58,6 +60,13 @@ let locationFeeBreakdown = { totalLocationFee: 0 };
 let availabilityState = { status: "unknown", key: "" };
 let availabilityRequestId = 0;
 let currentStep = 0;
+let isDateOfBirthBound = false;
+let bookingDraftSaveTimer = null;
+let isRestoringBookingDraft = false;
+
+const BOOKING_DRAFT_KEY = "mirCars.bookingDraft.v1";
+const BOOKING_DRAFT_VERSION = 1;
+const BOOKING_DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
 
 function selectedVehicle() {
   return findVehicleByRequestValue(vehicles, vehicleSelect.value) || vehicles[0] || null;
@@ -174,6 +183,80 @@ function datePickerTriggerFor(name) {
   return form.elements[name]?.closest("[data-date-picker]")?.querySelector("[data-date-trigger]");
 }
 
+function dateOfBirthControl() {
+  return dateOfBirthDisplay || form.querySelector("[data-dob-display]");
+}
+
+function formatDobDisplay(value) {
+  const digits = String(value || "")
+    .replace(/\D/g, "")
+    .slice(0, 8);
+
+  return [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4, 8)].filter(Boolean).join("/");
+}
+
+function parseDobDisplay(value) {
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(value || "").trim());
+  if (!match) return "";
+
+  const [, day, month, year] = match;
+  const normalized = `${year}-${month}-${day}`;
+
+  return isDateOnlyString(normalized) ? normalized : "";
+}
+
+function syncDateOfBirthField({ format = false } = {}) {
+  const display = dateOfBirthControl();
+  const input = form.elements.date_of_birth;
+  if (!display || !input) return;
+
+  if (format) {
+    display.value = formatDobDisplay(display.value);
+  }
+
+  const value = String(display.value || "").trim();
+  const normalized = parseDobDisplay(value);
+
+  input.value = normalized;
+
+  if (!value) {
+    display.setCustomValidity("");
+    return;
+  }
+
+  if (!/^\d{2}\/\d{2}\/\d{4}$/.test(value) || !normalized) {
+    display.setCustomValidity("Enter a valid date of birth as dd/mm/yyyy.");
+    return;
+  }
+
+  if (normalized > todayDateString()) {
+    input.value = "";
+    display.setCustomValidity("Date of birth cannot be in the future.");
+    return;
+  }
+
+  display.setCustomValidity("");
+}
+
+function bindDateOfBirthInput() {
+  if (isDateOfBirthBound) return;
+
+  const display = dateOfBirthControl();
+  if (!display) return;
+
+  syncDateOfBirthField({ format: true });
+
+  display.addEventListener("input", () => {
+    syncDateOfBirthField({ format: true });
+  });
+
+  display.addEventListener("blur", () => {
+    syncDateOfBirthField({ format: true });
+  });
+
+  isDateOfBirthBound = true;
+}
+
 function syncBookingDateControls(options = {}) {
   const pickupInput = form.elements.pickup_date;
   const returnInput = form.elements.return_date;
@@ -183,6 +266,192 @@ function syncBookingDateControls(options = {}) {
   }
 
   syncDateInputLimits(pickupInput, returnInput);
+}
+
+function bookingDraftStorage() {
+  try {
+    return window.localStorage || null;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function clearBookingDraft() {
+  const storage = bookingDraftStorage();
+  if (!storage) return;
+
+  try {
+    storage.removeItem(BOOKING_DRAFT_KEY);
+  } catch (error) {
+    logClientWarning("Booking draft could not be cleared.", error);
+  }
+}
+
+function isDraftField(field) {
+  if (!field?.name) return false;
+
+  const type = String(field.type || "").toLowerCase();
+  return !["button", "file", "image", "password", "reset", "submit"].includes(type);
+}
+
+function draftFieldValue(field) {
+  const type = String(field.type || "").toLowerCase();
+
+  if (type === "checkbox") return Boolean(field.checked);
+  if (type === "radio") return field.checked ? field.value : null;
+  if (field instanceof HTMLSelectElement && field.multiple) {
+    return [...field.selectedOptions].map((option) => option.value);
+  }
+
+  return field.value;
+}
+
+function collectBookingDraftFields() {
+  const fields = {};
+
+  [...form.elements].forEach((field) => {
+    if (!isDraftField(field)) return;
+
+    const value = draftFieldValue(field);
+    if (value === null) return;
+
+    fields[field.name] = value;
+  });
+
+  return fields;
+}
+
+function saveBookingDraft() {
+  if (isRestoringBookingDraft) return;
+
+  const storage = bookingDraftStorage();
+  if (!storage) return;
+
+  const now = Date.now();
+  const draft = {
+    version: BOOKING_DRAFT_VERSION,
+    updatedAt: now,
+    expiresAt: now + BOOKING_DRAFT_TTL_MS,
+    step: currentStep,
+    dateOfBirthDisplay: dateOfBirthControl()?.value || "",
+    fields: collectBookingDraftFields(),
+  };
+
+  try {
+    storage.setItem(BOOKING_DRAFT_KEY, JSON.stringify(draft));
+  } catch (error) {
+    logClientWarning("Booking draft could not be saved.", error);
+  }
+}
+
+function queueBookingDraftSave() {
+  window.clearTimeout(bookingDraftSaveTimer);
+  bookingDraftSaveTimer = window.setTimeout(saveBookingDraft, 120);
+}
+
+function readBookingDraft() {
+  const storage = bookingDraftStorage();
+  if (!storage) return null;
+
+  try {
+    const rawDraft = storage.getItem(BOOKING_DRAFT_KEY);
+    if (!rawDraft) return null;
+
+    const draft = JSON.parse(rawDraft);
+    if (draft?.version !== BOOKING_DRAFT_VERSION || !draft.fields || Number(draft.expiresAt || 0) < Date.now()) {
+      storage.removeItem(BOOKING_DRAFT_KEY);
+      return null;
+    }
+
+    return draft;
+  } catch (error) {
+    logClientWarning("Booking draft could not be restored.", error);
+    clearBookingDraft();
+    return null;
+  }
+}
+
+function dobDisplayFromStoredValue(value) {
+  if (!isDateOnlyString(value)) return "";
+
+  const [year, month, day] = value.split("-");
+  return `${day}/${month}/${year}`;
+}
+
+function refreshDatePickerInput(input) {
+  input?.dispatchEvent(new Event("date-picker:refresh"));
+}
+
+function refreshCustomSelect(select) {
+  select?.dispatchEvent(new Event("custom-select:refresh", { bubbles: true }));
+}
+
+function setDraftField(field, value) {
+  if (!field || !isDraftField(field)) return;
+
+  const type = String(field.type || "").toLowerCase();
+
+  if (type === "checkbox") {
+    field.checked = Boolean(value);
+  } else if (type === "radio") {
+    field.checked = field.value === value;
+  } else if (field instanceof HTMLSelectElement && field.multiple && Array.isArray(value)) {
+    [...field.options].forEach((option) => {
+      option.selected = value.includes(option.value);
+    });
+  } else if (field instanceof HTMLSelectElement) {
+    const nextValue = String(value ?? "");
+    if ([...field.options].some((option) => option.value === nextValue)) {
+      field.value = nextValue;
+    }
+  } else {
+    field.value = String(value ?? "");
+  }
+
+  field.dispatchEvent(new Event("input", { bubbles: true }));
+  field.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+function restoreBookingDraft() {
+  const draft = readBookingDraft();
+  if (!draft) return null;
+
+  isRestoringBookingDraft = true;
+
+  try {
+    Object.entries(draft.fields).forEach(([name, value]) => {
+      const field = form.elements[name];
+      if (!field) return;
+
+      if (field instanceof RadioNodeList) {
+        [...field].forEach((radio) => setDraftField(radio, value));
+        return;
+      }
+
+      setDraftField(field, value);
+    });
+
+    const dobDisplay = dateOfBirthControl();
+    if (dobDisplay) {
+      dobDisplay.value = draft.dateOfBirthDisplay || dobDisplayFromStoredValue(form.elements.date_of_birth?.value || "");
+      syncDateOfBirthField({ format: true });
+    }
+
+    syncBookingDateControls();
+    refreshDatePickerInput(form.elements.pickup_date);
+    refreshDatePickerInput(form.elements.return_date);
+    refreshTimeSelect(form.elements.pickup_time);
+    refreshTimeSelect(form.elements.return_time);
+    refreshCustomSelect(form.elements.pickup_location);
+    refreshCustomSelect(form.elements.return_location);
+    refreshCustomSelect(form.elements.payment_method);
+    syncLocationFields();
+  } finally {
+    isRestoringBookingDraft = false;
+  }
+
+  const step = Number(draft.step);
+  return Number.isInteger(step) ? Math.max(0, Math.min(stepPanels.length - 1, step)) : null;
 }
 
 function numberOrNull(value) {
@@ -229,6 +498,9 @@ function populateLocationSelects() {
 
   if ([...pickupSelect.options].some((option) => option.value === pickupValue)) pickupSelect.value = pickupValue;
   if ([...returnSelect.options].some((option) => option.value === returnValue)) returnSelect.value = returnValue;
+
+  pickupSelect.dispatchEvent(new Event("custom-select:refresh", { bubbles: true }));
+  returnSelect.dispatchEvent(new Event("custom-select:refresh", { bubbles: true }));
 }
 
 function selectedLocationOption(kind) {
@@ -412,6 +684,7 @@ async function geocodeLocation(kind) {
     syncLocationFields();
     renderEstimate();
     renderBookingSummaryDetails();
+    queueBookingDraftSave();
     return true;
   } catch (error) {
     logClientWarning("Custom location geocoding failed.", error);
@@ -422,6 +695,7 @@ async function geocodeLocation(kind) {
     syncLocationFields();
     renderEstimate();
     renderBookingSummaryDetails();
+    queueBookingDraftSave();
     return false;
   } finally {
     button.disabled = false;
@@ -470,6 +744,8 @@ function applyTripSearchFromUrl() {
   if (isTimeString(endTime)) form.elements.return_time.value = endTime;
 
   syncBookingDateControls({ clearInvalidReturn: true });
+  refreshDatePickerInput(form.elements.pickup_date);
+  refreshDatePickerInput(form.elements.return_date);
   refreshTimeSelect(form.elements.pickup_time);
   refreshTimeSelect(form.elements.return_time);
 }
@@ -735,6 +1011,10 @@ function showStep(stepIndex, options = {}) {
   if (options.focus) {
     stepPanels[currentStep].querySelector(".booking-step-header")?.focus();
   }
+
+  if (options.persist !== false) {
+    queueBookingDraftSave();
+  }
 }
 
 function stepFields(stepIndex) {
@@ -750,6 +1030,8 @@ function reportStepInvalid(field, message = "Please complete the required detail
 }
 
 async function validateStep(stepIndex) {
+  syncDateOfBirthField();
+
   const invalidField = stepFields(stepIndex).find((field) => !field.checkValidity());
 
   if (invalidField) {
@@ -776,6 +1058,18 @@ async function validateStep(stepIndex) {
 
     if (!returnDate) {
       setFormStatus(status, "error", "Return date is required.");
+      datePickerTriggerFor("return_date")?.focus();
+      return false;
+    }
+
+    if (pickupDate < todayDateString()) {
+      setFormStatus(status, "error", "Pickup date cannot be in the past.");
+      datePickerTriggerFor("pickup_date")?.focus();
+      return false;
+    }
+
+    if (returnDate < todayDateString()) {
+      setFormStatus(status, "error", "Return date cannot be in the past.");
       datePickerTriggerFor("return_date")?.focus();
       return false;
     }
@@ -828,7 +1122,7 @@ async function validateStep(stepIndex) {
   if (stepIndex === 1) {
     if (!form.elements.date_of_birth.value) {
       setFormStatus(status, "error", "Date of birth is required.");
-      datePickerTriggerFor("date_of_birth")?.focus();
+      dateOfBirthControl()?.focus();
       return false;
     }
 
@@ -836,7 +1130,7 @@ async function validateStep(stepIndex) {
 
     if (age !== null && age < 21) {
       setFormStatus(status, "error", "Drivers must be at least 21 years old.");
-      datePickerTriggerFor("date_of_birth")?.focus();
+      dateOfBirthControl()?.focus();
       return false;
     }
   }
@@ -855,6 +1149,8 @@ function goToPreviousStep() {
 }
 
 function validateBooking() {
+  syncDateOfBirthField();
+
   const data = new FormData(form);
   const pickupDate = String(data.get("pickup_date") || "");
   const returnDate = String(data.get("return_date") || "");
@@ -869,6 +1165,8 @@ function validateBooking() {
   if (!String(data.get("customer_phone") || "").trim()) return "Phone is required.";
   if (!pickupDate) return "Pick-up date is required.";
   if (!returnDate) return "Drop-off date is required.";
+  if (pickupDate < todayDateString()) return "Pick-up date cannot be in the past.";
+  if (returnDate < todayDateString()) return "Drop-off date cannot be in the past.";
   if (!pickupTime) return "Pickup time is required.";
   if (!returnTime) return "Return time is required.";
   if (!rentalDays) return "Drop-off date must be after or the same as the pick-up date.";
@@ -992,6 +1290,7 @@ function paymentRedirectUrl(bookingNumber, paymentAccessToken) {
 
 function bindBookingForm() {
   syncBookingDateControls();
+  bindDateOfBirthInput();
 
   form.elements.pickup_date?.addEventListener("input", () => {
     syncBookingDateControls({ clearInvalidReturn: true });
@@ -1085,7 +1384,13 @@ function bindBookingForm() {
       }
 
       renderBookingSummaryDetails();
+      queueBookingDraftSave();
     });
+  });
+
+  window.addEventListener("pagehide", saveBookingDraft);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") saveBookingDraft();
   });
 
   form.addEventListener("submit", async (event) => {
@@ -1136,6 +1441,7 @@ function bindBookingForm() {
         bookingNumber,
         documents: documentUploads(),
       });
+      clearBookingDraft();
       const portalUrl = window.MIR_CARS.portalUrl(`?trip=${encodeURIComponent(bookingNumber)}`);
       redirectingToPayment = true;
       setFormStatusHtml(
@@ -1159,6 +1465,7 @@ async function initBookingPage() {
   initPublicSite();
   initCustomDatePickers();
   initCustomTimeSelects();
+  bindDateOfBirthInput();
 
   document.querySelectorAll("[data-home-link]").forEach((link) => {
     link.href = window.MIR_CARS.homeUrl(link.dataset.homeLink);
@@ -1167,6 +1474,7 @@ async function initBookingPage() {
   [vehicles, deliveryConfig] = await Promise.all([loadAvailableVehicles(), loadDeliveryPricingConfig()]);
   populateVehicleSelect();
   populateLocationSelects();
+  const restoredStep = restoreBookingDraft();
   selectVehicleFromUrl();
   applyTripSearchFromUrl();
   renderVehiclePickerOptions();
@@ -1176,8 +1484,9 @@ async function initBookingPage() {
   renderEstimate();
   renderBookingSummaryDetails();
   refreshAvailability();
-  showStep(0);
+  showStep(restoredStep ?? 0, { persist: false });
   bindBookingForm();
+  saveBookingDraft();
   bindCarouselControls(selectedVehicleCard);
   refreshHashScroll();
 }

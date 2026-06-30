@@ -1254,6 +1254,168 @@ textarea:focus {
   outline: none;
 }
 
+.native-custom-select {
+  position: absolute !important;
+  width: 1px !important;
+  min-width: 1px !important;
+  height: 1px !important;
+  min-height: 1px !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  border: 0 !important;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.custom-select-shell {
+  position: relative;
+  z-index: 8;
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.custom-select-trigger {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: 46px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  overflow: hidden;
+  padding: 8px 44px 8px 14px;
+  border: 1px solid rgba(226, 234, 242, 0.16);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(142, 160, 176, 0.018)),
+    rgba(5, 6, 7, 0.6);
+  color: rgba(238, 243, 247, 0.72);
+  cursor: pointer;
+  font-size: 0.96rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-align: left;
+  text-transform: none;
+  transition:
+    transform var(--motion-fast, 140ms) var(--motion-ease-out, cubic-bezier(0.23, 1, 0.32, 1)),
+    border-color 180ms ease,
+    background 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.custom-select-trigger [data-custom-select-display] {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.custom-select-trigger::after {
+  position: absolute;
+  top: 50%;
+  right: 18px;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  content: "";
+  opacity: 0.76;
+  transform: translateY(-65%) rotate(45deg);
+  transition: transform 180ms var(--motion-ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+.custom-select-shell.is-open .custom-select-trigger::after {
+  transform: translateY(-35%) rotate(225deg);
+}
+
+.custom-select-trigger:hover,
+.custom-select-trigger:focus-visible,
+.custom-select-shell.is-open .custom-select-trigger {
+  border-color: rgba(244, 248, 251, 0.42);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(142, 160, 176, 0.03)),
+    rgba(8, 10, 12, 0.82);
+  color: var(--text);
+  box-shadow: 0 0 0 3px rgba(244, 248, 251, 0.08);
+  outline: none;
+}
+
+.custom-select-trigger.has-value {
+  color: var(--gold-strong);
+}
+
+.custom-select-popover {
+  position: fixed;
+  top: var(--custom-select-top, 0);
+  left: var(--custom-select-left, 0);
+  z-index: 130;
+  display: grid;
+  width: min(var(--custom-select-width, 240px), calc(100vw - 24px));
+  max-height: var(--custom-select-max-height, 280px);
+  overflow-y: auto;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid rgba(226, 234, 242, 0.2);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(145deg, rgba(226, 234, 242, 0.08), transparent 38%, rgba(122, 139, 154, 0.08)),
+    rgba(8, 10, 12, 0.96);
+  box-shadow:
+    0 24px 54px rgba(0, 0, 0, 0.46),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  color: var(--text);
+  text-transform: none;
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(150%);
+}
+
+.custom-select-popover[hidden] {
+  display: none;
+}
+
+.custom-select-option {
+  display: flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(238, 243, 247, 0.82);
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 760;
+  line-height: 1.25;
+  text-align: left;
+  text-transform: none;
+}
+
+.custom-select-option.is-selected::after {
+  width: 8px;
+  height: 12px;
+  flex: 0 0 auto;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  content: "";
+  opacity: 0.8;
+  transform: translateY(-1px) rotate(45deg);
+}
+
+.custom-select-option:hover,
+.custom-select-option:focus-visible,
+.custom-select-option.is-selected {
+  border-color: rgba(244, 248, 251, 0.34);
+  background: rgba(226, 234, 242, 0.1);
+  color: var(--gold-strong);
+  outline: none;
+}
+
 .date-picker-popover {
   position: fixed;
   top: var(--date-picker-top, 0);
@@ -2965,6 +3127,90 @@ address {
   line-height: 1.45;
 }
 
+.booking-resource-links {
+  display: grid;
+  grid-template-columns: minmax(0, 0.72fr) minmax(320px, 1fr);
+  align-items: center;
+  gap: clamp(16px, 2.4vw, 28px);
+  margin-top: clamp(20px, 3vw, 32px);
+  padding: clamp(18px, 2.4vw, 26px);
+  border: 1px solid rgba(226, 234, 242, 0.16);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.052), rgba(148, 166, 181, 0.03) 46%, rgba(255, 255, 255, 0.02)),
+    rgba(9, 11, 13, 0.34);
+  box-shadow:
+    0 16px 44px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.booking-resource-links .eyebrow {
+  margin-bottom: 8px;
+}
+
+.booking-resource-links h2 {
+  margin: 0;
+  font-size: clamp(1.45rem, 2.15vw, 2.05rem);
+  line-height: 1.04;
+}
+
+.booking-resource-links p:not(.eyebrow) {
+  max-width: 460px;
+  margin: 12px 0 0;
+  color: rgba(238, 243, 247, 0.62);
+  font-size: 0.94rem;
+  font-weight: 650;
+  line-height: 1.55;
+}
+
+.booking-resource-link-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.booking-resource-link {
+  display: grid;
+  min-height: 124px;
+  align-content: start;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid rgba(226, 234, 242, 0.14);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.045), rgba(142, 160, 176, 0.026)),
+    rgba(13, 15, 17, 0.72);
+  color: inherit;
+  transition:
+    transform 160ms var(--motion-ease-out, cubic-bezier(0.23, 1, 0.32, 1)),
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.booking-resource-link span {
+  color: var(--gold-strong);
+  font-size: 0.96rem;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.booking-resource-link strong {
+  color: rgba(238, 243, 247, 0.62);
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.booking-resource-link:hover,
+.booking-resource-link:focus-visible {
+  border-color: rgba(244, 248, 251, 0.36);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.07), rgba(142, 160, 176, 0.036)),
+    rgba(18, 20, 22, 0.8);
+  outline: none;
+  transform: translateY(-1px);
+}
+
 .booking-info-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3821,6 +4067,64 @@ address {
   outline: none;
 }
 
+.dob-field {
+  width: min(280px, 100%);
+}
+
+.dob-input-shell {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.booking-checkout-form .dob-input {
+  width: 100%;
+  height: 46px;
+  min-height: 46px;
+  padding: 8px 58px 8px 14px;
+  border: 1px solid rgba(226, 234, 242, 0.16);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(142, 160, 176, 0.018)),
+    rgba(5, 6, 7, 0.6);
+  color: var(--text);
+  font-size: 0.96rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.booking-checkout-form .dob-input::placeholder {
+  color: rgba(238, 243, 247, 0.62);
+}
+
+.dob-input-shell::after {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  padding: 4px 7px;
+  border: 1px solid rgba(226, 234, 242, 0.14);
+  border-radius: var(--radius-pill);
+  background: rgba(226, 234, 242, 0.06);
+  color: rgba(238, 243, 247, 0.62);
+  content: "DOB";
+  font-size: 0.68rem;
+  font-weight: 850;
+  line-height: 1;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.booking-checkout-form .dob-input:hover,
+.booking-checkout-form .dob-input:focus {
+  border-color: rgba(244, 248, 251, 0.42);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(142, 160, 176, 0.03)),
+    rgba(8, 10, 12, 0.82);
+  box-shadow: 0 0 0 3px rgba(244, 248, 251, 0.08);
+  outline: none;
+}
+
 .time-picker-label {
   color: rgba(238, 243, 247, 0.76);
   font-size: 0.88rem;
@@ -4484,18 +4788,44 @@ address {
 }
 
 .booking-step-actions {
-  display: grid;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
   gap: 12px;
   margin-top: 4px;
 }
 
 .booking-step-actions.split {
-  grid-template-columns: minmax(118px, 0.42fr) minmax(0, 1fr);
+  grid-template-columns: none;
 }
 
 .booking-checkout-form .booking-step-actions .button {
-  min-height: 52px;
-  border-radius: var(--radius);
+  width: auto;
+  min-height: 46px;
+  padding-inline: 28px;
+  border-radius: var(--radius-pill);
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.booking-step-actions:not(.split) .button {
+  min-width: 146px;
+}
+
+.booking-checkout-form .booking-step-actions .button.secondary {
+  width: 146px;
+  min-width: 146px;
+}
+
+.booking-checkout-form .booking-step-actions .button.primary {
+  width: 146px;
+  min-width: 146px;
+}
+
+.booking-checkout-form .booking-step-actions button[type="submit"] {
+  width: 240px;
+  min-width: 240px;
 }
 
 .booking-checkout-form .booking-step-actions .button.secondary {
@@ -4503,6 +4833,21 @@ address {
     linear-gradient(145deg, rgba(255, 255, 255, 0.11), rgba(142, 160, 176, 0.06)),
     rgba(5, 6, 7, 0.34);
   color: rgba(238, 243, 247, 0.86);
+}
+
+.booking-checkout-form .checkbox-row a {
+  color: var(--text-primary-dark);
+  font-weight: 850;
+  text-decoration: underline;
+  text-decoration-color: rgba(244, 248, 251, 0.32);
+  text-underline-offset: 3px;
+}
+
+.booking-checkout-form .checkbox-row a:hover,
+.booking-checkout-form .checkbox-row a:focus-visible {
+  color: var(--link-color);
+  outline: none;
+  text-decoration-color: currentColor;
 }
 
 .booking-checkout-form .form-status {
@@ -6919,6 +7264,10 @@ address a:hover {
     flex: initial;
   }
 
+  .booking-resource-links {
+    grid-template-columns: 1fr;
+  }
+
   .hero-media {
     --hero-bg-position: 62% center;
   }
@@ -6959,6 +7308,10 @@ address a:hover {
     padding: 0 11px;
     font-size: 0.7rem;
     letter-spacing: 0.07em;
+  }
+
+  .booking-resource-link-grid {
+    grid-template-columns: 1fr;
   }
 
   .header-cta {
@@ -7536,6 +7889,7 @@ label,
 .support-cta,
 .faq-list,
 .terms-notice,
+.booking-resource-links,
 .agreement-card,
 .payment-page-section,
 .vehicle-detail-grid,
@@ -7562,6 +7916,8 @@ label,
 .booking-summary-panel,
 .booking-requirements,
 .booking-requirements-grid article,
+.booking-resource-links,
+.booking-resource-link,
 .booking-info-grid article,
 .policy-grid article,
 .testimonial-grid article,
@@ -7587,6 +7943,7 @@ label,
 .payment-card,
 .payment-state,
 .location-fee-preview,
+.custom-select-popover,
 .vehicle-picker-panel,
 .time-picker-panel {
   border: 1px solid rgba(255, 255, 255, 0.11);
@@ -7598,6 +7955,7 @@ label,
 .booking-stepper,
 .fleet-tools,
 .location-fee-preview,
+.custom-select-popover,
 .vehicle-picker-panel,
 .time-picker-panel,
 .quick-request {
@@ -7664,6 +8022,7 @@ select,
 textarea,
 .date-picker-trigger,
 .time-select-trigger,
+.custom-select-trigger,
 .date-filter-field,
 .vehicle-picker-trigger,
 .location-option,
@@ -7686,8 +8045,10 @@ select:focus,
 textarea:focus,
 .date-picker-trigger:focus-visible,
 .time-select-trigger:focus-visible,
+.custom-select-trigger:focus-visible,
 .date-picker-shell.is-open .date-picker-trigger,
 .time-select-shell.is-open .time-select-trigger,
+.custom-select-shell.is-open .custom-select-trigger,
 .vehicle-picker-trigger:focus-visible {
   border-color: var(--link-color) !important;
   outline: 2px solid rgba(244, 248, 251, 0.26);
@@ -7696,6 +8057,7 @@ textarea:focus,
 
 .date-picker-popover,
 .time-select-popover,
+.custom-select-popover,
 .vehicle-picker-panel,
 .time-picker-panel {
   border: 1px solid rgba(255, 255, 255, 0.14);
@@ -7710,6 +8072,7 @@ textarea:focus,
 .date-picker-footer button,
 .date-picker-day,
 .time-select-option,
+.custom-select-option,
 .vehicle-picker-option,
 .time-picker-option {
   border-radius: var(--radius-small);
@@ -7722,6 +8085,9 @@ textarea:focus,
 .time-select-option:hover,
 .time-select-option:focus-visible,
 .time-select-option.is-selected,
+.custom-select-option:hover,
+.custom-select-option:focus-visible,
+.custom-select-option.is-selected,
 .vehicle-picker-option:hover,
 .vehicle-picker-option:focus-visible,
 .vehicle-picker-option.is-selected,
@@ -8474,10 +8840,12 @@ textarea:focus,
 .filter-button,
 .date-picker-trigger,
 .time-select-trigger,
+.custom-select-trigger,
 .date-picker-day,
 .date-picker-nav,
 .date-picker-footer button,
 .time-select-option,
+.custom-select-option,
 .vehicle-picker-trigger,
 .vehicle-picker-option,
 .location-option,
@@ -8495,10 +8863,12 @@ textarea:focus,
 .filter-button:not(:disabled):active,
 .date-picker-trigger:active,
 .time-select-trigger:active,
+.custom-select-trigger:active,
 .date-picker-day:not(:disabled):active,
 .date-picker-nav:not(:disabled):active,
 .date-picker-footer button:not(:disabled):active,
 .time-select-option:active,
+.custom-select-option:active,
 .vehicle-picker-trigger:active,
 .vehicle-picker-option:active,
 .location-option:active,
@@ -9092,6 +9462,7 @@ body::before {
 .support-form-shell,
 .faq-list,
 .terms-notice,
+.booking-resource-links,
 .agreement-card {
   background: transparent !important;
 }
@@ -9125,6 +9496,8 @@ body::before {
 .policy-grid article,
 .booking-requirements,
 .booking-requirements-grid article,
+.booking-resource-links,
+.booking-resource-link,
 .booking-info-grid article,
 .testimonial-grid article,
 .rental-rate-card,
@@ -9133,6 +9506,7 @@ body::before {
 .location-fee-preview,
 .date-picker-popover,
 .time-select-popover,
+.custom-select-popover,
 .vehicle-picker-panel,
 .time-picker-panel {
   background: var(--mir-surface-gradient) !important;
@@ -9284,6 +9658,52 @@ body::before {
 
 .fleet-page-controls .sort-control {
   min-width: 132px;
+}
+
+.support-page-main,
+.fleet-page-main {
+  --mir-page-hero-width: 940px;
+  --mir-page-content-width: 1080px;
+}
+
+.fleet-page-main {
+  padding-top: clamp(42px, 7vw, 92px);
+}
+
+.support-page-main .support-hero,
+.fleet-page-main .fleet-page-hero {
+  width: min(var(--mir-page-hero-width), calc(100vw - 80px)) !important;
+  margin-inline: auto;
+}
+
+.support-page-main .support-layout,
+.support-page-main .policies-at-a-glance,
+.fleet-page-main .fleet-page-controls,
+.fleet-page-main .fleet-grid-full {
+  width: min(var(--mir-page-content-width), calc(100vw - 80px)) !important;
+  margin-inline: auto;
+}
+
+.fleet-page-main .fleet-page-hero {
+  padding-top: 0 !important;
+  padding-right: 0 !important;
+  padding-left: 0 !important;
+}
+
+.fleet-page-main .fleet-grid-full {
+  padding-right: 0 !important;
+  padding-left: 0 !important;
+}
+
+@media (max-width: 980px) {
+  .support-page-main .support-hero,
+  .fleet-page-main .fleet-page-hero,
+  .support-page-main .support-layout,
+  .support-page-main .policies-at-a-glance,
+  .fleet-page-main .fleet-page-controls,
+  .fleet-page-main .fleet-grid-full {
+    width: min(100% - 32px, var(--mir-page-content-width)) !important;
+  }
 }
 
 .booking-stepper {
@@ -9461,5 +9881,277 @@ body::before {
 
   .site-footer-shell {
     grid-template-columns: 1fr !important;
+  }
+}
+
+@media (min-width: 981px) {
+  .site-header .main-nav {
+    font-size: 0.8125rem;
+  }
+
+  .site-header .main-nav a {
+    font-size: inherit;
+  }
+
+  .site-header .header-cta {
+    font-size: 0.8825rem;
+  }
+}
+
+.button,
+.header-cta,
+.mobile-nav-action,
+.filter-button,
+.date-search-submit,
+.date-picker-trigger,
+.time-select-trigger,
+.date-picker-nav,
+.date-picker-footer button,
+.time-select-option,
+.vehicle-picker-trigger,
+.vehicle-picker-option,
+.location-option,
+.time-picker-option,
+.payment-method-option,
+button[type="button"],
+button[type="submit"],
+button[type="reset"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  text-transform: uppercase !important;
+  white-space: nowrap;
+}
+
+input[type="file"]::file-selector-button {
+  text-transform: uppercase;
+}
+
+.hero-date-search .date-picker-trigger,
+.hero-date-search .time-select-trigger,
+.hero-date-search [data-date-display],
+.hero-date-search [data-time-display] {
+  text-transform: none !important;
+}
+
+.custom-select-trigger,
+.custom-select-option,
+.custom-select-trigger [data-custom-select-display],
+button.custom-select-trigger,
+button.custom-select-option,
+button.custom-select-trigger [data-custom-select-display],
+.booking-checkout-form .button,
+.booking-checkout-form .date-picker-trigger,
+.booking-checkout-form .time-select-trigger,
+.booking-checkout-form .vehicle-picker-trigger,
+.booking-checkout-form .custom-select-trigger,
+.booking-checkout-form .custom-select-option,
+.booking-checkout-form [data-date-display],
+.booking-checkout-form [data-time-display],
+.booking-checkout-form [data-vehicle-picker-label] {
+  text-transform: none !important;
+}
+
+.booking-checkout-shell .booking-resource-links {
+  width: 100% !important;
+  max-width: none !important;
+  margin-inline: 0 !important;
+}
+
+.booking-checkout-form .booking-step-actions {
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.booking-checkout-form .booking-step-actions .button {
+  width: auto !important;
+  min-height: 46px !important;
+  border-radius: var(--radius-pill) !important;
+  padding-inline: 20px !important;
+  font-size: 0.76rem;
+  text-transform: uppercase !important;
+}
+
+.booking-checkout-form .booking-step-actions .button.secondary {
+  width: 146px !important;
+  min-width: 146px;
+}
+
+.booking-checkout-form .booking-step-actions .button.primary {
+  width: 146px !important;
+  min-width: 146px;
+}
+
+.booking-checkout-form .booking-step-actions:not(.split) .button {
+  width: 146px !important;
+  min-width: 146px;
+}
+
+.booking-checkout-form .booking-step-actions button[type="submit"] {
+  width: 208px !important;
+  min-width: 208px;
+}
+
+.booking-checkout-form .booking-step-actions button.button.primary[type="submit"] {
+  width: 208px !important;
+  min-width: 208px;
+}
+
+.fleet-page-controls .sort-control {
+  align-self: start !important;
+  height: 46px;
+  max-height: 46px;
+  overflow: visible;
+}
+
+.fleet-page-controls .sort-control .custom-select-shell {
+  height: 44px;
+  min-width: 84px;
+  border-radius: var(--radius-pill);
+}
+
+.fleet-page-controls .sort-control .custom-select-trigger {
+  height: 100%;
+  min-height: 44px;
+  padding-inline: 12px 34px;
+  border-radius: var(--radius-pill) !important;
+  background: var(--surface-card) !important;
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
+.fleet-page-controls .sort-control .custom-select-trigger::after {
+  right: 14px;
+}
+
+@media (max-width: 640px) {
+  .booking-checkout-form .booking-step-actions {
+    align-items: stretch;
+  }
+
+  .booking-checkout-form .booking-step-actions .button,
+  .booking-checkout-form .booking-step-actions .button.primary,
+  .booking-checkout-form .booking-step-actions .button.secondary,
+  .booking-checkout-form .booking-step-actions button[type="submit"] {
+    width: auto !important;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+
+/* Final detail-page and fleet-control polish. */
+.vehicle-detail-page {
+  --vehicle-detail-content-width: min(1180px, calc(100vw - 96px));
+}
+
+.vehicle-detail-hero,
+.rental-rates,
+.vehicle-detail-grid,
+.vehicle-story,
+.detail-panels,
+.related-vehicles {
+  width: var(--vehicle-detail-content-width) !important;
+  margin-inline: auto !important;
+  padding-right: 0 !important;
+  padding-left: 0 !important;
+}
+
+.vehicle-detail-hero {
+  grid-template-columns: minmax(340px, 0.82fr) minmax(0, 1.18fr) !important;
+}
+
+.vehicle-detail-copy {
+  max-width: none;
+}
+
+.vehicle-detail-copy h1,
+.vehicle-detail-copy h1 span {
+  overflow-wrap: normal;
+  text-wrap: balance;
+  word-break: normal;
+}
+
+.vehicle-detail-copy h1 {
+  font-size: clamp(3rem, 4.6vw, 5.1rem);
+}
+
+.rental-rates {
+  grid-template-columns: minmax(250px, 0.42fr) minmax(0, 1fr) !important;
+  align-items: start;
+}
+
+.rental-rates-grid,
+.vehicle-detail-grid,
+.detail-panels {
+  align-items: stretch;
+}
+
+.fleet-page-controls .date-filter-field > span:first-child,
+.fleet-page-controls .date-picker-trigger,
+.fleet-page-controls .time-select-trigger,
+.fleet-page-controls .fleet-date-filter .button,
+.fleet-page-controls .custom-select-trigger,
+.fleet-page-controls .custom-select-option,
+.fleet-page-controls [data-date-display],
+.fleet-page-controls [data-time-display],
+.fleet-page-controls [data-custom-select-display],
+.fleet-page-controls .sort-control {
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.fleet-page-controls .filter-button {
+  letter-spacing: 0.075em !important;
+  text-transform: uppercase !important;
+}
+
+.fleet-page-controls .filter-button,
+.fleet-page-controls .fleet-date-filter .button,
+.fleet-page-controls .date-filter-field > span:first-child {
+  font-size: 0.78rem;
+}
+
+@media (max-width: 1080px) {
+  .vehicle-detail-page {
+    --vehicle-detail-content-width: min(1180px, calc(100vw - 48px));
+  }
+
+  .vehicle-detail-hero,
+  .rental-rates,
+  .vehicle-story {
+    grid-template-columns: 1fr !important;
+  }
+
+  .vehicle-detail-copy h1 {
+    max-width: 11.5ch;
+    font-size: clamp(2.7rem, 8vw, 4.4rem);
+  }
+
+  .rental-rates-grid,
+  .vehicle-detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .vehicle-detail-page {
+    --vehicle-detail-content-width: min(1180px, calc(100vw - 32px));
+  }
+
+  .vehicle-detail-copy h1 {
+    max-width: 100%;
+    font-size: clamp(2.35rem, 10vw, 3.4rem);
+  }
+
+  .rental-rates-grid,
+  .vehicle-detail-grid,
+  .detail-panels {
+    grid-template-columns: 1fr !important;
+  }
+
+  .related-vehicles-row {
+    grid-auto-columns: minmax(260px, 88%) !important;
   }
 }
