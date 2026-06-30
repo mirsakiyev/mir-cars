@@ -172,7 +172,6 @@ function renderVehiclePage(vehicleData) {
   const detailStats = [
     ...vehicleData.detail.stats.filter(([name]) => name !== "Daily rate"),
     ["Daily rate", formatDailyRate(vehicleData.rate, vehicleData.currency)],
-    ["Rental class", rentalTerms.classLabel],
   ];
 
   vehiclePage.innerHTML = `

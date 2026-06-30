@@ -1,4 +1,5 @@
 import { normalizeTripId } from "../lib/booking-utils.js";
+import { initCustomDatePickers } from "../lib/date-picker.js";
 import { setFormStatus } from "../lib/dom-utils.js";
 import { logClientWarning } from "../lib/logging.js";
 import { initPublicSite } from "../lib/public-site.js";
@@ -76,6 +77,9 @@ function bindLostFoundForm() {
     try {
       const data = await submitLostFoundReport(lostFoundPayload(new FormData(form)));
       form.reset();
+      form.querySelectorAll("[data-date-input]").forEach((input) => {
+        input.dispatchEvent(new CustomEvent("date-picker:refresh", { bubbles: true }));
+      });
       setFormStatus(status, "success", data.message || form.dataset.success);
     } catch (error) {
       logClientWarning("Lost and found submission failed.", error);
@@ -87,4 +91,5 @@ function bindLostFoundForm() {
 }
 
 initPublicSite();
+initCustomDatePickers();
 bindLostFoundForm();

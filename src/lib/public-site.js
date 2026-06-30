@@ -3,7 +3,7 @@ import { bindReliableHashScroll } from "./hash-scroll.js";
 
 function publicLinks() {
   return {
-    home: window.MIR_CARS.homeUrl("#top"),
+    home: window.MIR_CARS.homeUrl(),
     fleet: window.MIR_CARS.fleetUrl(),
     policies: window.MIR_CARS.homeUrl("#policies"),
     testimonials: window.MIR_CARS.homeUrl("#testimonials"),
@@ -12,13 +12,13 @@ function publicLinks() {
     faq: window.MIR_CARS.faqUrl(),
     lostAndFound: window.MIR_CARS.lostAndFoundUrl(),
     portal: window.MIR_CARS.portalUrl(),
+    booking: window.MIR_CARS.bookingUrl(),
   };
 }
 
-function renderFooterLinks(title, label, links) {
+function renderFooterLinks(label, links) {
   return `
     <nav class="footer-link-group" aria-label="${label}">
-      <h2>${title}</h2>
       ${links.map(([text, href]) => `<a href="${href}">${text}</a>`).join("")}
     </nav>
   `;
@@ -111,6 +111,7 @@ function enhanceSiteHeader() {
   });
 
   markActiveHeaderLink(header);
+  window.addEventListener("hashchange", () => markActiveHeaderLink(header));
 }
 
 function initMarketingReveals() {
@@ -184,18 +185,23 @@ export function renderPublicFooter() {
         <p>Premium vehicle rentals and delivery service in Los Angeles.</p>
       </section>
 
-      ${renderFooterLinks("Quick Links", "Footer quick links", [
+      ${renderFooterLinks("Footer quick links", [
+        ["Home", links.home],
         ["Fleet", links.fleet],
         ["Policies", links.policies],
         ["Testimonials", links.testimonials],
-        ["My Trip", links.portal],
       ])}
 
-      ${renderFooterLinks("Support", "Footer support links", [
+      ${renderFooterLinks("Footer support links", [
         ["Terms", links.terms],
         ["FAQ", links.faq],
         ["Lost & Found", links.lostAndFound],
         ["Contact", links.contact],
+      ])}
+
+      ${renderFooterLinks("Footer booking links", [
+        ["My Trip", links.portal],
+        ["Book Now", links.booking],
       ])}
     </div>
     <div class="footer-legal">
