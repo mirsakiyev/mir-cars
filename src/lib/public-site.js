@@ -113,6 +113,57 @@ function enhanceSiteHeader() {
   markActiveHeaderLink(header);
 }
 
+function initMarketingReveals() {
+  const selectors = [
+    ".section-intro",
+    ".policy-section",
+    ".testimonials-section",
+    ".booking-requirements",
+    ".booking-info-grid",
+    ".booking-policy-section",
+    ".support-grid",
+    ".support-cta",
+    ".faq-list",
+    ".terms-notice",
+    ".agreement-card",
+    ".vehicle-detail-grid",
+    ".rental-rates",
+    ".vehicle-story",
+    ".related-vehicles",
+    ".contact-section .contact-card",
+  ];
+
+  const revealItems = [...document.querySelectorAll(selectors.join(","))].filter((item) => !item.closest(".booking-checkout-form"));
+  if (!revealItems.length) return;
+
+  document.documentElement.classList.add("motion-ready");
+
+  revealItems.forEach((item, index) => {
+    item.dataset.motionReveal = "true";
+    item.style.setProperty("--motion-index", String(Math.min(index, 5)));
+    item.style.setProperty("--motion-delay", `${Math.min(index, 5) * 28}ms`);
+  });
+
+  if (!("IntersectionObserver" in window)) {
+    revealItems.forEach((item) => item.classList.add("is-revealed"));
+    return;
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+
+        entry.target.classList.add("is-revealed");
+        observer.unobserve(entry.target);
+      });
+    },
+    { rootMargin: "0px 0px -12% 0px", threshold: 0.12 },
+  );
+
+  revealItems.forEach((item) => observer.observe(item));
+}
+
 export function renderPublicFooter() {
   const footer = document.querySelector(".site-footer");
   if (!footer) return;
@@ -157,4 +208,5 @@ export function initPublicSite() {
   bindReliableHashScroll();
   enhanceSiteHeader();
   renderPublicFooter();
+  initMarketingReveals();
 }

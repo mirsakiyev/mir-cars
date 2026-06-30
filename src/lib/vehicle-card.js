@@ -8,7 +8,7 @@ function bookingHref(vehicle) {
 }
 
 export function renderVehicleCard(vehicle, options = {}) {
-  const actionLabel = options.actionLabel || "Request Booking";
+  const actionLabel = options.actionLabel || "Book";
   const actionHref = options.actionHref || bookingHref(vehicle);
   const label = window.MIR_CARS.getVehicleRequestLabel(vehicle);
   const dailyRate = formatDailyRate(vehicle.rate, vehicle.currency);

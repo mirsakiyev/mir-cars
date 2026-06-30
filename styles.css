@@ -7242,7 +7242,7 @@ label,
 }
 
 .wordmark-city {
-  color: var(--text-secondary-dark);
+  color: var(--text-tertiary-dark);
 }
 
 .hero-copy {
@@ -8131,4 +8131,968 @@ textarea:focus,
     grid-row: auto;
     width: 100%;
   }
+}
+
+:root {
+  --motion-fast: 140ms;
+  --motion-ui: 180ms;
+  --motion-popover: 220ms;
+  --motion-section: 300ms;
+  --motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --motion-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+@keyframes mir-fade-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes mir-card-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes mir-hero-stage {
+  from {
+    opacity: 0.84;
+    transform: scale(1.006);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes mir-loading-sheen {
+  from {
+    transform: translate3d(-115%, 0, 0);
+  }
+
+  to {
+    transform: translate3d(115%, 0, 0);
+  }
+}
+
+@keyframes mir-status-pulse {
+  0%,
+  100% {
+    opacity: 0.52;
+    transform: scale(0.92);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.hero-media {
+  animation: mir-hero-stage var(--motion-section) var(--motion-ease-out) 40ms both;
+  transform-origin: center;
+}
+
+.hero .eyebrow,
+.hero-wordmark,
+.hero-date-search {
+  animation: mir-fade-up var(--motion-section) var(--motion-ease-out) both;
+  will-change: opacity, transform;
+}
+
+.hero .eyebrow {
+  animation-delay: 70ms;
+}
+
+.hero-wordmark {
+  animation-delay: 110ms;
+}
+
+.hero-date-search {
+  animation-delay: 150ms;
+}
+
+.button,
+.header-cta,
+.filter-button,
+.date-picker-trigger,
+.time-select-trigger,
+.date-picker-day,
+.date-picker-nav,
+.date-picker-footer button,
+.time-select-option,
+.vehicle-picker-trigger,
+.vehicle-picker-option,
+.location-option,
+.time-picker-option {
+  transition:
+    transform var(--motion-fast) var(--motion-ease-out),
+    border-color var(--motion-ui) ease,
+    background var(--motion-ui) ease,
+    color var(--motion-ui) ease,
+    opacity var(--motion-ui) ease;
+}
+
+.button:not(:disabled):active,
+.header-cta:active,
+.filter-button:not(:disabled):active,
+.date-picker-trigger:active,
+.time-select-trigger:active,
+.date-picker-day:not(:disabled):active,
+.date-picker-nav:not(:disabled):active,
+.date-picker-footer button:not(:disabled):active,
+.time-select-option:active,
+.vehicle-picker-trigger:active,
+.vehicle-picker-option:active,
+.location-option:active,
+.time-picker-option:active {
+  transform: scale(0.98);
+}
+
+.booking-checkout-form input[type="file"]::file-selector-button {
+  transition:
+    transform var(--motion-fast) var(--motion-ease-out),
+    border-color var(--motion-ui) ease,
+    background var(--motion-ui) ease,
+    color var(--motion-ui) ease;
+}
+
+.booking-checkout-form input[type="file"]:active::file-selector-button {
+  transform: scale(0.98);
+}
+
+.vehicle-card {
+  animation: mir-card-in 260ms var(--motion-ease-out) both;
+  transition:
+    transform var(--motion-popover) var(--motion-ease-out),
+    border-color var(--motion-ui) ease;
+}
+
+.vehicle-card:nth-child(2) {
+  animation-delay: 40ms;
+}
+
+.vehicle-card:nth-child(3) {
+  animation-delay: 80ms;
+}
+
+.vehicle-card:nth-child(4) {
+  animation-delay: 120ms;
+}
+
+.vehicle-card:nth-child(n + 5) {
+  animation-delay: 140ms;
+}
+
+.vehicle-image,
+.selected-vehicle-image,
+.detail-image {
+  transition: transform var(--motion-popover) var(--motion-ease-out);
+}
+
+.vehicle-image::before {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 0%, transparent 36%, rgba(255, 255, 255, 0.2) 50%, transparent 64%, transparent 100%);
+  opacity: 0;
+  transform: translate3d(-42%, 0, 0);
+  transition:
+    opacity var(--motion-ui) ease,
+    transform 260ms var(--motion-ease-out);
+}
+
+.booking-step.active {
+  animation: mir-fade-up 220ms var(--motion-ease-out) both;
+}
+
+.booking-step-indicator,
+.booking-step-indicator span,
+.location-fee-preview,
+.booking-estimate,
+.payment-card,
+.payment-state,
+.form-status {
+  transition:
+    transform var(--motion-ui) var(--motion-ease-out),
+    border-color var(--motion-ui) ease,
+    background var(--motion-ui) ease,
+    opacity var(--motion-ui) ease;
+}
+
+.booking-step-indicator.active span {
+  transform: scale(1.04);
+}
+
+.location-fee-preview.priced,
+.booking-summary-availability[data-tone="available"] {
+  box-shadow: inset 0 0 0 1px rgba(159, 240, 184, 0.08);
+}
+
+.date-picker-popover,
+.time-select-popover,
+.vehicle-picker-panel,
+.time-picker-panel {
+  transform-origin: top left;
+  transition:
+    opacity var(--motion-popover) var(--motion-ease-out),
+    transform var(--motion-popover) var(--motion-ease-out);
+
+  @starting-style {
+    opacity: 0;
+    transform: translate3d(0, -6px, 0) scale(0.98);
+  }
+}
+
+.site-header .main-nav {
+  transform-origin: top right;
+}
+
+.form-status.loading::after {
+  display: inline-block;
+  width: 0.55em;
+  height: 0.55em;
+  margin-left: 8px;
+  border-radius: 999px;
+  background: currentColor;
+  content: "";
+  vertical-align: 0.05em;
+  animation: mir-status-pulse 900ms linear infinite;
+}
+
+.fleet-empty-state-loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.fleet-empty-state-loading::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 0%, rgba(255, 255, 255, 0.08) 46%, transparent 62%);
+  transform: translate3d(-115%, 0, 0);
+  animation: mir-loading-sheen 1100ms linear infinite;
+}
+
+.motion-ready [data-motion-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 12px, 0);
+}
+
+.motion-ready [data-motion-reveal].is-revealed {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition:
+    opacity var(--motion-section) var(--motion-ease-out),
+    transform var(--motion-section) var(--motion-ease-out);
+  transition-delay: var(--motion-delay, 0ms);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .button:not(:disabled):hover,
+  .header-cta:hover,
+  .filter-button:not(:disabled):hover,
+  .vehicle-picker-option:hover,
+  .location-option:hover {
+    transform: translate3d(0, -1px, 0);
+  }
+
+  .vehicle-card:hover,
+  .selected-vehicle-card:hover {
+    transform: translate3d(0, -6px, 0);
+    border-color: rgba(255, 255, 255, 0.24);
+  }
+
+  .vehicle-card:hover .vehicle-image::before {
+    opacity: 1;
+    transform: translate3d(42%, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
+  }
+
+  .hero-media,
+  .hero .eyebrow,
+  .hero-wordmark,
+  .hero-date-search,
+  .vehicle-card,
+  .booking-step.active,
+  .motion-ready [data-motion-reveal],
+  .motion-ready [data-motion-reveal].is-revealed {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .vehicle-image::before,
+  .fleet-empty-state-loading::after,
+  .form-status.loading::after {
+    display: none !important;
+  }
+}
+
+/* Targeted polish from the latest visual pass. */
+.section,
+.section-intro,
+.fleet-grid,
+.fleet-page-hero,
+.fleet-page-controls,
+.vehicle-detail-hero,
+.rental-rates,
+.vehicle-detail-grid,
+.vehicle-story,
+.detail-panels,
+.related-vehicles,
+.portal-page-main,
+.portal-shell {
+  width: min(1220px, calc(100vw - 80px)) !important;
+  margin-inline: auto;
+}
+
+.vehicle-card,
+.selected-vehicle-card,
+.rental-rate-card,
+.vehicle-detail-grid article,
+.detail-panels article,
+.portal-summary-card,
+.portal-card {
+  border-radius: var(--radius-card) !important;
+}
+
+.vehicle-image {
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+}
+
+.selected-vehicle-image,
+.detail-image {
+  border-radius: var(--radius-card) !important;
+}
+
+.detail-carousel,
+.detail-image {
+  max-width: 100%;
+}
+
+.detail-image {
+  width: 100%;
+  min-height: 0 !important;
+}
+
+.vehicle-detail-actions .button,
+.detail-price {
+  min-height: 44px;
+}
+
+.detail-price {
+  align-items: center;
+  padding-inline: 18px;
+  border-radius: var(--radius-pill) !important;
+  color: var(--text-primary-dark);
+}
+
+.related-vehicles {
+  padding: clamp(20px, 3vw, 40px) 0 clamp(70px, 8vw, 116px) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.related-vehicles-header {
+  margin-bottom: clamp(18px, 2.4vw, 30px);
+}
+
+.related-vehicles-row {
+  padding-bottom: 18px;
+}
+
+.fleet-page-controls {
+  padding-bottom: clamp(28px, 4vw, 46px);
+}
+
+.fleet-page-controls .fleet-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(146px, auto);
+  align-items: center;
+  justify-items: stretch;
+  gap: 14px 12px;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.fleet-page-controls .fleet-controls {
+  grid-column: 1 / -1;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+}
+
+.fleet-page-controls .fleet-date-filter {
+  grid-column: 1;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(300px, 1fr)) minmax(138px, auto) minmax(106px, auto);
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+}
+
+.fleet-page-controls .date-filter-field {
+  grid-template-columns: minmax(160px, 1fr) minmax(118px, auto);
+  min-width: 0;
+  min-height: 46px;
+  border-radius: var(--radius-pill);
+  background: rgba(22, 22, 23, 0.74) !important;
+}
+
+.fleet-page-controls .date-filter-field .date-picker-trigger,
+.fleet-page-controls .date-filter-field .time-select-trigger {
+  min-width: 0;
+  min-height: 46px;
+  padding-inline: 16px 36px;
+  overflow: hidden;
+  font-size: 0.82rem;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fleet-page-controls .date-filter-field .time-select-trigger {
+  min-width: 118px;
+  padding-left: 14px;
+}
+
+.fleet-page-controls .fleet-date-filter .button {
+  min-width: 138px;
+  min-height: 46px;
+  padding-inline: 16px;
+  overflow: visible;
+  border-radius: var(--radius-pill);
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+
+.fleet-page-controls .fleet-date-filter .secondary {
+  min-width: 106px;
+}
+
+.fleet-page-controls .sort-control {
+  grid-column: 2;
+  grid-row: 2;
+  grid-template-columns: auto minmax(74px, 1fr);
+  align-self: stretch;
+  min-width: 146px;
+  min-height: 46px;
+  padding-left: 13px;
+  border-radius: var(--radius-pill);
+}
+
+.fleet-page-controls .sort-control select {
+  min-width: 76px;
+  min-height: 44px;
+  padding-inline: 10px 26px;
+  border-radius: var(--radius-pill);
+}
+
+.portal-lookup-form input {
+  min-height: 48px !important;
+}
+
+.portal-lookup-form .button {
+  height: 48px;
+  min-height: 48px !important;
+  padding-inline: 24px;
+  border-radius: var(--radius-pill) !important;
+  white-space: nowrap;
+}
+
+.carousel-arrow,
+.carousel-arrow:hover,
+.carousel-arrow:focus-visible,
+.carousel-arrow:active,
+.detail-carousel .carousel-arrow,
+.detail-carousel .carousel-arrow:hover,
+.detail-carousel .carousel-arrow:focus-visible,
+.detail-carousel .carousel-arrow:active,
+.booking-summary-panel .carousel-arrow,
+.booking-summary-panel .carousel-arrow:hover,
+.booking-summary-panel .carousel-arrow:focus-visible,
+.booking-summary-panel .carousel-arrow:active {
+  transform: translateY(-50%);
+}
+
+.main-nav a {
+  position: relative;
+  transition:
+    color var(--motion-ui, 180ms) ease,
+    transform var(--motion-fast, 140ms) var(--motion-ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+.main-nav a::after {
+  position: absolute;
+  right: auto;
+  bottom: 4px;
+  left: 50%;
+  display: block !important;
+  width: calc(100% - 24px);
+  height: 1px;
+  border-radius: var(--radius-pill);
+  background: currentColor;
+  content: "";
+  opacity: 0;
+  transform: translate3d(-50%, 4px, 0) scaleX(0.72);
+  transform-origin: center;
+  transition:
+    opacity var(--motion-ui, 180ms) ease,
+    transform var(--motion-ui, 180ms) var(--motion-ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .main-nav a:hover,
+  .main-nav a:focus-visible,
+  .main-nav a.active {
+    transform: translate3d(0, -1px, 0);
+  }
+
+  .main-nav a:hover::after,
+  .main-nav a:focus-visible::after,
+  .main-nav a.active::after {
+    opacity: 0.72;
+    transform: translate3d(-50%, 0, 0) scaleX(1);
+  }
+}
+
+@media (max-width: 1180px) {
+  .fleet-page-controls .fleet-tools {
+    grid-template-columns: 1fr;
+  }
+
+  .fleet-page-controls .fleet-date-filter,
+  .fleet-page-controls .sort-control {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .fleet-page-controls .sort-control {
+    justify-self: center;
+    width: min(100%, 180px);
+  }
+}
+
+@media (max-width: 980px) {
+  .section,
+  .section-intro,
+  .fleet-grid,
+  .fleet-page-hero,
+  .fleet-page-controls,
+  .vehicle-detail-hero,
+  .rental-rates,
+  .vehicle-detail-grid,
+  .vehicle-story,
+  .detail-panels,
+  .related-vehicles,
+  .portal-page-main,
+  .portal-shell {
+    width: min(100% - 32px, 1220px) !important;
+  }
+
+  .fleet-page-controls .fleet-date-filter {
+    grid-template-columns: 1fr;
+  }
+
+  .fleet-page-controls .date-filter-field {
+    grid-template-columns: 1fr;
+  }
+
+  .fleet-page-controls .date-filter-field .time-select-trigger {
+    min-width: 0;
+  }
+
+  .portal-lookup-form {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-lookup-form .button {
+    width: 100%;
+  }
+}
+
+/* Shared dark gradients for the cinematic surface pass. */
+:root {
+  --mir-page-gradient:
+    radial-gradient(circle at 16% 10%, rgba(70, 70, 76, 0.34), transparent 34%),
+    radial-gradient(circle at 86% 18%, rgba(52, 52, 58, 0.22), transparent 30%),
+    radial-gradient(circle at 50% 96%, rgba(38, 38, 42, 0.26), transparent 36%),
+    linear-gradient(180deg, #050506 0%, #000000 48%, #070708 100%);
+  --mir-surface-gradient:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.072) 0%, rgba(255, 255, 255, 0.026) 28%, rgba(104, 112, 124, 0.07) 62%, rgba(255, 255, 255, 0.03) 100%),
+    rgba(22, 22, 23, 0.78);
+  --mir-surface-gradient-soft:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.056) 0%, rgba(255, 255, 255, 0.018) 38%, rgba(96, 104, 116, 0.06) 72%, rgba(255, 255, 255, 0.026) 100%),
+    rgba(18, 18, 20, 0.72);
+  --mir-surface-gradient-deep:
+    linear-gradient(140deg, rgba(255, 255, 255, 0.048) 0%, rgba(255, 255, 255, 0.016) 34%, rgba(86, 94, 104, 0.055) 70%, rgba(0, 0, 0, 0.2) 100%),
+    rgba(15, 15, 17, 0.82);
+}
+
+html,
+body {
+  background: #000000 !important;
+}
+
+body {
+  background: var(--mir-page-gradient) fixed !important;
+}
+
+body::before {
+  background: var(--mir-page-gradient) fixed !important;
+}
+
+.section,
+.section-intro,
+.fleet-page-hero,
+.fleet-page-controls,
+.booking-page-section,
+.payment-page-section,
+.support-page-main,
+.portal-page-main,
+.admin-page-main,
+.vehicle-detail-hero,
+.vehicle-detail-copy,
+.contact-section,
+.booking-section,
+.booking-policy-section,
+.policy-section,
+.feature-band,
+.trust-strip,
+.support-form-shell,
+.faq-list,
+.terms-notice,
+.agreement-card {
+  background: transparent !important;
+}
+
+.booking-form,
+.booking-checkout-form,
+.contact-form,
+.support-form,
+.portal-lookup-form,
+.portal-extension-form,
+.admin-login-form,
+.admin-inline-form,
+.admin-form-grid,
+.booking-summary-panel,
+.booking-step-card,
+.booking-stepper,
+.selected-vehicle-card,
+.vehicle-card,
+.support-card,
+.contact-card,
+.support-mini-card,
+.support-cta,
+.faq-category,
+.faq-category details,
+.terms-notice,
+.agreement-card,
+.portal-summary-card,
+.portal-card,
+.payment-card,
+.payment-state,
+.policy-grid article,
+.booking-requirements,
+.booking-requirements-grid article,
+.booking-info-grid article,
+.testimonial-grid article,
+.rental-rate-card,
+.vehicle-detail-grid article,
+.detail-panels article,
+.location-fee-preview,
+.date-picker-popover,
+.time-select-popover,
+.vehicle-picker-panel,
+.time-picker-panel {
+  background: var(--mir-surface-gradient) !important;
+}
+
+.hero-date-search.quick-request,
+.quick-request,
+.portal-lookup-form {
+  background: var(--mir-surface-gradient-deep) !important;
+}
+
+.vehicle-body,
+.selected-vehicle-body,
+.booking-summary-details,
+.booking-summary-availability,
+.booking-estimate,
+.availability-panel,
+.checkbox-row,
+.file-field,
+.portal-detail-row,
+.portal-extension-item {
+  background: var(--mir-surface-gradient-soft) !important;
+}
+
+.vehicle-card:hover,
+.selected-vehicle-card:hover,
+.policy-grid article:hover,
+.support-card:hover,
+.portal-card:hover {
+  background: var(--mir-surface-gradient) !important;
+}
+
+/* Final alignment and hero blend pass. */
+:root {
+  --mir-page-gradient:
+    radial-gradient(circle at 16% 10%, rgba(48, 48, 54, 0.24), transparent 34%),
+    radial-gradient(circle at 86% 18%, rgba(38, 38, 44, 0.16), transparent 30%),
+    radial-gradient(circle at 50% 96%, rgba(26, 26, 30, 0.18), transparent 36%),
+    linear-gradient(180deg, #030304 0%, #000000 52%, #040405 100%);
+  --mir-surface-gradient:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.052) 0%, rgba(255, 255, 255, 0.018) 30%, rgba(74, 82, 92, 0.05) 64%, rgba(255, 255, 255, 0.022) 100%),
+    rgba(17, 17, 19, 0.82);
+  --mir-surface-gradient-soft:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.014) 40%, rgba(68, 76, 86, 0.045) 74%, rgba(255, 255, 255, 0.018) 100%),
+    rgba(14, 14, 16, 0.76);
+  --mir-surface-gradient-deep:
+    linear-gradient(140deg, rgba(255, 255, 255, 0.034) 0%, rgba(255, 255, 255, 0.012) 34%, rgba(58, 66, 76, 0.042) 70%, rgba(0, 0, 0, 0.28) 100%),
+    rgba(12, 12, 14, 0.86);
+}
+
+.hero {
+  min-height: calc(100svh - 78px) !important;
+  padding-bottom: clamp(28px, 4vw, 52px) !important;
+  background: #000000 !important;
+}
+
+.hero-media {
+  top: 0 !important;
+  right: 0 !important;
+  bottom: calc(-1 * clamp(76px, 9vw, 132px)) !important;
+  left: 0 !important;
+  height: auto !important;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.86) 0%, rgba(0, 0, 0, 0.52) 46%, rgba(0, 0, 0, 0.24) 100%),
+    linear-gradient(0deg, rgba(0, 0, 0, 0.96) 0%, rgba(0, 0, 0, 0.6) 12%, rgba(0, 0, 0, 0) 42%),
+    url("assets/backgrounds/mercedes-s-class-hero.png") center bottom / cover no-repeat !important;
+}
+
+.hero-media::before {
+  background-position: center bottom !important;
+  background-size: cover !important;
+}
+
+.hero + .section {
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+  margin-top: 0 !important;
+  padding-top: clamp(44px, 5vw, 72px) !important;
+  background: transparent !important;
+}
+
+.hero + .section::before {
+  position: absolute;
+  top: calc(-1 * clamp(110px, 11vw, 170px));
+  bottom: calc(-1 * clamp(500px, 44vw, 760px));
+  left: 50%;
+  z-index: 0;
+  width: 100vw;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0) 0%,
+      rgba(0, 0, 0, 0.18) 14%,
+      rgba(0, 0, 0, 0.46) 30%,
+      rgba(2, 2, 3, 0.74) 52%,
+      rgba(4, 4, 5, 0.9) 74%,
+      rgba(5, 5, 6, 0.96) 100%
+    );
+  content: "";
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.hero + .section > * {
+  position: relative;
+  z-index: 1;
+}
+
+.hero + .section + .fleet-grid {
+  position: relative;
+  z-index: 1;
+  background: transparent !important;
+}
+
+.fleet-page-controls {
+  width: min(1080px, calc(100vw - 80px)) !important;
+}
+
+.fleet-page-controls .fleet-tools {
+  grid-template-columns: minmax(0, 1fr) minmax(132px, auto);
+}
+
+.fleet-page-controls .fleet-date-filter {
+  grid-template-columns: repeat(2, minmax(250px, 1fr)) minmax(132px, auto) minmax(78px, auto);
+}
+
+.fleet-page-controls .date-filter-field {
+  grid-template-columns: minmax(120px, 1fr) minmax(108px, auto);
+}
+
+.fleet-page-controls .date-filter-field .date-picker-trigger,
+.fleet-page-controls .date-filter-field .time-select-trigger {
+  padding-inline: 14px 32px;
+}
+
+.fleet-page-controls .date-filter-field .time-select-trigger {
+  min-width: 108px;
+}
+
+.fleet-page-controls .fleet-date-filter .button {
+  min-width: 132px;
+  padding-inline: 14px;
+}
+
+.fleet-page-controls .fleet-date-filter .secondary {
+  min-width: 78px;
+}
+
+.fleet-page-controls .sort-control {
+  min-width: 132px;
+}
+
+.booking-stepper {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Single continuous homepage background after the hero. */
+.post-hero-background {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin-top: -1px;
+  background: var(--mir-page-gradient) fixed;
+}
+
+.post-hero-background > * {
+  position: relative;
+  z-index: 1;
+}
+
+.post-hero-background .section,
+.post-hero-background .section-intro,
+.post-hero-background .fleet-grid,
+.post-hero-background .policy-section,
+.post-hero-background .testimonials-section,
+.post-hero-background .site-footer {
+  border-top: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.post-hero-background .site-footer {
+  border-top: 1px solid rgba(226, 234, 242, 0.07) !important;
+}
+
+.post-hero-background .section::before,
+.post-hero-background .section::after,
+.post-hero-background .section-intro::before,
+.post-hero-background .section-intro::after,
+.post-hero-background .fleet-grid::before,
+.post-hero-background .fleet-grid::after,
+.post-hero-background .policy-section::before,
+.post-hero-background .policy-section::after,
+.post-hero-background .testimonials-section::before,
+.post-hero-background .testimonials-section::after,
+.post-hero-background .site-footer::before,
+.post-hero-background .site-footer::after {
+  display: none !important;
+}
+
+/* Requested container cleanup while preserving interior layout. */
+.booking-checkout-form {
+  margin-top: clamp(8px, 1.4vw, 18px) !important;
+}
+
+.booking-summary-panel .selected-vehicle-card,
+.booking-summary-panel .selected-vehicle-carousel {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.booking-summary-panel .selected-vehicle-carousel {
+  border-radius: var(--radius-card) !important;
+}
+
+.booking-requirements-grid {
+  gap: clamp(16px, 2vw, 24px) !important;
+  overflow: visible !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+.booking-requirements-grid article {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.support-mini-card {
+  padding-top: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.portal-lookup-form {
+  border-radius: var(--radius-card) !important;
+}
+
+.booking-summary-panel .selected-vehicle-card,
+.booking-summary-panel .selected-vehicle-card:hover {
+  border-color: transparent !important;
+  transform: none !important;
+}
+
+.booking-summary-panel .selected-vehicle-image {
+  transition: none !important;
 }

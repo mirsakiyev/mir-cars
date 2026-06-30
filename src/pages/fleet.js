@@ -150,7 +150,7 @@ function renderFleet() {
         <span>${escapeHtml(copy.eyebrow)}</span>
         <h2>${escapeHtml(copy.title)}</h2>
         <p>${escapeHtml(copy.body)}</p>
-        ${copy.showClear ? '<button class="button secondary" type="button" data-clear-dates>Clear dates</button>' : ""}
+        ${copy.showClear ? '<button class="button secondary" type="button" data-clear-dates>Clear</button>' : ""}
       </article>
     `;
     return;
