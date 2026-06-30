@@ -92,8 +92,25 @@ function imageObjects(imageUrls, fallbackImages = []) {
       : [{ src: "/assets/backgrounds/mercedes-s-class-hero.png", label: "Vehicle photo" }];
 }
 
+function stripDuplicateTitlePrefix(title, row, fallback) {
+  const value = String(title || "").trim();
+  const prefixes = [
+    [row.year, row.color],
+    [fallback?.year, fallback?.color],
+  ]
+    .map((parts) => parts.filter(Boolean).join(" ").trim())
+    .filter(Boolean);
+
+  for (const prefix of prefixes) {
+    const match = value.match(new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s+(.+)$`, "i"));
+    if (match?.[1]) return match[1].trim();
+  }
+
+  return value;
+}
+
 function buildVehicleTitle(row, fallback) {
-  return row.title || fallback?.title || [row.make, row.model, row.trim].filter(Boolean).join(" ").trim() || "MIR CARS vehicle";
+  return stripDuplicateTitlePrefix(row.title, row, fallback) || fallback?.title || [row.make, row.model, row.trim].filter(Boolean).join(" ").trim() || "MIR CARS vehicle";
 }
 
 function buildVehicleSpecs(row, fallback) {

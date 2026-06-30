@@ -8,6 +8,7 @@ const ignoredDirs = new Set(["assets", "audit", "dist", "node_modules", "supabas
 const staticAssetDirs = ["assets/fleet", "assets/backgrounds"];
 const extensionlessRoutes = new Map([
   ["/fleet", "/fleet.html"],
+  ["/policies", "/policies/index.html"],
   ["/admin/login", "/admin/login/index.html"],
   ["/admin/bookings", "/admin/bookings/index.html"],
   ["/admin/vehicles", "/admin/vehicles/index.html"],

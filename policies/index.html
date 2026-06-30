@@ -3,12 +3,15 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Look up your MIR CARS booking status, trip details, documents, payment, and support options." />
-    <title>Booking Portal | MIR CARS</title>
+    <meta
+      name="description"
+      content="Review MIR CARS rental policies for driver documents, deposits, mileage, and vehicle care standards."
+    />
+    <title>Policies | MIR CARS</title>
     <link rel="icon" href="../favicon.ico" sizes="any" />
     <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
-<link rel="stylesheet" href="../styles.css" />
-    <script type="module" src="../portal.js"></script>
+    <link rel="stylesheet" href="../styles.css" />
+    <script type="module" src="../policies.js"></script>
   </head>
   <body id="top">
     <header class="site-header">
@@ -33,32 +36,19 @@
       <div class="header-actions"><a class="header-cta header-trip-cta" href="../portal/">My Trip</a><a class="header-cta" href="../booking.html">Book now</a></div>
     </header>
 
-    <main class="support-page-main portal-page-main">
-      <section class="support-hero portal-hero">
-        <p class="eyebrow">Customer booking portal</p>
-        <h1>View Your Trip</h1>
-        <p>Enter your Trip ID and the email or phone number used on the booking.</p>
+    <main class="support-page-main policies-page-main">
+      <section class="support-hero">
+        <p class="eyebrow">Rental rules</p>
+        <h1>Policies and rules</h1>
+        <p>Simple requirements and rental standards so every trip starts smoothly.</p>
       </section>
 
-      <section class="portal-shell">
-        <form
-          class="contact-form portal-lookup-form"
-          id="portalLookupForm"
-          data-error="We could not find a booking with those details."
-        >
-          <label>
-            Trip ID
-            <input name="trip_id" autocomplete="off" autocapitalize="characters" placeholder="12AC1" required />
-          </label>
-          <label>
-            Email or phone
-            <input name="verifier" autocomplete="email tel" placeholder="Email or phone used for booking" required />
-          </label>
-          <button class="button primary" type="submit">View Booking</button>
-          <p class="form-status" id="portalLookupStatus" role="status" aria-live="polite"></p>
-        </form>
-
-        <div class="portal-result" id="portalResult" aria-live="polite" hidden></div>
+      <section class="policies-at-a-glance" aria-label="Policies at a glance">
+        <div class="support-grid policy-grid policies-page-grid" id="policiesGrid" aria-label="MIR CARS rental policies"></div>
+        <div class="policies-terms-cta">
+          <p>For complete rental conditions, please review the full Terms of Use.</p>
+          <a class="button secondary" href="../terms/">View full Terms of Use</a>
+        </div>
       </section>
     </main>
 

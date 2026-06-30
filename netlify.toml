@@ -8,6 +8,11 @@
   status = 200
 
 [[redirects]]
+  from = "/policies"
+  to = "/policies/"
+  status = 301
+
+[[redirects]]
   from = "/admin/login"
   to = "/admin/login/"
   status = 301

@@ -5,7 +5,7 @@ function publicLinks() {
   return {
     home: window.MIR_CARS.homeUrl(),
     fleet: window.MIR_CARS.fleetUrl(),
-    policies: window.MIR_CARS.homeUrl("#policies"),
+    policies: window.MIR_CARS.policiesUrl(),
     testimonials: window.MIR_CARS.homeUrl("#testimonials"),
     contact: window.MIR_CARS.contactUrl(),
     terms: window.MIR_CARS.termsUrl(),
@@ -58,14 +58,18 @@ function enhanceSiteHeader() {
   const header = document.querySelector(".site-header");
   if (!header || header.dataset.enhancedHeader === "true") return;
 
-  header.dataset.enhancedHeader = "true";
+  header.classList.remove("is-motion-ready");
 
-  const shell = document.createElement("div");
-  shell.className = "site-header-shell";
-  while (header.firstChild) {
-    shell.append(header.firstChild);
+  let shell = header.querySelector(":scope > .site-header-shell");
+
+  if (!shell) {
+    shell = document.createElement("div");
+    shell.className = "site-header-shell";
+    while (header.firstChild) {
+      shell.append(header.firstChild);
+    }
+    header.append(shell);
   }
-  header.append(shell);
 
   const nav = shell.querySelector(".main-nav");
   const actions = shell.querySelector(".header-actions");
@@ -112,6 +116,13 @@ function enhanceSiteHeader() {
 
   markActiveHeaderLink(header);
   window.addEventListener("hashchange", () => markActiveHeaderLink(header));
+  header.dataset.enhancedHeader = "true";
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      header.classList.add("is-motion-ready");
+    });
+  });
 }
 
 function initMarketingReveals() {
@@ -126,6 +137,7 @@ function initMarketingReveals() {
     ".support-cta",
     ".faq-list",
     ".terms-notice",
+    ".terms-layout",
     ".agreement-card",
     ".vehicle-detail-grid",
     ".rental-rates",
@@ -137,13 +149,22 @@ function initMarketingReveals() {
   const revealItems = [...document.querySelectorAll(selectors.join(","))].filter((item) => !item.closest(".booking-checkout-form"));
   if (!revealItems.length) return;
 
-  document.documentElement.classList.add("motion-ready");
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+  const initiallyVisibleItems = new Set();
 
   revealItems.forEach((item, index) => {
     item.dataset.motionReveal = "true";
     item.style.setProperty("--motion-index", String(Math.min(index, 5)));
     item.style.setProperty("--motion-delay", `${Math.min(index, 5) * 28}ms`);
+
+    const rect = item.getBoundingClientRect();
+    if (rect.top < viewportHeight * 0.92 && rect.bottom > 0) {
+      item.classList.add("is-revealed");
+      initiallyVisibleItems.add(item);
+    }
   });
+
+  document.documentElement.classList.add("motion-ready");
 
   if (!("IntersectionObserver" in window)) {
     revealItems.forEach((item) => item.classList.add("is-revealed"));
@@ -162,7 +183,9 @@ function initMarketingReveals() {
     { rootMargin: "0px 0px -12% 0px", threshold: 0.12 },
   );
 
-  revealItems.forEach((item) => observer.observe(item));
+  revealItems.forEach((item) => {
+    if (!initiallyVisibleItems.has(item)) observer.observe(item);
+  });
 }
 
 export function renderPublicFooter() {

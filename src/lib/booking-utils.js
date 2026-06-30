@@ -9,6 +9,7 @@ export const AVAILABILITY_END_TIME_PARAM = "endTime";
 export const BOOKING_NUMBER_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 export const BOOKING_NUMBER_LENGTH = 5;
 export const BOOKING_NUMBER_MAX_ATTEMPTS = 12;
+const RESERVED_BOOKING_NUMBER_FRAGMENTS = ["MIR"];
 
 const NEW_TRIP_ID_PATTERN = /^[A-Z0-9]{5}$/;
 const LEGACY_TRIP_ID_PATTERN = /^MIR-[0-9]{8}-[A-Z0-9]{6,8}$/;
@@ -261,9 +262,13 @@ function secureRandomIndex(limit) {
 export function generateBookingNumber() {
   let bookingNumber = "";
 
-  for (let index = 0; index < BOOKING_NUMBER_LENGTH; index += 1) {
-    bookingNumber += BOOKING_NUMBER_CHARACTERS[secureRandomIndex(BOOKING_NUMBER_CHARACTERS.length)];
-  }
+  do {
+    bookingNumber = "";
+
+    for (let index = 0; index < BOOKING_NUMBER_LENGTH; index += 1) {
+      bookingNumber += BOOKING_NUMBER_CHARACTERS[secureRandomIndex(BOOKING_NUMBER_CHARACTERS.length)];
+    }
+  } while (RESERVED_BOOKING_NUMBER_FRAGMENTS.some((fragment) => bookingNumber.includes(fragment)));
 
   return bookingNumber;
 }

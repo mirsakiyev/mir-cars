@@ -72,6 +72,10 @@
     return publicPageUrl("terms", suffix);
   }
 
+  function policiesUrl(suffix = "") {
+    return publicPageUrl("policies", suffix);
+  }
+
   function faqUrl(suffix = "") {
     return publicPageUrl("faq", suffix);
   }
@@ -596,6 +600,7 @@
     bookingUrl,
     paymentUrl,
     fleetUrl,
+    policiesUrl,
     termsUrl,
     faqUrl,
     lostAndFoundUrl,
