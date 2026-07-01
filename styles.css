@@ -671,12 +671,13 @@ p {
 
 .wordmark-city {
   display: inline-flex;
+  align-items: center;
+  gap: 7px;
   width: max-content;
-  margin-top: 12px;
-  margin-left: 1.1rem;
-  padding: 8px 13px;
-  border-left: 1px solid rgba(226, 234, 242, 0.46);
-  border-bottom: 1px solid rgba(226, 234, 242, 0.46);
+  margin-top: 10px;
+  margin-left: 1.15rem;
+  padding: 0;
+  border: 0;
   color: var(--muted);
   font-family:
     Inter, ui-sans-serif, system-ui, "Segoe UI", Roboto, Arial, sans-serif;
@@ -685,6 +686,18 @@ p {
   letter-spacing: 0;
   line-height: 1;
   text-transform: uppercase;
+}
+
+.wordmark-city-icon {
+  width: 0.95em;
+  height: 0.95em;
+  flex: 0 0 auto;
+  color: currentColor;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
 }
 
 h2 {
@@ -5404,9 +5417,8 @@ address a:hover {
 
 .terms-sidebar-link:hover,
 .terms-sidebar-link:focus-visible,
-.terms-page-main:not(:has(.legal-section:target)) .terms-sidebar-link[href="#terms-of-service"],
-.terms-page-main:has(#terms-of-service:target) .terms-sidebar-link[href="#terms-of-service"],
-.terms-page-main:has(#privacy-policy:target) .terms-sidebar-link[href="#privacy-policy"] {
+.terms-sidebar-link.is-active,
+.terms-sidebar-link[aria-current="location"] {
   border-color: rgba(244, 248, 251, 0.16);
   background: rgba(255, 255, 255, 0.055);
   color: var(--text);
@@ -9996,7 +10008,7 @@ body::before {
   }
 
   .site-header .header-cta {
-    font-size: 0.8825rem;
+    font-size: 0.82rem;
   }
 }
 
