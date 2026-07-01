@@ -94,7 +94,7 @@
 
                   <div class="form-row">
                     <div class="vehicle-picker-field">
-                      <span class="vehicle-picker-label">Preferred vehicle</span>
+                      <span class="vehicle-picker-label">Selected vehicle</span>
                       <select class="native-vehicle-select" name="vehicle" id="vehicleSelect" required aria-hidden="true" tabindex="-1"></select>
                       <button
                         class="vehicle-picker-trigger"
@@ -287,14 +287,36 @@
                   </div>
 
                   <div class="form-row">
-                    <label>
-                      Email
-                      <input type="email" name="customer_email" autocomplete="email" required />
-                    </label>
-                    <label>
-                      Phone
-                      <input name="customer_phone" autocomplete="tel" required />
-                    </label>
+                    <div class="booking-field email-field">
+                      <label for="customerEmailInput">Email</label>
+                      <span class="email-suggestion-shell">
+                        <input
+                          id="customerEmailInput"
+                          type="email"
+                          name="customer_email"
+                          autocomplete="email"
+                          aria-autocomplete="list"
+                          aria-controls="emailDomainSuggestions"
+                          aria-expanded="false"
+                          data-email-suggestion-input
+                          required
+                        />
+                        <span class="email-domain-suggestions" id="emailDomainSuggestions" role="listbox" hidden></span>
+                      </span>
+                    </div>
+                    <div class="booking-field phone-field">
+                      <label for="customerPhoneInput">Phone</label>
+                      <input
+                        id="customerPhoneInput"
+                        name="customer_phone"
+                        type="tel"
+                        inputmode="tel"
+                        autocomplete="tel"
+                        placeholder="+1 (555) 123-4567"
+                        data-phone-input
+                        required
+                      />
+                    </div>
                   </div>
 
                   <div class="form-row">

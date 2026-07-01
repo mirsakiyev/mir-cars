@@ -1,4 +1,11 @@
-import { formatMoney, normalizeTripId } from "../lib/booking-utils.js";
+import {
+  formatDateOnlyDisplay,
+  formatMoney,
+  formatTimeDisplay,
+  isDateOnlyString,
+  isTimeString,
+  normalizeTripId,
+} from "../lib/booking-utils.js";
 import { escapeHtml, setFormStatus } from "../lib/dom-utils.js";
 import { logClientWarning } from "../lib/logging.js";
 import { initPublicSite } from "../lib/public-site.js";
@@ -25,7 +32,13 @@ function displayValue(value, fallback = "Not provided") {
 }
 
 function formatDateTime(date, time) {
-  return [date, time].filter(Boolean).join(" at ") || "Not provided";
+  const dateValue = String(date || "").trim();
+  const rawTimeValue = String(time || "").trim();
+  const timeValue = rawTimeValue.match(/^(\d{2}:\d{2})(?::\d{2})?$/)?.[1] || rawTimeValue;
+  const dateDisplay = isDateOnlyString(dateValue) ? formatDateOnlyDisplay(dateValue) : dateValue;
+  const timeDisplay = isTimeString(timeValue) ? formatTimeDisplay(timeValue) : rawTimeValue;
+
+  return [dateDisplay, timeDisplay].filter(Boolean).join(" at ") || "Not provided";
 }
 
 function summaryRow(label, value, options = {}) {

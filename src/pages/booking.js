@@ -53,6 +53,9 @@ const stepIndicators = [...form.querySelectorAll("[data-step-indicator]")];
 const locationFeePreview = document.querySelector("#locationFeePreview");
 const customLocationFields = document.querySelector("#customLocationFields");
 const dateOfBirthDisplay = document.querySelector("[data-dob-display]");
+const emailInput = document.querySelector("[data-email-suggestion-input]");
+const emailSuggestionList = document.querySelector("#emailDomainSuggestions");
+const phoneInput = document.querySelector("[data-phone-input]");
 
 let vehicles = [];
 let deliveryConfig = null;
@@ -63,10 +66,24 @@ let currentStep = 0;
 let isDateOfBirthBound = false;
 let bookingDraftSaveTimer = null;
 let isRestoringBookingDraft = false;
+let activeEmailSuggestionIndex = -1;
+let visibleEmailDomains = [];
 
 const BOOKING_DRAFT_KEY = "mirCars.bookingDraft.v1";
 const BOOKING_DRAFT_VERSION = 1;
 const BOOKING_DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
+const PHONE_NATIONAL_DIGIT_LIMIT = 10;
+const EMAIL_DOMAIN_SUGGESTIONS = [
+  "@gmail.com",
+  "@yahoo.com",
+  "@outlook.com",
+  "@hotmail.com",
+  "@icloud.com",
+  "@aol.com",
+  "@proton.me",
+  "@live.com",
+  "@msn.com",
+];
 
 function selectedVehicle() {
   return findVehicleByRequestValue(vehicles, vehicleSelect.value) || vehicles[0] || null;
@@ -255,6 +272,279 @@ function bindDateOfBirthInput() {
   });
 
   isDateOfBirthBound = true;
+}
+
+function emailSuggestionContext(value = emailInput?.value || "") {
+  const text = String(value || "");
+  const atIndex = text.lastIndexOf("@");
+
+  if (atIndex <= 0 || text.indexOf("@") !== atIndex) return null;
+
+  const localPart = text.slice(0, atIndex);
+  const typedDomain = text.slice(atIndex).toLowerCase();
+
+  if (!localPart.trim() || /\s/.test(typedDomain)) return null;
+
+  const domains = EMAIL_DOMAIN_SUGGESTIONS.filter((domain) => domain.startsWith(typedDomain));
+  if (!domains.length || (domains.length === 1 && domains[0] === typedDomain)) return null;
+
+  return { localPart, domains };
+}
+
+function setActiveEmailSuggestion(index) {
+  if (!emailInput || !emailSuggestionList || emailSuggestionList.hidden || !visibleEmailDomains.length) return;
+
+  activeEmailSuggestionIndex = (index + visibleEmailDomains.length) % visibleEmailDomains.length;
+
+  emailSuggestionList.querySelectorAll("[data-email-domain]").forEach((option, optionIndex) => {
+    const isActive = optionIndex === activeEmailSuggestionIndex;
+    option.classList.toggle("is-active", isActive);
+    option.setAttribute("aria-selected", String(isActive));
+    if (isActive) {
+      emailInput.setAttribute("aria-activedescendant", option.id);
+      option.scrollIntoView({ block: "nearest" });
+    }
+  });
+}
+
+function closeEmailDomainSuggestions() {
+  if (!emailInput || !emailSuggestionList) return;
+
+  emailSuggestionList.hidden = true;
+  emailSuggestionList.replaceChildren();
+  emailInput.setAttribute("aria-expanded", "false");
+  emailInput.removeAttribute("aria-activedescendant");
+  activeEmailSuggestionIndex = -1;
+  visibleEmailDomains = [];
+}
+
+function renderEmailDomainSuggestions() {
+  if (!emailInput || !emailSuggestionList) return;
+
+  const context = emailSuggestionContext();
+  if (!context) {
+    closeEmailDomainSuggestions();
+    return;
+  }
+
+  visibleEmailDomains = context.domains;
+  emailSuggestionList.replaceChildren(
+    ...visibleEmailDomains.map((domain, index) => {
+      const option = document.createElement("span");
+      option.id = `email-domain-suggestion-${index}`;
+      option.className = "email-domain-option";
+      option.dataset.emailDomain = domain;
+      option.role = "option";
+      option.tabIndex = -1;
+      option.textContent = domain;
+      option.setAttribute("aria-label", `${context.localPart}${domain}`);
+      return option;
+    }),
+  );
+
+  emailSuggestionList.hidden = false;
+  emailInput.setAttribute("aria-expanded", "true");
+  setActiveEmailSuggestion(0);
+}
+
+function selectEmailDomainSuggestion(domain) {
+  const context = emailSuggestionContext();
+  if (!emailInput || !domain || !context) return;
+
+  emailInput.value = `${context.localPart}${domain}`;
+  closeEmailDomainSuggestions();
+  emailInput.focus();
+  try {
+    emailInput.setSelectionRange(emailInput.value.length, emailInput.value.length);
+  } catch (_error) {
+    // Email inputs do not expose selection APIs in every browser.
+  }
+  emailInput.dispatchEvent(new Event("input", { bubbles: true }));
+  emailInput.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+function phonePartsFromValue(value, { finalize = false } = {}) {
+  const raw = String(value || "").trim();
+  const digits = raw.replace(/\D/g, "");
+
+  if (!digits) {
+    return {
+      dialCode: raw.startsWith("+") ? "+" : "+1",
+      nationalDigits: "",
+      isPartialDialCode: raw.startsWith("+"),
+      displayValue: raw.startsWith("+") ? "+" : "",
+    };
+  }
+
+  if (!raw.startsWith("+")) {
+    if (digits.length < PHONE_NATIONAL_DIGIT_LIMIT) {
+      return {
+        dialCode: "+1",
+        nationalDigits: digits,
+        isPartialDialCode: true,
+        displayValue: digits,
+      };
+    }
+
+    if (!finalize && digits.length <= PHONE_NATIONAL_DIGIT_LIMIT + 1) {
+      return {
+        dialCode: "+1",
+        nationalDigits: digits,
+        isPartialDialCode: !finalize,
+        displayValue: digits,
+      };
+    }
+
+    if (digits.length === PHONE_NATIONAL_DIGIT_LIMIT) {
+      return {
+        dialCode: "+1",
+        nationalDigits: digits,
+        isPartialDialCode: false,
+        displayValue: "",
+      };
+    }
+
+    if (digits.length === PHONE_NATIONAL_DIGIT_LIMIT + 1 && digits.startsWith("1")) {
+      return {
+        dialCode: "+1",
+        nationalDigits: digits.slice(1),
+        isPartialDialCode: false,
+        displayValue: "",
+      };
+    }
+
+    if (digits.length > PHONE_NATIONAL_DIGIT_LIMIT) {
+      const dialLength = Math.min(4, digits.length - PHONE_NATIONAL_DIGIT_LIMIT);
+      return {
+        dialCode: `+${digits.slice(0, dialLength)}`,
+        nationalDigits: digits.slice(dialLength, dialLength + PHONE_NATIONAL_DIGIT_LIMIT),
+        isPartialDialCode: false,
+        displayValue: "",
+      };
+    }
+
+    return {
+      dialCode: "+1",
+      nationalDigits: digits.slice(0, PHONE_NATIONAL_DIGIT_LIMIT),
+      isPartialDialCode: false,
+      displayValue: "",
+    };
+  }
+
+  const separated = raw.match(/^\+\s*(\d{1,4})\D+(.+)$/);
+  if (separated) {
+    return {
+      dialCode: `+${separated[1]}`,
+      nationalDigits: separated[2].replace(/\D/g, "").slice(0, PHONE_NATIONAL_DIGIT_LIMIT),
+      isPartialDialCode: false,
+      displayValue: "",
+    };
+  }
+
+  if (digits.length > PHONE_NATIONAL_DIGIT_LIMIT) {
+    const dialLength = Math.min(4, digits.length - PHONE_NATIONAL_DIGIT_LIMIT);
+    return {
+      dialCode: `+${digits.slice(0, dialLength)}`,
+      nationalDigits: digits.slice(dialLength, dialLength + PHONE_NATIONAL_DIGIT_LIMIT),
+      isPartialDialCode: false,
+      displayValue: "",
+    };
+  }
+
+  return {
+    dialCode: `+${digits}`,
+    nationalDigits: "",
+    isPartialDialCode: true,
+    displayValue: `+${digits}`,
+  };
+}
+
+function normalizePhoneDigits(value) {
+  return phonePartsFromValue(value, { finalize: true }).nationalDigits;
+}
+
+function formatPhoneNumber(nationalDigits, dialCode = "+1") {
+  const digits = String(nationalDigits || "").replace(/\D/g, "").slice(0, PHONE_NATIONAL_DIGIT_LIMIT);
+  if (!digits) return dialCode === "+1" ? "" : dialCode;
+
+  const area = digits.slice(0, 3);
+  const prefix = digits.slice(3, 6);
+  const line = digits.slice(6, 10);
+
+  if (digits.length <= 3) return `${dialCode} (${area}`;
+  if (digits.length <= 6) return `${dialCode} (${area}) ${prefix}`;
+  return `${dialCode} (${area}) ${prefix}-${line}`;
+}
+
+function syncPhoneInputFormatting({ finalize = false } = {}) {
+  if (!phoneInput) return;
+
+  const { dialCode, nationalDigits, isPartialDialCode, displayValue } = phonePartsFromValue(phoneInput.value, { finalize });
+  const formatted = isPartialDialCode ? displayValue || dialCode : formatPhoneNumber(nationalDigits, dialCode);
+
+  if (phoneInput.value !== formatted) {
+    phoneInput.value = formatted;
+    phoneInput.setSelectionRange?.(phoneInput.value.length, phoneInput.value.length);
+  }
+}
+
+function bindContactEnhancements() {
+  if (emailInput && emailSuggestionList && emailInput.dataset.emailSuggestionsBound !== "true") {
+    emailInput.dataset.emailSuggestionsBound = "true";
+
+    emailInput.addEventListener("input", renderEmailDomainSuggestions);
+
+    emailInput.addEventListener("keydown", (event) => {
+      if (emailSuggestionList.hidden) return;
+
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        setActiveEmailSuggestion(activeEmailSuggestionIndex + (event.key === "ArrowDown" ? 1 : -1));
+        return;
+      }
+
+      if (event.key === "Enter" && activeEmailSuggestionIndex >= 0) {
+        event.preventDefault();
+        event.stopPropagation();
+        selectEmailDomainSuggestion(visibleEmailDomains[activeEmailSuggestionIndex]);
+        return;
+      }
+
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeEmailDomainSuggestions();
+      }
+    });
+
+    emailSuggestionList.addEventListener("mousedown", (event) => {
+      if (event.target.closest("[data-email-domain]")) event.preventDefault();
+    });
+
+    emailSuggestionList.addEventListener("click", (event) => {
+      const option = event.target.closest("[data-email-domain]");
+      if (!option) return;
+      selectEmailDomainSuggestion(option.dataset.emailDomain);
+    });
+
+    document.addEventListener("click", (event) => {
+      if (event.target.closest(".email-field")) return;
+      closeEmailDomainSuggestions();
+    });
+  }
+
+  if (phoneInput && phoneInput.dataset.phoneFormatterBound !== "true") {
+    phoneInput.dataset.phoneFormatterBound = "true";
+
+    phoneInput.addEventListener("input", () => {
+      syncPhoneInputFormatting();
+    });
+
+    phoneInput.addEventListener("blur", () => {
+      syncPhoneInputFormatting({ finalize: true });
+    });
+
+    syncPhoneInputFormatting();
+  }
 }
 
 function syncBookingDateControls(options = {}) {
@@ -1150,6 +1440,7 @@ function goToPreviousStep() {
 
 function validateBooking() {
   syncDateOfBirthField();
+  syncPhoneInputFormatting({ finalize: true });
 
   const data = new FormData(form);
   const pickupDate = String(data.get("pickup_date") || "");
@@ -1158,11 +1449,13 @@ function validateBooking() {
   const returnTime = String(data.get("return_time") || "");
   const rentalDays = calculateRentalDays(pickupDate, returnDate);
   const age = getAge(String(data.get("date_of_birth") || ""));
+  const phoneDigits = normalizePhoneDigits(data.get("customer_phone"));
 
   if (!String(data.get("customer_first_name") || "").trim()) return "First name is required.";
   if (!String(data.get("customer_last_name") || "").trim()) return "Last name is required.";
   if (!String(data.get("customer_email") || "").trim()) return "Email is required.";
   if (!String(data.get("customer_phone") || "").trim()) return "Phone is required.";
+  if (phoneDigits.length !== PHONE_NATIONAL_DIGIT_LIMIT) return "Phone number must include 10 digits.";
   if (!pickupDate) return "Pick-up date is required.";
   if (!returnDate) return "Drop-off date is required.";
   if (pickupDate < todayDateString()) return "Pick-up date cannot be in the past.";
@@ -1291,6 +1584,7 @@ function paymentRedirectUrl(bookingNumber, paymentAccessToken) {
 function bindBookingForm() {
   syncBookingDateControls();
   bindDateOfBirthInput();
+  bindContactEnhancements();
 
   form.elements.pickup_date?.addEventListener("input", () => {
     syncBookingDateControls({ clearInvalidReturn: true });
@@ -1466,6 +1760,7 @@ async function initBookingPage() {
   initCustomDatePickers();
   initCustomTimeSelects();
   bindDateOfBirthInput();
+  bindContactEnhancements();
 
   document.querySelectorAll("[data-home-link]").forEach((link) => {
     link.href = window.MIR_CARS.homeUrl(link.dataset.homeLink);
