@@ -1,3 +1,4 @@
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 
 const supportContact = {
@@ -13,6 +14,40 @@ export const jsonHeaders = {
 };
 
 const lookupError = "We could not find a booking with those details.";
+const portalTokenTtlMs = 6 * 60 * 60 * 1000;
+
+function portalTokenSecret() {
+  return (
+    process.env.PORTAL_TOKEN_SECRET ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_KEY ||
+    process.env.SUPABASE_ANON_KEY ||
+    "mir-cars-local-portal-token"
+  );
+}
+
+function base64UrlJson(value) {
+  return Buffer.from(JSON.stringify(value), "utf8").toString("base64url");
+}
+
+function decodeBase64UrlJson(value) {
+  try {
+    return JSON.parse(Buffer.from(String(value || ""), "base64url").toString("utf8"));
+  } catch (_error) {
+    return null;
+  }
+}
+
+function signPortalTokenPayload(payload) {
+  return createHmac("sha256", portalTokenSecret()).update(payload).digest("base64url");
+}
+
+function safeEqual(first, second) {
+  const firstBuffer = Buffer.from(String(first || ""));
+  const secondBuffer = Buffer.from(String(second || ""));
+
+  return firstBuffer.length === secondBuffer.length && timingSafeEqual(firstBuffer, secondBuffer);
+}
 
 const portalBookingSelect = `
   id,
@@ -66,6 +101,7 @@ const portalBookingSelect = `
   payments(
     id,
     payment_provider,
+    payment_type,
     payment_status,
     status,
     amount_due,
@@ -75,6 +111,7 @@ const portalBookingSelect = `
     security_deposit_status,
     refund_status,
     refund_amount,
+    stripe_receipt_url,
     created_at
   ),
   booking_extension_requests(
@@ -136,6 +173,7 @@ const baseBookingSelect = `
   payments(
     id,
     payment_provider,
+    payment_type,
     payment_status,
     status,
     amount_due,
@@ -145,6 +183,7 @@ const baseBookingSelect = `
     security_deposit_status,
     refund_status,
     refund_amount,
+    stripe_receipt_url,
     created_at
   )
 `;
@@ -291,6 +330,33 @@ export function normalizeTripId(value) {
     .trim()
     .toUpperCase()
     .replace(/\s+/g, "");
+}
+
+function createPortalToken(booking) {
+  const tripId = normalizeTripId(booking?.booking_number);
+  if (!booking?.id || !tripId) return "";
+
+  const payload = base64UrlJson({
+    bookingId: String(booking.id),
+    tripId,
+    exp: Date.now() + portalTokenTtlMs,
+  });
+  const signature = signPortalTokenPayload(payload);
+
+  return `${payload}.${signature}`;
+}
+
+function readPortalToken(token) {
+  const [payload, signature] = String(token || "").split(".");
+  if (!payload || !signature || !safeEqual(signPortalTokenPayload(payload), signature)) return null;
+
+  const decoded = decodeBase64UrlJson(payload);
+  if (!decoded?.bookingId || !decoded?.tripId || Number(decoded.exp) < Date.now()) return null;
+
+  return {
+    bookingId: String(decoded.bookingId),
+    tripId: normalizeTripId(decoded.tripId),
+  };
 }
 
 export function normalizeEmail(value) {
@@ -560,6 +626,13 @@ function shouldUseBaseBookingSelect(error) {
 export async function findVerifiedBooking(client, payload) {
   const tripId = normalizeTripId(payload.tripId || payload.trip_id || payload.bookingNumber || payload.trip_identifier);
   const verifier = String(payload.emailOrPhone || payload.verifier || payload.email || payload.phone || "").trim();
+  const token = readPortalToken(payload.portalToken || payload.portal_token);
+
+  if (token && (!tripId || token.tripId === tripId)) {
+    const tokenBooking = await fetchBookingByTripId(client, token.tripId);
+
+    if (tokenBooking && String(tokenBooking.id) === token.bookingId) return tokenBooking;
+  }
 
   if (!tripId || !verifier) return null;
 
@@ -648,23 +721,71 @@ function documentChecklist(documents = []) {
   const uploadedTypes = new Set(documents.map((document) => document.document_type).filter(Boolean));
 
   return [
-    ["driver_license", "Driver's license"],
-    ["insurance", "Insurance"],
-    ["supporting_document", "Additional verification"],
-  ].map(([type, label]) => ({
-    type,
-    label,
-    status: uploadedTypes.has(type) ? "uploaded" : "needed",
-    statusLabel: uploadedTypes.has(type) ? "Uploaded" : "Needed",
-  }));
-}
+    { type: "driver_license", label: "Driver's license", required: true },
+    { type: "insurance", label: "Insurance", required: true },
+    { type: "supporting_document", label: "Additional verification", required: false },
+  ].map(({ type, label, required }) => {
+    const uploaded = uploadedTypes.has(type);
+    const status = uploaded ? "uploaded" : required ? "needed" : "not_required";
 
-function customerName(booking) {
-  return [booking.customer_first_name, booking.customer_last_name].filter(Boolean).join(" ").trim();
+    return {
+      type,
+      label,
+      status,
+      statusLabel: uploaded ? "Uploaded" : required ? "Needed" : "Not required",
+    };
+  });
 }
 
 function vehicleName(vehicle) {
   return [vehicle?.year, vehicle?.color, vehicle?.make, vehicle?.model, vehicle?.trim].filter(Boolean).join(" ").trim();
+}
+
+function maskEmail(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  const [local, domain] = normalized.split("@");
+
+  if (!local || !domain) return "";
+
+  const visible = local.slice(0, 1);
+  return `${visible}${"•".repeat(Math.min(Math.max(local.length - 1, 4), 6))}@${domain}`;
+}
+
+function maskPhone(value) {
+  const digits = String(value || "").replace(/\D/g, "");
+
+  if (digits.length < 4) return "";
+
+  return `•••-•••-${digits.slice(-4)}`;
+}
+
+function maskedCustomerContact(booking) {
+  return maskEmail(booking.customer_email) || maskPhone(booking.customer_phone) || "";
+}
+
+function friendlyPaymentMethod(booking, payment) {
+  const rawMethod = String(payment?.payment_type || booking.payment_method || "").trim();
+  const normalizedMethod = rawMethod.toLowerCase();
+  const provider = String(payment?.payment_provider || payment?.provider || "").trim().toLowerCase();
+  const labels = {
+    stripe_card: "Card payment",
+    card: "Card payment",
+    cash: "Cash",
+    zelle: "Zelle",
+    apple_pay: "Apple Pay",
+    google_pay: "Google Pay",
+    bank_transfer: "Bank transfer",
+  };
+
+  if (!rawMethod && !provider) return "Payment method pending";
+  if (labels[normalizedMethod]) return labels[normalizedMethod];
+  if (provider === "stripe") return "Card payment";
+
+  return rawMethod
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function sanitizedExtensionRequests(rows = []) {
@@ -692,12 +813,15 @@ export function sanitizeBooking(booking) {
 
   return {
     tripId: booking.booking_number || null,
+    portalToken: createPortalToken(booking),
     status: hasPendingExtension ? "extension_requested" : internalStatus,
     statusLabel: hasPendingExtension ? "Extension requested" : statusLabel(internalStatus),
-    customerName: customerName(booking) || "Customer",
+    customerName: "Verified renter",
+    maskedContact: maskedCustomerContact(booking),
     createdAt: booking.created_at || null,
     vehicle: {
       name: vehicleName(vehicle) || "Selected vehicle",
+      slug: vehicle?.slug || null,
       year: vehicle?.year || null,
       make: vehicle?.make || null,
       model: vehicle?.model || null,
@@ -730,12 +854,13 @@ export function sanitizeBooking(booking) {
       amountDue: payment?.amount_due ?? booking.estimated_total ?? null,
       amountPaid: payment?.amount_paid ?? 0,
       currency: payment?.currency || booking.currency || "USD",
-      paymentMethod: booking.payment_method || "Payment method pending",
+      paymentMethod: friendlyPaymentMethod(booking, payment),
       depositAmount: payment?.security_deposit_amount ?? booking.deposit_snapshot ?? null,
       depositStatus: payment?.security_deposit_status || "pending",
       depositStatusLabel: depositStatusLabel(payment?.security_deposit_status || "pending"),
       refundStatus: payment?.refund_status || "none",
       refundAmount: payment?.refund_amount ?? 0,
+      receiptUrl: payment?.stripe_receipt_url || null,
     },
     agreement: {
       status: agreementStatus,

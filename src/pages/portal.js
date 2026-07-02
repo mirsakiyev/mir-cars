@@ -1,16 +1,22 @@
-import { formatMoney, normalizeTripId } from "../lib/booking-utils.js";
+import { formatMoney, isAcceptedTripId, isDateOnlyString, isTimeString, normalizeTripId } from "../lib/booking-utils.js";
 import { initCustomDatePickers } from "../lib/date-picker.js";
 import { escapeHtml, setFormStatus } from "../lib/dom-utils.js";
 import { initPublicSite } from "../lib/public-site.js";
 import { supportContact } from "../lib/site-config.js";
 import { initCustomTimeSelects } from "../lib/time-select.js";
 
+const lookupCard = document.querySelector("#portalLookupCard");
 const lookupForm = document.querySelector("#portalLookupForm");
 const lookupStatus = document.querySelector("#portalLookupStatus");
+const lookupTitle = document.querySelector("#portalLookupTitle");
+const lookupToggle = document.querySelector("[data-lookup-toggle]");
 const portalResult = document.querySelector("#portalResult");
 
 let currentBooking = null;
 let currentVerifier = "";
+let currentPortalToken = "";
+let lookupContactWasCleared = false;
+let extensionFormExpanded = false;
 
 function fieldValue(formData, name) {
   return String(formData.get(name) || "").trim();
@@ -23,8 +29,50 @@ function normalizeTripIdInput(input) {
   return input.value;
 }
 
+function lookupSubmitButton() {
+  return lookupForm?.querySelector('button[type="submit"]') || null;
+}
+
+function lookupFieldValue(name) {
+  return String(lookupForm?.elements[name]?.value || "").trim();
+}
+
+function lookupErrorElement(name) {
+  return lookupForm?.querySelector(`[data-lookup-error="${name}"]`) || null;
+}
+
+function setLookupFieldError(name, message = "") {
+  const input = lookupForm?.elements[name];
+  const error = lookupErrorElement(name);
+
+  if (error) error.textContent = message;
+  if (input) input.setAttribute("aria-invalid", message ? "true" : "false");
+}
+
+function clearLookupErrors() {
+  setLookupFieldError("trip_id");
+  setLookupFieldError("verifier");
+}
+
+function lookupFieldsHaveContent() {
+  return Boolean(lookupFieldValue("trip_id") && lookupFieldValue("verifier"));
+}
+
+function syncLookupSubmit() {
+  const submitButton = lookupSubmitButton();
+  if (!submitButton) return;
+
+  submitButton.disabled = lookupForm?.dataset.loading === "true" || !lookupFieldsHaveContent();
+}
+
 function displayValue(value, fallback = "Pending") {
   return value === null || value === undefined || value === "" ? fallback : value;
+}
+
+function isUsableValue(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+
+  return Boolean(normalized) && !/(pending|not available|not assigned|tbd|to be shared)/i.test(normalized);
 }
 
 function formatDate(value) {
@@ -56,8 +104,258 @@ function formatDateTime(dateValue, timeValue) {
   return `${formatDate(dateValue)} at ${formatTime(timeValue)}`;
 }
 
+function formatTimestamp(value) {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function numberValue(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
 function money(value, currency) {
   return value === null || value === undefined ? "TBD" : formatMoney(value, currency);
+}
+
+function maskContact(value) {
+  const raw = String(value || "").trim();
+
+  if (!raw) return "";
+
+  if (raw.includes("@")) {
+    const [local, domain] = raw.toLowerCase().split("@");
+    if (!local || !domain) return "";
+
+    return `${local.slice(0, 1)}${"•".repeat(Math.min(Math.max(local.length - 1, 4), 6))}@${domain}`;
+  }
+
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length < 4) return "";
+
+  return `•••-•••-${digits.slice(-4)}`;
+}
+
+function plural(value, singular, pluralLabel = `${singular}s`) {
+  return `${value} ${value === 1 ? singular : pluralLabel}`;
+}
+
+function calculatedRentalDays(trip = {}) {
+  const existing = numberValue(trip.rentalDays);
+  if (existing) return existing;
+  if (!isDateOnlyString(trip.pickupDate) || !isDateOnlyString(trip.returnDate)) return null;
+
+  const pickup = new Date(`${trip.pickupDate}T00:00:00`);
+  const dropoff = new Date(`${trip.returnDate}T00:00:00`);
+  const difference = Math.round((dropoff.getTime() - pickup.getTime()) / (24 * 60 * 60 * 1000));
+
+  return difference < 0 ? null : Math.max(1, difference || 1);
+}
+
+function tripDuration(trip = {}) {
+  const days = calculatedRentalDays(trip);
+  return days ? plural(days, "day") : "Duration pending";
+}
+
+function normalizedStatus(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, "_");
+}
+
+function getStatusVariant(status, label = "") {
+  const token = `${normalizedStatus(status)} ${normalizedStatus(label)}`;
+
+  if (/rejected|declined|failed|overdue|blocked|payment_failed/.test(token)) return "danger";
+  if (/needed|missing|pending|review|awaiting|requested|not_ready|requires|prepared|preparing|ready|active|authorized/.test(token)) return "warning";
+  if (/paid|approved|complete|completed|signed|accepted|released|uploaded/.test(token)) return "success";
+  if (/not_required|not_applicable|unavailable|not_available|none|cancelled/.test(token)) return "neutral";
+
+  return "neutral";
+}
+
+function statusBadge(label, state = "pending", options = {}) {
+  const tone = options.tone || getStatusVariant(state, label);
+
+  return `<span class="portal-status-badge" data-state="${escapeHtml(tone)}">${escapeHtml(displayValue(label, "Pending"))}</span>`;
+}
+
+function timelineStateToVariant(state) {
+  const variants = {
+    complete: "success",
+    current: "warning",
+    needs_attention: "warning",
+    pending: "neutral",
+    blocked: "danger",
+  };
+
+  return variants[state] || "neutral";
+}
+
+function isRentalActive(booking = {}) {
+  return /active/.test(normalizedStatus(booking.status || booking.statusLabel));
+}
+
+function isTripCompleted(booking = {}) {
+  return /completed|returned|closed/.test(normalizedStatus(booking.status || booking.statusLabel));
+}
+
+function bookingStatusToken(booking = {}) {
+  return normalizedStatus(booking.status || booking.statusLabel);
+}
+
+function isBookingPending(booking = {}) {
+  return /pending|review|requested|submitted|received|awaiting/.test(bookingStatusToken(booking));
+}
+
+function isBookingApprovedBeforePickup(booking = {}) {
+  return /approved|confirmed|ready|paid/.test(bookingStatusToken(booking)) || pickupIsFuture(booking);
+}
+
+function tripDateTimeMs(dateValue, timeValue, fallbackTime = "00:00") {
+  if (!isDateOnlyString(dateValue)) return null;
+
+  const [year, month, day] = dateValue.split("-").map(Number);
+  const timeMatch = /^(\d{2}):(\d{2})/.exec(String(timeValue || fallbackTime));
+  const hour = Number(timeMatch?.[1] || fallbackTime.slice(0, 2));
+  const minute = Number(timeMatch?.[2] || fallbackTime.slice(3, 5));
+
+  return new Date(year, month - 1, day, hour, minute).getTime();
+}
+
+function pickupIsFuture(booking = {}) {
+  const trip = booking.trip || {};
+  const pickup = tripDateTimeMs(trip.pickupDate, trip.pickupTime, "00:00");
+
+  return pickup !== null && pickup > Date.now();
+}
+
+function returnIsOverdue(booking = {}) {
+  if (isTripCompleted(booking)) return false;
+
+  const trip = booking.trip || {};
+  const deadline = tripDateTimeMs(trip.returnDate, trip.returnTime, "23:59");
+
+  return deadline !== null && deadline < Date.now();
+}
+
+function detailRow(label, value, options = {}) {
+  return `
+    <div class="portal-detail-row${options.highlight ? " is-highlighted" : ""}">
+      <span>${escapeHtml(label)}</span>
+      <strong>${escapeHtml(displayValue(value, options.fallback || "Pending"))}</strong>
+    </div>
+  `;
+}
+
+function summaryTile(label, value, options = {}) {
+  return `
+    <div class="portal-summary-tile${options.highlight ? " is-highlighted" : ""}">
+      <span>${escapeHtml(label)}</span>
+      <strong>${escapeHtml(displayValue(value, options.fallback || "Pending"))}</strong>
+    </div>
+  `;
+}
+
+function portalCard(title, body, options = {}) {
+  return `
+    <section class="portal-card${options.className ? ` ${options.className}` : ""}"${options.id ? ` id="${escapeHtml(options.id)}"` : ""}>
+      <div class="portal-card-head">
+        <div>
+          ${options.eyebrow ? `<p class="eyebrow">${escapeHtml(options.eyebrow)}</p>` : ""}
+          <h2>${escapeHtml(title)}</h2>
+        </div>
+        ${options.action || ""}
+      </div>
+      ${body}
+    </section>
+  `;
+}
+
+function supportMailHref(subject, body = "") {
+  const email = currentBooking?.support?.email || supportContact.email;
+  const params = new URLSearchParams({
+    subject,
+    body,
+  });
+
+  return `mailto:${email}?${params.toString()}`;
+}
+
+function actionLink({ label, href, detail = "", variant = "secondary", target = "", title = "", ariaLabel = "", dataAttribute = "" }) {
+  const titleText = title || (detail && target ? detail : "");
+
+  return `
+    <div class="portal-action-control">
+      <a class="button ${escapeHtml(variant)}" href="${escapeHtml(href)}"${target ? ` target="${escapeHtml(target)}" rel="noopener"` : ""}${titleText ? ` title="${escapeHtml(titleText)}"` : ""}${ariaLabel ? ` aria-label="${escapeHtml(ariaLabel)}"` : ""}${dataAttribute ? ` ${dataAttribute}` : ""}>${escapeHtml(label)}</a>
+      ${detail ? `<small>${escapeHtml(detail)}</small>` : ""}
+    </div>
+  `;
+}
+
+function disabledAction(label, detail, options = {}) {
+  return `
+    <div class="portal-action-control${options.compact ? " is-secondary" : ""}">
+      <button class="button secondary" type="button" disabled${detail ? ` title="${escapeHtml(detail)}"` : ""}>${escapeHtml(label)}</button>
+      ${detail && !options.compact ? `<small>${escapeHtml(detail)}</small>` : ""}
+    </div>
+  `;
+}
+
+function compactDisabledAction(label, detail) {
+  return disabledAction(label, detail, { compact: true });
+}
+
+function attentionHeading(booking) {
+  if (isTripCompleted(booking)) return "Trip follow-up needed";
+  if (isRentalActive(booking)) return "Some items still need attention";
+  if (isBookingPending(booking) || isBookingApprovedBeforePickup(booking)) return "Action needed before pickup";
+
+  return "Action needed";
+}
+
+function renderNeedsAttentionCard(booking) {
+  const items = getNeedsAttentionItems(booking);
+  if (!items.length) return "";
+
+  const severity = items.some((item) => item.severity === "danger") ? "danger" : "warning";
+
+  return `
+    <section class="portal-attention-card" id="portalNeedsAttentionCard" data-severity="${escapeHtml(severity)}" aria-labelledby="portalAttentionTitle">
+      <div>
+        <p class="eyebrow">${severity === "danger" ? "Urgent attention" : "Needs attention"}</p>
+        <h2 id="portalAttentionTitle">${escapeHtml(attentionHeading(booking))}</h2>
+        <p class="portal-attention-intro">Complete these items or contact support if you need help.</p>
+      </div>
+      <ul>
+        ${items
+          .map(
+            (item) => `
+              <li data-severity="${escapeHtml(item.severity)}">
+                <span class="portal-attention-marker" aria-hidden="true">${item.severity === "danger" ? "!" : "i"}</span>
+                <div class="portal-attention-copy">
+                  <strong>${escapeHtml(item.title)}</strong>
+                  <p>${escapeHtml(item.text)}</p>
+                </div>
+                <a class="button secondary" href="${escapeHtml(item.href)}">${escapeHtml(item.actionLabel)}</a>
+              </li>
+            `,
+          )
+          .join("")}
+      </ul>
+    </section>
+  `;
 }
 
 async function postJson(url, payload) {
@@ -77,40 +375,867 @@ async function postJson(url, payload) {
   return data;
 }
 
-function detailRow(label, value) {
-  return `
-    <div class="portal-detail-row">
-      <span>${escapeHtml(label)}</span>
-      <strong>${escapeHtml(displayValue(value))}</strong>
-    </div>
-  `;
+function setLookupCollapsed(collapsed) {
+  if (!lookupCard || !lookupForm || !lookupToggle) return;
+
+  const canCollapse = Boolean(currentBooking);
+  const eyebrow = lookupCard.querySelector(".eyebrow");
+  let summary = lookupCard.querySelector("[data-lookup-summary]");
+  const headCopy = lookupTitle?.closest("div");
+
+  if (!summary && headCopy) {
+    summary = document.createElement("p");
+    summary.className = "portal-lookup-summary";
+    summary.dataset.lookupSummary = "true";
+    headCopy.append(summary);
+  }
+
+  lookupToggle.hidden = !canCollapse;
+  lookupCard.hidden = canCollapse && collapsed;
+  lookupForm.hidden = false;
+  lookupToggle.setAttribute("aria-expanded", String(!lookupCard.hidden));
+  lookupToggle.textContent = "Hide lookup form";
+  document.body.classList.toggle("portal-lookup-open", canCollapse && !collapsed);
+  document.body.classList.toggle("portal-lookup-collapsed", canCollapse && collapsed);
+  lookupCard.classList.toggle("has-booking", canCollapse);
+  lookupCard.classList.toggle("is-collapsed", Boolean(lookupCard.hidden));
+
+  if (canCollapse) {
+    if (eyebrow) eyebrow.textContent = "Secure lookup";
+    if (lookupTitle) lookupTitle.textContent = "Look up another trip";
+    if (summary) {
+      summary.textContent = "Enter a new Trip ID and contact detail.";
+    }
+  } else {
+    if (eyebrow) eyebrow.textContent = "Secure lookup";
+    if (lookupTitle) lookupTitle.textContent = "Find your trip";
+    if (summary) summary.textContent = "Use the Trip ID from your confirmation message.";
+  }
+
+  if (canCollapse && !lookupContactWasCleared) {
+    lookupForm.elements.verifier.value = "";
+    lookupContactWasCleared = true;
+  }
 }
 
-function portalCard(title, body, options = {}) {
-  return `
-    <section class="portal-card${options.className ? ` ${options.className}` : ""}">
-      ${options.eyebrow ? `<p class="eyebrow">${escapeHtml(options.eyebrow)}</p>` : ""}
-      <h2>${escapeHtml(title)}</h2>
-      ${body}
+function renderLoadingState(tripId) {
+  if (!portalResult) return;
+
+  portalResult.hidden = false;
+  portalResult.innerHTML = `
+    <section class="portal-loading-state" aria-label="Loading trip">
+      <div>
+        <p class="eyebrow">Secure lookup</p>
+        <h2>Finding your trip</h2>
+        <p>Checking booking details, documents, payment, and support options.</p>
+      </div>
+      <div class="portal-skeleton-grid" aria-hidden="true">
+        <span></span><span></span><span></span><span></span>
+      </div>
     </section>
   `;
 }
 
-function documentChecklist(documents) {
-  return `
-    <div class="portal-check-list">
-      ${documents
-        .map(
-          (document) => `
-            <div class="portal-check-item">
-              <span>${escapeHtml(document.label)}</span>
-              <strong class="${document.status === "uploaded" ? "success" : ""}">${escapeHtml(document.statusLabel)}</strong>
-            </div>
-          `,
-        )
-        .join("")}
-    </div>
+function renderNoBookingState(message) {
+  if (!portalResult) return;
+  const supportHref = supportMailHref(
+    "Help finding my MIR CARS trip",
+    "Hello MIR CARS, I need help finding my MIR CARS trip.",
+  );
+
+  portalResult.hidden = false;
+  portalResult.innerHTML = `
+    <section class="portal-empty-state">
+      <p class="eyebrow">No trip found</p>
+      <h2>No booking found</h2>
+      <p>${escapeHtml(message || "Check your Trip ID and contact detail, then try again.")}</p>
+      <p>Still need help? Contact support.</p>
+      <div class="portal-action-stack">
+        <a class="button secondary" href="${escapeHtml(supportContact.phoneHref)}">Call support</a>
+        <a class="button secondary" href="${escapeHtml(supportHref)}">Email support</a>
+      </div>
+    </section>
   `;
+}
+
+function renderTripHero(booking) {
+  const vehicleName = booking.vehicle?.name || "Selected vehicle";
+  const renterStatus = "Verified renter";
+  const maskedContact = booking.maskedContact || maskContact(currentVerifier);
+
+  return `
+    <section class="portal-trip-hero" aria-labelledby="portalTripHeading">
+      <div class="portal-loaded-strip" aria-label="Loaded trip">
+        <div>
+          <span>Trip loaded</span>
+          <strong>${escapeHtml(booking.tripId || "Trip ID pending")}</strong>
+          ${maskedContact ? `<span>${escapeHtml(maskedContact)}</span>` : ""}
+        </div>
+        <button class="button secondary" type="button" data-lookup-open>Look up another trip</button>
+      </div>
+      <div class="portal-trip-hero-main">
+        <div class="portal-trip-hero-copy">
+          <p class="eyebrow">Customer booking portal</p>
+          <h1 id="portalTripHeading">Your Trip</h1>
+          <p class="portal-trip-subtitle">
+            <span>${escapeHtml(vehicleName)}</span>
+            <span>${escapeHtml(renterStatus)}</span>
+          </p>
+        </div>
+        <div class="portal-trip-meta">
+          ${statusBadge(booking.statusLabel || "Under review", booking.status)}
+          <div class="portal-trip-id">
+            <span>Trip ID</span>
+            <strong>${escapeHtml(booking.tripId || "Not assigned")}</strong>
+            <button class="button secondary" type="button" data-copy-trip="${escapeHtml(booking.tripId || "")}" aria-label="Copy Trip ID" ${booking.tripId ? "" : "disabled"}>Copy</button>
+          </div>
+          <p class="portal-copy-status" data-copy-status role="status" aria-live="polite"></p>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function pickupDirectionsUrl(location) {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+}
+
+function documentsNeedAction(documents = []) {
+  return documents.some((document) => ["needed", "rejected", "missing"].includes(normalizedStatus(document.status)));
+}
+
+function documentIsAccepted(document = {}) {
+  return ["approved", "accepted"].includes(normalizedStatus(document.status));
+}
+
+function documentIsUploaded(document = {}) {
+  return ["uploaded", "under_review", "review", "pending"].includes(normalizedStatus(document.status));
+}
+
+function documentIsMissing(document = {}) {
+  return ["needed", "missing"].includes(normalizedStatus(document.status));
+}
+
+function documentIsRejected(document = {}) {
+  return normalizedStatus(document.status) === "rejected";
+}
+
+function documentPrimaryLabel(document = {}) {
+  if (documentIsAccepted(document)) return "Approved";
+  if (documentIsRejected(document)) return "Rejected";
+  if (documentIsUploaded(document)) return "Under review";
+  if (documentIsMissing(document)) return "Needed";
+  if (normalizedStatus(document.status) === "not_required") return "Not required";
+
+  return document.statusLabel || "Not available";
+}
+
+function documentsComplete(documents = []) {
+  return documents.length > 0 && documents.every((document) => documentIsAccepted(document) || normalizedStatus(document.status) === "not_required");
+}
+
+function documentsPendingReview(documents = []) {
+  return documents.length > 0 && !documentsNeedAction(documents) && documents.some(documentIsUploaded);
+}
+
+function paymentRemainingBalance(payment = {}) {
+  const amountDue = numberValue(payment.amountDue);
+  const amountPaid = numberValue(payment.amountPaid);
+
+  if (amountDue === null) return null;
+
+  return Math.max(0, amountDue - (amountPaid || 0));
+}
+
+function paymentComplete(payment = {}) {
+  const amountDue = numberValue(payment.amountDue);
+  const amountPaid = numberValue(payment.amountPaid);
+
+  return normalizedStatus(payment.status) === "paid" || (amountDue !== null && amountPaid !== null && amountPaid >= amountDue) || (amountDue !== null && paymentRemainingBalance(payment) === 0);
+}
+
+function paymentBlocked(payment = {}) {
+  return ["failed", "cancelled", "payment_failed"].includes(normalizedStatus(payment.status || payment.statusLabel));
+}
+
+function formatPaymentMethod(method, payment = {}) {
+  if (!method && !payment.cardBrand && !payment.cardLast4 && !payment.last4) return "Not available";
+
+  const brand = payment.cardBrand || payment.brand || method?.cardBrand || method?.brand;
+  const last4 = payment.cardLast4 || payment.last4 || method?.last4 || method?.cardLast4;
+  if (last4) return `${brand ? `${String(brand).replace(/\b\w/g, (letter) => letter.toUpperCase())}` : "Card"} ending in ${last4}`;
+
+  const normalized = normalizedStatus(method.paymentMethod || method);
+  const labels = {
+    stripe_card: "Card payment",
+    card: "Card payment",
+    cash: "Cash",
+    zelle: "Zelle",
+    apple_pay: "Apple Pay",
+    google_pay: "Google Pay",
+    bank_transfer: "Bank transfer",
+    payment_method_pending: "Not available",
+    not_available: "Not available",
+    unknown: "Not available",
+  };
+
+  return labels[normalized] || normalized.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function agreementReady(agreement = {}) {
+  return ["ready", "signed"].includes(normalizedStatus(agreement.status));
+}
+
+function agreementComplete(agreement = {}) {
+  return normalizedStatus(agreement.status) === "signed";
+}
+
+function agreementNeedsAttention(booking = {}) {
+  const agreement = booking.agreement || {};
+
+  return isRentalActive(booking) && !agreementReady(agreement);
+}
+
+function depositNeedsAttention(payment = {}) {
+  const status = normalizedStatus(payment.depositStatus || payment.depositStatusLabel);
+
+  return Boolean(status) && !["authorized", "captured", "received", "released", "refunded", "not_required"].includes(status);
+}
+
+function getNeedsAttentionItems(booking = {}) {
+  const documents = booking.documents || [];
+  const payment = booking.payment || {};
+  const items = [];
+
+  documents.forEach((document) => {
+    if (!documentIsMissing(document) && !documentIsRejected(document)) return;
+
+    const type = normalizedStatus(document.type);
+    const isRejected = documentIsRejected(document);
+    const labels = {
+      insurance: {
+        title: isRejected ? "Insurance needs review" : "Insurance needed",
+        text: isRejected ? "Insurance was not accepted. Please send an updated copy." : "Insurance is required for this rental.",
+        action: "Email insurance",
+      },
+      supporting_document: {
+        title: isRejected ? "Verification needs review" : "Verification needed",
+        text: isRejected ? "Additional verification was not accepted. Please send an updated copy." : "Additional verification is still required.",
+        action: "Email verification",
+      },
+      driver_license: {
+        title: isRejected ? "Driver's license needs review" : "Driver's license needed",
+        text: isRejected ? "Your driver's license was not accepted. Please send an updated copy." : "A driver's license is required for this rental.",
+        action: "Email license",
+      },
+    };
+    const copy = labels[type] || {
+      title: isRejected ? "Document needs review" : "Document needed",
+      text: isRejected ? "A required document was not accepted. Please send an updated copy." : "A required document is still needed.",
+      action: "Email document",
+    };
+
+    items.push({
+      severity: isRejected ? "danger" : "warning",
+      title: copy.title,
+      text: copy.text,
+      actionLabel: copy.action,
+      href: documentUsesEmailFallback(document) ? documentSupportHref(document, booking) : "#portalDocumentsCard",
+    });
+  });
+
+  if (paymentBlocked(payment)) {
+    items.push({
+      severity: "danger",
+      title: "Payment needs support",
+      text: "Payment could not be completed online. Contact MIR CARS for help.",
+      actionLabel: "View payment",
+      href: "#portalPaymentCard",
+    });
+  } else if (!paymentComplete(payment) && paymentRemainingBalance(payment) > 0) {
+    items.push({
+      severity: "warning",
+      title: "Balance due",
+      text: `${money(paymentRemainingBalance(payment), payment.currency)} remains due for this rental.`,
+      actionLabel: "View payment",
+      href: "#portalPaymentCard",
+    });
+  }
+
+  if (depositNeedsAttention(payment)) {
+    items.push({
+      severity: "warning",
+      title: "Deposit status pending",
+      text: "Security deposit status still needs attention.",
+      actionLabel: "View deposit",
+      href: "#portalPaymentCard",
+    });
+  }
+
+  if (agreementNeedsAttention(booking)) {
+    items.push({
+      severity: "warning",
+      title: "Agreement unavailable",
+      text: "Your agreement is not available online yet.",
+      actionLabel: "Contact support",
+      href: "#portalSupportCard",
+    });
+  }
+
+  if ((booking.extensionRequests || []).some((request) => normalizedStatus(request.status) === "pending")) {
+    items.push({
+      severity: "warning",
+      title: "Extension pending",
+      text: "Your extension request is pending approval.",
+      actionLabel: "View extension",
+      href: "#portalExtensionCard",
+    });
+  }
+
+  if (returnIsOverdue(booking)) {
+    items.push({
+      severity: "danger",
+      title: "Return deadline passed",
+      text: "This trip appears past the current return deadline.",
+      actionLabel: "Request extension",
+      href: "#portalExtensionCard",
+    });
+  }
+
+  return items;
+}
+
+function renderTripActions(booking) {
+  const trip = booking.trip || {};
+  const payment = booking.payment || {};
+  const agreement = booking.agreement || {};
+  const lostFoundUrl = window.MIR_CARS.lostAndFoundUrl(`?trip=${encodeURIComponent(booking.tripId || "")}`);
+  const pickupReady = isUsableValue(trip.pickupLocation);
+  const instructionsReady = isUsableValue(trip.pickupInstructions);
+  const hasDocumentAction = documentsNeedAction(booking.documents || []);
+  const extensionEligible = !isTripCompleted(booking);
+  const isPaid = paymentComplete(payment);
+  const receiptDisabledCopy = isPaid
+    ? "Receipt download is not available online yet. Contact support for a receipt."
+    : "Receipt is available after payment is completed.";
+  const primaryActions = [
+    hasDocumentAction
+      ? actionLink({ label: "Review missing documents", href: "#portalDocumentsCard", detail: "Email fallback available.", variant: "primary" })
+      : "",
+    extensionEligible
+      ? actionLink({
+          label: "Request extension",
+          href: "#portalExtensionCard",
+          detail: `Current return: ${formatDateTime(trip.returnDate, trip.returnTime)}`,
+          variant: "primary",
+          dataAttribute: "data-expand-extension",
+        })
+      : "",
+    actionLink({ label: "Contact support", href: "#portalSupportCard", detail: "Call or email with your Trip ID.", variant: "primary" }),
+  ].join("");
+
+  return portalCard(
+    "Trip Actions",
+    `
+      <div class="portal-primary-actions">
+        ${primaryActions}
+      </div>
+      <div class="portal-more-actions-label">More actions</div>
+      <div class="portal-secondary-actions">
+        ${
+          pickupReady
+            ? actionLink({ label: "Get directions", href: pickupDirectionsUrl(trip.pickupLocation), target: "_blank", title: trip.pickupLocation })
+            : compactDisabledAction("Get directions", "Pickup location is not available yet.")
+        }
+        ${
+          instructionsReady
+            ? actionLink({ label: "Pickup instructions", href: "#portalPickupReturnCard" })
+            : compactDisabledAction("Pickup instructions", pickupInstructionsCopy(booking))
+        }
+        ${actionLink({ label: "Report lost item", href: lostFoundUrl })}
+        ${
+          payment.receiptUrl
+            ? actionLink({ label: "Download receipt", href: payment.receiptUrl, target: "_blank", title: "Open your payment receipt." })
+            : compactDisabledAction("Download receipt", receiptDisabledCopy)
+        }
+        ${
+          agreement.url
+            ? actionLink({ label: "View agreement", href: agreement.url, target: "_blank", title: "Open your rental agreement." })
+            : compactDisabledAction("View agreement", agreementMessage(booking))
+        }
+      </div>
+    `,
+    { id: "portalActionsCard", className: "portal-actions-card" },
+  );
+}
+
+function timelineStatusLabel(state) {
+  const labels = {
+    complete: "Complete",
+    current: "Current",
+    needs_attention: "Needs attention",
+    pending: "Pending",
+    blocked: "Blocked",
+  };
+
+  return labels[state] || "Pending";
+}
+
+function getTimelineSteps(booking) {
+  const documents = booking.documents || [];
+  const docsComplete = documentsComplete(documents);
+  const docsBlocked = documentsNeedAction(documents);
+  const docsPending = documentsPendingReview(documents);
+  const payment = booking.payment || {};
+  const paid = paymentComplete(payment);
+  const paymentIsBlocked = paymentBlocked(payment);
+  const agreement = booking.agreement || {};
+  const agreementIsReady = agreementReady(agreement);
+  const agreementIsComplete = agreementComplete(agreement);
+  const isActive = isRentalActive(booking);
+  const isReturned = isTripCompleted(booking);
+  const isOverdue = returnIsOverdue(booking);
+
+  return [
+    { label: "Booking Found", state: "complete", detail: "Trip matched." },
+    {
+      label: "Documents",
+      state: docsComplete ? "complete" : docsBlocked ? "needs_attention" : docsPending ? "pending" : "pending",
+      detail: docsComplete ? "Documents accepted." : docsBlocked ? "Insurance or verification needed." : "Documents are under review.",
+    },
+    {
+      label: "Payment",
+      state: paid ? "complete" : paymentIsBlocked ? "blocked" : "needs_attention",
+      detail: paid ? "Paid in full." : paymentIsBlocked ? "Payment needs support." : "Balance or status pending.",
+    },
+    {
+      label: "Agreement",
+      state: agreementIsComplete ? "complete" : agreementIsReady ? "current" : isActive ? "needs_attention" : "pending",
+      detail: agreementIsComplete ? "Signed." : agreementIsReady ? "Ready to view." : isActive ? "Not available online." : "Being prepared.",
+    },
+    {
+      label: "Active Rental",
+      state: isReturned ? "complete" : isActive ? "current" : pickupIsFuture(booking) ? "pending" : "pending",
+      detail: isReturned ? "Finished." : isActive ? "In progress." : pickupIsFuture(booking) ? "Upcoming." : "Not active yet.",
+    },
+    {
+      label: "Return",
+      state: isReturned ? "complete" : isOverdue ? "needs_attention" : "pending",
+      detail: isReturned ? "Returned." : isOverdue ? "Past deadline." : "Pending.",
+    },
+  ];
+}
+
+function renderTimeline(booking) {
+  const steps = getTimelineSteps(booking);
+
+  return portalCard(
+    "Trip Timeline",
+    `
+      <ol class="portal-timeline" aria-label="Trip lifecycle">
+        ${steps
+          .map(
+            (step, index) => `
+              <li class="portal-timeline-step" data-state="${escapeHtml(step.state)}" data-variant="${escapeHtml(timelineStateToVariant(step.state))}" aria-label="${escapeHtml(`${step.label}: ${step.detail}`)}">
+                <span class="portal-timeline-marker" aria-hidden="true">${index + 1}</span>
+                <div>
+                  <strong>${escapeHtml(step.label)}</strong>
+                  <span class="portal-timeline-status">${escapeHtml(timelineStatusLabel(step.state))}</span>
+                  <span>${escapeHtml(step.detail)}</span>
+                </div>
+              </li>
+            `,
+          )
+          .join("")}
+      </ol>
+    `,
+    { id: "portalTimelineCard", className: "portal-timeline-card" },
+  );
+}
+
+function totalMileageText(vehicle = {}, trip = {}) {
+  const dailyMileage = numberValue(vehicle.mileageAllowance);
+  const days = calculatedRentalDays(trip);
+
+  if (!dailyMileage || !days) return "Mileage pending";
+
+  return `${dailyMileage * days} miles`;
+}
+
+function renderBookingSummary(booking) {
+  const trip = booking.trip || {};
+  const vehicle = booking.vehicle || {};
+
+  return portalCard(
+    "Trip Details",
+    `
+      <div class="portal-summary-tiles">
+        ${summaryTile("Pickup", formatDateTime(trip.pickupDate, trip.pickupTime))}
+        ${summaryTile("Return", formatDateTime(trip.returnDate, trip.returnTime), { highlight: true })}
+        ${summaryTile("Duration", tripDuration(trip))}
+        ${summaryTile("Status", booking.statusLabel)}
+        ${summaryTile("Pickup location", trip.pickupLocation)}
+        ${summaryTile("Return location", trip.returnLocation)}
+        ${summaryTile("Included mileage", vehicle.mileageAllowance ? `${vehicle.mileageAllowance} miles/day` : "Mileage pending")}
+        ${summaryTile("Estimated miles included", totalMileageText(vehicle, trip))}
+      </div>
+      <div class="portal-deadline-callout">
+        <span>Current return deadline</span>
+        <strong>${escapeHtml(formatDateTime(trip.returnDate, trip.returnTime))}</strong>
+      </div>
+    `,
+    { id: "portalTripDetailsCard" },
+  );
+}
+
+function renderVehicleCard(booking) {
+  const vehicle = booking.vehicle || {};
+  const vehicleUrl = vehicle.slug ? window.MIR_CARS.vehicleUrl({ slug: vehicle.slug }) : "";
+
+  return portalCard(
+    "Vehicle",
+    `
+      <div class="portal-vehicle-card">
+        ${
+          vehicle.imageUrl
+            ? `<img class="portal-vehicle-image" src="${escapeHtml(vehicle.imageUrl)}" alt="${escapeHtml(`${vehicle.name || "Rental vehicle"} reserved for this trip`)}" />`
+            : `<div class="portal-vehicle-image is-empty" role="img" aria-label="Vehicle image pending"></div>`
+        }
+        <div class="portal-vehicle-copy">
+          <div class="portal-vehicle-title-row">
+            <h3>${escapeHtml(vehicle.name || "Selected vehicle")}</h3>
+            ${vehicle.category ? statusBadge(vehicle.category, "pending", { tone: "neutral" }) : ""}
+          </div>
+          <div class="portal-detail-grid compact">
+            ${detailRow("Daily rate", money(vehicle.dailyRate, vehicle.currency))}
+            ${detailRow("Seats", vehicle.seats)}
+            ${detailRow("Transmission", vehicle.transmission)}
+            ${detailRow("Fuel type", vehicle.fuelType)}
+            ${detailRow("Mileage allowance", vehicle.mileageAllowance ? `${vehicle.mileageAllowance} miles/day` : "Pending")}
+          </div>
+          ${vehicleUrl ? `<a class="button secondary" href="${escapeHtml(vehicleUrl)}">View fleet details</a>` : ""}
+        </div>
+      </div>
+    `,
+    { id: "portalVehicleCard" },
+  );
+}
+
+function instructionCopyIsGeneric(value) {
+  return /shared.*approved|after approval|booking is approved|before your pickup time|to be shared|confirmed before/i.test(String(value || ""));
+}
+
+function pickupInstructionsCopy(booking) {
+  const trip = booking.trip || {};
+
+  if (isUsableValue(trip.pickupInstructions) && !instructionCopyIsGeneric(trip.pickupInstructions)) return trip.pickupInstructions;
+  if (isTripCompleted(booking)) return "This trip has ended.";
+  if (isRentalActive(booking)) return "Contact support if you need pickup or return instructions.";
+  if (isBookingPending(booking)) return "Pickup instructions will be shared after your booking is approved.";
+  if (isBookingApprovedBeforePickup(booking)) return "Pickup instructions will be shared before your pickup time.";
+
+  return "Pickup instructions will be shared before your pickup time.";
+}
+
+function returnInstructionsCopy(booking) {
+  const trip = booking.trip || {};
+
+  if (isUsableValue(trip.returnInstructions) && !instructionCopyIsGeneric(trip.returnInstructions)) return trip.returnInstructions;
+  if (isTripCompleted(booking)) return "This trip has ended.";
+  if (isRentalActive(booking)) return "Contact support if you need pickup or return instructions.";
+  if (isBookingPending(booking)) return "Return instructions will be shared after your booking is approved.";
+
+  return "Return instructions will be shared before your return time.";
+}
+
+function renderPickupReturnCard(booking) {
+  const trip = booking.trip || {};
+  const directionsReady = isUsableValue(trip.pickupLocation);
+
+  return portalCard(
+    "Pickup Instructions",
+    `
+      <div class="portal-detail-grid">
+        ${detailRow("Pickup location", trip.pickupLocation)}
+        ${detailRow("Return location", trip.returnLocation)}
+      </div>
+      <div class="portal-instructions">
+        <span>Pickup instructions</span>
+        <p>${escapeHtml(pickupInstructionsCopy(booking))}</p>
+      </div>
+      <div class="portal-instructions">
+        <span>Return instructions</span>
+        <p>${escapeHtml(returnInstructionsCopy(booking))}</p>
+      </div>
+      ${
+        directionsReady
+          ? `<a class="button secondary" href="${escapeHtml(pickupDirectionsUrl(trip.pickupLocation))}" target="_blank" rel="noopener">Get directions</a>`
+          : `<button class="button secondary" type="button" disabled>Directions unavailable</button>`
+      }
+    `,
+    { id: "portalPickupReturnCard" },
+  );
+}
+
+function documentMicrocopy(document) {
+  const type = normalizedStatus(document.type);
+
+  if (documentIsRejected(document)) return "Please send a clearer replacement before pickup.";
+  if (documentIsUploaded(document)) return "Received by MIR CARS.";
+  if (documentIsAccepted(document)) return "Approved for this trip.";
+  if (type === "supporting_document" && documentIsMissing(document)) return "Additional verification is required before this rental is complete.";
+  if (type === "supporting_document" && normalizedStatus(document.status) === "not_required") return "No additional verification is required at this time.";
+  if (type === "supporting_document") return "Additional verification status is not available yet.";
+  if (type === "insurance") return "Insurance is required for this rental.";
+  if (type === "driver_license") return "Driver's license is required before pickup.";
+  if (normalizedStatus(document.status) === "not_required") return "Not required for this trip.";
+
+  return "Document status is not available yet.";
+}
+
+function documentSupportType(document) {
+  const type = normalizedStatus(document.type);
+
+  if (type === "insurance") return "insurance";
+  if (type === "supporting_document") return "additional verification";
+  if (type === "driver_license") return "driver's license";
+
+  return String(document.label || "document").toLowerCase();
+}
+
+function documentEmailActionLabel(document) {
+  const type = normalizedStatus(document.type);
+  const prefix = "Email";
+
+  if (type === "insurance") return `${prefix} insurance`;
+  if (type === "supporting_document") return `${prefix} verification`;
+  if (type === "driver_license") return `${prefix} license`;
+
+  return `${prefix} document`;
+}
+
+function documentSupportHref(document, booking) {
+  const documentType = documentSupportType(document);
+
+  return supportMailHref(
+    `Documents for Trip ${booking.tripId || ""}`.trim(),
+    `Hello MIR CARS, I need to submit my ${documentType} for Trip ${booking.tripId || ""}. I will attach the document to this email.`,
+  );
+}
+
+function documentUsesEmailFallback(document = {}) {
+  return !document.url && (documentIsRejected(document) || documentIsMissing(document));
+}
+
+function documentAction(document, booking) {
+  if (document.url) return `<a class="button secondary" href="${escapeHtml(document.url)}" target="_blank" rel="noopener">View</a>`;
+  if (documentUsesEmailFallback(document)) {
+    return `<a class="button secondary" href="${escapeHtml(documentSupportHref(document, booking))}">${escapeHtml(documentEmailActionLabel(document))}</a>`;
+  }
+
+  return "";
+}
+
+function renderDocumentsCard(booking) {
+  const documents = booking.documents || [];
+
+  return portalCard(
+    "Documents",
+    `
+      <div class="portal-document-list">
+        ${documents
+          .map(
+            (document) => `
+              <div class="portal-document-row">
+                <div>
+                  <strong>${escapeHtml(document.label || "Document")}</strong>
+                  <p>${escapeHtml(documentMicrocopy(document))}</p>
+                  ${
+                    documentUsesEmailFallback(document)
+                      ? `<p class="portal-document-helper">Online upload is not available yet. Please email this document to support.</p>`
+                      : ""
+                  }
+                </div>
+                <div class="portal-document-status">
+                  ${statusBadge(documentPrimaryLabel(document), document.status)}
+                  ${documentAction(document, booking)}
+                </div>
+              </div>
+            `,
+          )
+          .join("")}
+      </div>
+    `,
+    { id: "portalDocumentsCard" },
+  );
+}
+
+function remainingBalance(payment = {}) {
+  return paymentRemainingBalance(payment);
+}
+
+function paymentHeadline(payment = {}) {
+  if (paymentBlocked(payment)) return "Payment needs support";
+  if (paymentComplete(payment)) return "Paid in full";
+  if (paymentRemainingBalance(payment) > 0) return "Balance due";
+
+  return "Payment pending";
+}
+
+function paymentSummaryAmount(payment = {}) {
+  const balance = remainingBalance(payment);
+
+  if (paymentComplete(payment)) return "No balance due";
+  if (balance === null) return "Balance pending";
+  if (balance > 0) return money(balance, payment.currency);
+
+  return "No balance due";
+}
+
+function renderPaymentCard(booking) {
+  const payment = booking.payment || {};
+  const depositVariant = depositNeedsAttention(payment) ? "warning" : "success";
+
+  return portalCard(
+    "Payment & Deposit",
+    `
+      <div class="portal-payment-head">
+        <div>
+          <span>${escapeHtml(paymentHeadline(payment))}</span>
+          ${statusBadge(payment.statusLabel || payment.status, payment.status)}
+        </div>
+        <strong>${escapeHtml(paymentSummaryAmount(payment))}</strong>
+      </div>
+      <div class="portal-detail-grid compact">
+        ${detailRow("Amount due", money(payment.amountDue, payment.currency))}
+        ${detailRow("Amount paid", money(payment.amountPaid, payment.currency))}
+        ${detailRow("Remaining balance", money(remainingBalance(payment), payment.currency))}
+        ${detailRow("Payment method", formatPaymentMethod(payment.paymentMethod, payment))}
+        ${detailRow("Security deposit", money(payment.depositAmount, payment.currency))}
+        <div class="portal-detail-row">
+          <span>Deposit status</span>
+          ${statusBadge(payment.depositStatusLabel || payment.depositStatus, payment.depositStatus, { tone: depositVariant })}
+        </div>
+      </div>
+      <p class="portal-muted">Security deposits are reviewed after return. Release timing depends on the payment provider and MIR CARS policy.</p>
+      ${payment.receiptUrl ? `<a class="button secondary" href="${escapeHtml(payment.receiptUrl)}" target="_blank" rel="noopener">Download receipt</a>` : ""}
+    `,
+    { id: "portalPaymentCard" },
+  );
+}
+
+function agreementMessage(booking) {
+  const agreement = booking.agreement || {};
+  const status = normalizedStatus(agreement.status);
+
+  if (status === "signed") return "Agreement signed.";
+  if (status === "ready") return "Your rental agreement is ready to view.";
+  if (isTripCompleted(booking)) return "Agreement for this completed trip.";
+  if (isRentalActive(booking)) return "Your agreement is not available online yet. Contact support if you need it.";
+  if (status === "pending") return "Your rental agreement is being prepared.";
+
+  return "Your rental agreement will be prepared after your booking is approved.";
+}
+
+function getAgreementState(booking) {
+  const agreement = booking.agreement || {};
+  const status = normalizedStatus(agreement.status);
+  const supportHref = supportMailHref(
+    `Agreement help for Trip ${booking.tripId || ""}`,
+    `Trip ID: ${booking.tripId || ""}\n\nI need help with my rental agreement.`,
+  );
+
+  if (status === "signed") {
+    return {
+      label: "Signed",
+      tone: "success",
+      message: "Your agreement is signed and available to download.",
+      buttonLabel: "Download agreement",
+      href: agreement.url || supportHref,
+      target: Boolean(agreement.url),
+    };
+  }
+
+  if (status === "ready" && agreement.url) {
+    return {
+      label: "Ready",
+      tone: "success",
+      message: "Your agreement is ready to view.",
+      buttonLabel: "View agreement",
+      href: agreement.url,
+      target: true,
+    };
+  }
+
+  if (isRentalActive(booking)) {
+    return {
+      label: "Not available online",
+      tone: "warning",
+      message: "Your agreement is not available online yet. Contact support if you need it.",
+      buttonLabel: "Contact support",
+      href: supportHref,
+    };
+  }
+
+  return {
+    label: "Being prepared",
+    tone: "warning",
+    message: "Your agreement will be available after review.",
+    buttonLabel: "Agreement pending",
+    disabled: true,
+  };
+}
+
+function renderAgreementCard(booking) {
+  const agreementState = getAgreementState(booking);
+
+  return portalCard(
+    "Rental Agreement",
+    `
+      <div class="portal-state-panel">
+        ${statusBadge(agreementState.label, agreementState.tone, { tone: agreementState.tone })}
+        <p>${escapeHtml(agreementState.message)}</p>
+      </div>
+      ${
+        agreementState.disabled
+          ? `<button class="button secondary" type="button" disabled>${escapeHtml(agreementState.buttonLabel)}</button>`
+          : `<a class="button secondary" href="${escapeHtml(agreementState.href)}"${agreementState.target ? ` target="_blank" rel="noopener"` : ""}>${escapeHtml(agreementState.buttonLabel)}</a>`
+      }
+    `,
+    { id: "portalAgreementCard" },
+  );
+}
+
+function renderHelpCard(booking) {
+  const contact = booking.support || supportContact;
+  const lostFoundUrl = window.MIR_CARS.lostAndFoundUrl(`?trip=${encodeURIComponent(booking.tripId || "")}`);
+  const emailHref = supportMailHref(`Support request for Trip ${booking.tripId || ""}`, `Trip ID: ${booking.tripId || ""}\n\nHow can MIR CARS help?`);
+
+  return portalCard(
+    "Help & Support",
+    `
+      <p>Please include your Trip ID when contacting support.</p>
+      <div class="portal-help-grid">
+        <div class="portal-help-option">
+          <span>Phone</span>
+          <strong>${escapeHtml(contact.phoneDisplay || "(747) 744-9777")}</strong>
+          <a class="button secondary" href="${escapeHtml(contact.phoneHref || "tel:+17477449777")}">Call support</a>
+        </div>
+        <div class="portal-help-option">
+          <span>Email</span>
+          <strong>${escapeHtml(contact.email || supportContact.email)}</strong>
+          <a class="button secondary" href="${escapeHtml(emailHref)}">Email support</a>
+        </div>
+        <div class="portal-help-option">
+          <span>Lost & Found</span>
+          <strong>Missing item?</strong>
+          <a class="button secondary" href="${escapeHtml(lostFoundUrl)}">Report lost item</a>
+        </div>
+      </div>
+      <p class="portal-muted">${escapeHtml(contact.hours || supportContact.hours)}</p>
+    `,
+    { id: "portalSupportCard", className: "portal-help-card" },
+  );
 }
 
 function extensionRequestsList(requests = []) {
@@ -122,8 +1247,12 @@ function extensionRequestsList(requests = []) {
         .map(
           (request) => `
             <div class="portal-extension-item">
-              <span>${escapeHtml(formatDateTime(request.requestedReturnDate, request.requestedReturnTime))}</span>
-              <strong>${escapeHtml(request.statusLabel)}</strong>
+              <div>
+                <span>${escapeHtml(formatDateTime(request.requestedReturnDate, request.requestedReturnTime))}</span>
+                ${request.createdAt ? `<p>Submitted ${escapeHtml(formatTimestamp(request.createdAt))}</p>` : ""}
+                ${request.message ? `<p>${escapeHtml(request.message)}</p>` : ""}
+              </div>
+              ${statusBadge(request.statusLabel || request.status, request.status)}
             </div>
           `,
         )
@@ -132,187 +1261,325 @@ function extensionRequestsList(requests = []) {
   `;
 }
 
-function supportCard(booking) {
-  const contact = booking.support || supportContact;
+function renderExtensionCard(booking) {
+  const trip = booking.trip || {};
+  const extensionRequests = booking.extensionRequests || [];
+  const pendingRequest = extensionRequests.find((request) => normalizedStatus(request.status) === "pending");
+  const visibleRequests = pendingRequest ? extensionRequests.filter((request) => request !== pendingRequest) : extensionRequests;
+  const minDateAttr = isDateOnlyString(trip.returnDate)
+    ? `min="${escapeHtml(trip.returnDate)}"`
+    : `data-date-default-min="today"`;
+  const pendingSummary = pendingRequest
+    ? `
+      <div class="portal-extension-pending">
+        ${statusBadge("Pending approval", "pending")}
+        <div>
+          <span>Requested return</span>
+          <strong>${escapeHtml(formatDateTime(pendingRequest.requestedReturnDate, pendingRequest.requestedReturnTime))}</strong>
+          ${pendingRequest.createdAt ? `<p>Submitted ${escapeHtml(formatTimestamp(pendingRequest.createdAt))}</p>` : ""}
+          ${pendingRequest.message ? `<p>${escapeHtml(pendingRequest.message)}</p>` : ""}
+        </div>
+      </div>
+    `
+    : "";
+  const requestForm = `
+    <form class="portal-extension-form" data-extension-form data-current-return-date="${escapeHtml(trip.returnDate || "")}" data-current-return-time="${escapeHtml(trip.returnTime || "")}" novalidate>
+      <p class="portal-muted">Submitting this request does not confirm the extension. MIR CARS will approve availability and pricing first.</p>
+      <div class="portal-extension-fields">
+        <label class="booking-date-field">
+          Requested return date
+          <span class="date-picker-shell" data-date-picker>
+            <input type="hidden" name="requested_return_date" data-date-input ${minDateAttr} required />
+            <button
+              class="date-picker-trigger"
+              type="button"
+              data-date-trigger
+              aria-haspopup="dialog"
+              aria-expanded="false"
+              aria-describedby="portalExtensionDateError"
+              aria-label="Choose requested return date"
+            >
+              <span data-date-display>Select date</span>
+            </button>
+          </span>
+          <small class="portal-field-error" id="portalExtensionDateError" data-extension-error="requested_return_date" aria-live="polite"></small>
+        </label>
+        <label class="booking-time-field">
+          Requested return time
+          <span class="time-select-shell booking-time-select" data-time-select>
+            <input type="hidden" name="requested_return_time" data-time-input required />
+            <button
+              class="time-select-trigger"
+              type="button"
+              data-time-trigger
+              aria-haspopup="dialog"
+              aria-expanded="false"
+              aria-describedby="portalExtensionTimeError"
+              aria-label="Choose requested return time"
+            >
+              <span data-time-display>Choose return time</span>
+            </button>
+          </span>
+          <small class="portal-field-error" id="portalExtensionTimeError" data-extension-error="requested_return_time" aria-live="polite"></small>
+        </label>
+      </div>
+      <label>
+        Message <small>Optional, but helpful</small>
+        <textarea name="message" rows="3" placeholder="Tell us why you need more time or where the vehicle will be."></textarea>
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" name="extension_acknowledgement" aria-describedby="portalExtensionAcknowledgementError" required />
+        <span>I understand this extension is not confirmed until MIR CARS approves availability and pricing.</span>
+      </label>
+      <small class="portal-field-error" id="portalExtensionAcknowledgementError" data-extension-error="extension_acknowledgement" aria-live="polite"></small>
+      <p class="portal-extension-helper" data-extension-helper>Select a date, time, and confirm the checkbox to request an extension.</p>
+      <button class="button primary" type="submit" data-extension-submit disabled>Request extension</button>
+      <p class="form-status" data-extension-status role="status" aria-live="polite"></p>
+    </form>
+  `;
+
+  if (pendingRequest) {
+    return portalCard(
+      "Need More Time?",
+      `
+        <div class="portal-current-return">
+          <span>Current return deadline</span>
+          <strong>${escapeHtml(formatDateTime(trip.returnDate, trip.returnTime))}</strong>
+        </div>
+        ${pendingSummary}
+        ${visibleRequests.length ? extensionRequestsList(visibleRequests) : ""}
+        <p class="portal-muted">MIR CARS will review availability and pricing before confirming this extension.</p>
+      `,
+      { id: "portalExtensionCard", className: "portal-extension-card" },
+    );
+  }
 
   return portalCard(
-    "Support",
+    "Need More Time?",
     `
-      <p>Please include your Trip ID when contacting support.</p>
-      <div class="portal-action-stack">
-        <a class="button secondary" href="${escapeHtml(contact.phoneHref || "#")}">${escapeHtml(contact.phoneDisplay || "Call MIR CARS")}</a>
-        <a class="button secondary" href="mailto:${escapeHtml(contact.email || "")}">${escapeHtml(contact.email || "Email MIR CARS")}</a>
+      <div class="portal-current-return">
+        <span>Current return deadline</span>
+        <strong>${escapeHtml(formatDateTime(trip.returnDate, trip.returnTime))}</strong>
       </div>
-      <p class="portal-muted">${escapeHtml(contact.hours || "")}</p>
+      ${visibleRequests.length ? extensionRequestsList(visibleRequests) : ""}
+      <p class="portal-muted">Need more time with the vehicle? Submit a request for MIR CARS to review availability and pricing.</p>
+      ${
+        extensionFormExpanded
+          ? requestForm
+          : `<button class="button secondary portal-extension-start" type="button" data-expand-extension>Start extension request</button>`
+      }
     `,
+    { id: "portalExtensionCard", className: "portal-extension-card" },
   );
 }
 
-function renderBookingPortal(booking, message = "") {
-  const vehicle = booking.vehicle || {};
-  const trip = booking.trip || {};
-  const payment = booking.payment || {};
-  const agreement = booking.agreement || {};
-  const lostFoundUrl = window.MIR_CARS.lostAndFoundUrl(`?trip=${encodeURIComponent(booking.tripId || "")}`);
+function renderMobileActionBar(booking) {
+  return `
+    <nav class="portal-mobile-action-bar" aria-label="Quick trip actions">
+      <a href="#portalSupportCard">Contact</a>
+      <a href="#portalExtensionCard" data-expand-extension>Extend</a>
+      <a href="#portalDocumentsCard">Docs</a>
+    </nav>
+  `;
+}
 
+function renderBookingPortal(booking, message = "") {
+  if (!portalResult) return;
+
+  const vehicle = booking.vehicle || {};
+
+  document.body.classList.add("portal-has-booking");
   portalResult.hidden = false;
   portalResult.innerHTML = `
     ${message ? `<p class="form-status success portal-inline-status">${escapeHtml(message)}</p>` : ""}
-    <section class="portal-summary-card">
-      <div>
-        <p class="eyebrow">Trip ID</p>
-        <h2>${escapeHtml(booking.tripId || "Trip ID not assigned")}</h2>
-        <p>${escapeHtml(vehicle.name || "Selected vehicle")} for ${escapeHtml(booking.customerName || "Customer")}</p>
-      </div>
-      <span class="portal-status-badge">${escapeHtml(booking.statusLabel || "Under review")}</span>
-    </section>
-
-    <div class="portal-grid">
-      ${portalCard(
-        "Booking Summary",
-        `
-          <div class="portal-detail-grid">
-            ${detailRow("Pickup", formatDateTime(trip.pickupDate, trip.pickupTime))}
-            ${detailRow("Return", formatDateTime(trip.returnDate, trip.returnTime))}
-            ${detailRow("Status", booking.statusLabel)}
-            ${detailRow("Rental days", trip.rentalDays ? `${trip.rentalDays} day${trip.rentalDays === 1 ? "" : "s"}` : "Pending")}
-          </div>
-        `,
-      )}
-
-      ${portalCard(
-        "Vehicle",
-        `
-          ${vehicle.imageUrl ? `<div class="portal-vehicle-image" style="background-image: url('${escapeHtml(vehicle.imageUrl)}')" role="img" aria-label="${escapeHtml(vehicle.name)}"></div>` : ""}
-          <div class="portal-detail-grid">
-            ${detailRow("Vehicle", vehicle.name)}
-            ${detailRow("Category", vehicle.category)}
-            ${detailRow("Daily rate", money(vehicle.dailyRate, vehicle.currency))}
-            ${detailRow("Seats", vehicle.seats)}
-            ${detailRow("Transmission", vehicle.transmission)}
-            ${detailRow("Fuel type", vehicle.fuelType)}
-            ${detailRow("Mileage", vehicle.mileageAllowance ? `${vehicle.mileageAllowance} miles/day` : "Pending")}
-          </div>
-        `,
-      )}
-
-      ${portalCard(
-        "Pickup & Return",
-        `
-          <div class="portal-detail-grid">
-            ${detailRow("Pickup location", trip.pickupLocation)}
-            ${detailRow("Return location", trip.returnLocation)}
-            ${detailRow("Pickup time", formatDateTime(trip.pickupDate, trip.pickupTime))}
-            ${detailRow("Return time", formatDateTime(trip.returnDate, trip.returnTime))}
-          </div>
-          <p class="portal-instructions">${escapeHtml(trip.pickupInstructions)}</p>
-        `,
-      )}
-
-      ${portalCard("Documents", documentChecklist(booking.documents || []))}
-
-      ${portalCard(
-        "Payment & Deposit",
-        `
-          <div class="portal-detail-grid">
-            ${detailRow("Payment status", payment.statusLabel)}
-            ${detailRow("Amount due", money(payment.amountDue, payment.currency))}
-            ${detailRow("Amount paid", money(payment.amountPaid, payment.currency))}
-            ${detailRow("Payment method", payment.paymentMethod)}
-            ${detailRow("Security deposit", money(payment.depositAmount, payment.currency))}
-            ${detailRow("Deposit status", payment.depositStatusLabel)}
-          </div>
-        `,
-      )}
-
-      ${portalCard(
-        "Rental Agreement",
-        `
-          <div class="portal-detail-grid">
-            ${detailRow("Agreement status", agreement.statusLabel)}
-          </div>
-          <p class="portal-muted">${escapeHtml(agreement.message)}</p>
-          ${
-            agreement.url
-              ? `<a class="button secondary" href="${escapeHtml(agreement.url)}" target="_blank" rel="noopener">View Agreement</a>`
-              : ""
-          }
-        `,
-      )}
-
-      ${supportCard(booking)}
-
-      ${portalCard(
-        "Lost & Found",
-        `
-          <p class="portal-muted">Report a lost item and we will attach it to this Trip ID.</p>
-          <a class="button secondary" href="${escapeHtml(lostFoundUrl)}">Report Lost Item</a>
-        `,
-      )}
-
-      ${portalCard(
-        "Need More Time?",
-        `
-          ${extensionRequestsList(booking.extensionRequests)}
-          <form class="portal-extension-form" data-extension-form>
-            <div class="portal-extension-fields">
-              <label class="booking-date-field">
-                Requested return date
-                <span class="date-picker-shell" data-date-picker>
-                  <input type="hidden" name="requested_return_date" data-date-input data-date-default-min="today" required />
-                  <button
-                    class="date-picker-trigger"
-                    type="button"
-                    data-date-trigger
-                    aria-haspopup="dialog"
-                    aria-expanded="false"
-                    aria-label="Choose requested return date"
-                  >
-                    <span data-date-display>dd/mm/yyyy</span>
-                  </button>
-                </span>
-              </label>
-              <label class="booking-time-field">
-                Requested return time
-                <span class="time-select-shell booking-time-select" data-time-select>
-                  <input type="hidden" name="requested_return_time" data-time-input />
-                  <button
-                    class="time-select-trigger"
-                    type="button"
-                    data-time-trigger
-                    aria-haspopup="dialog"
-                    aria-expanded="false"
-                    aria-label="Choose requested return time"
-                  >
-                    <span data-time-display>Choose return time</span>
-                  </button>
-                </span>
-              </label>
-            </div>
-            <label>
-              Message
-              <textarea name="message" rows="4" placeholder="Tell us how much extra time you need."></textarea>
-            </label>
-            <label class="checkbox-row">
-              <input type="checkbox" name="extension_acknowledgement" required />
-              <span>I understand this extension is not confirmed until MIR CARS approves availability and pricing.</span>
-            </label>
-            <button class="button primary" type="submit">Request Extension</button>
-            <p class="form-status" data-extension-status role="status" aria-live="polite"></p>
-          </form>
-        `,
-        { className: "portal-extension-card" },
-      )}
+    ${renderTripHero(booking)}
+    ${renderNeedsAttentionCard(booking)}
+    ${renderTripActions(booking)}
+    ${renderTimeline(booking)}
+    <div class="portal-dashboard-grid">
+      ${renderBookingSummary(booking)}
+      ${renderVehicleCard({ ...booking, vehicle })}
+      ${renderPickupReturnCard(booking)}
+      ${renderDocumentsCard(booking)}
+      ${renderPaymentCard(booking)}
+      ${renderAgreementCard(booking)}
+      ${renderHelpCard(booking)}
+      ${renderExtensionCard(booking)}
     </div>
+    ${renderMobileActionBar(booking)}
   `;
 
   initCustomDatePickers(portalResult);
   initCustomTimeSelects(portalResult);
+  portalResult.querySelectorAll("[data-extension-form]").forEach((form) => syncExtensionForm(form, false));
+  setLookupCollapsed(true);
+}
+
+function setExtensionFieldError(form, name, message) {
+  const error = form.querySelector(`[data-extension-error="${name}"]`);
+  const input = form.elements[name];
+  const trigger = input?.closest("[data-date-picker], [data-time-select]")?.querySelector("button");
+
+  if (error) error.textContent = message || "";
+  if (input) input.setAttribute("aria-invalid", message ? "true" : "false");
+  if (trigger) trigger.setAttribute("aria-invalid", message ? "true" : "false");
+}
+
+function dateTimeMinutes(dateValue, timeValue, fallbackTime = "00:00") {
+  if (!isDateOnlyString(dateValue)) return null;
+
+  const [year, month, day] = dateValue.split("-").map(Number);
+  const timeMatch = /^(\d{2}):(\d{2})/.exec(String(timeValue || ""));
+  const normalizedTime = timeMatch ? `${timeMatch[1]}:${timeMatch[2]}` : fallbackTime;
+  const [hour, minute] = normalizedTime.split(":").map(Number);
+
+  return new Date(year, month - 1, day, hour, minute).getTime() / 60000;
+}
+
+function extensionFieldWasTouched(form, name) {
+  return form.dataset.submitAttempted === "true" || form.elements[name]?.dataset.touched === "true";
+}
+
+function markExtensionFieldTouched(target) {
+  if (!target?.name) return;
+
+  target.dataset.touched = "true";
+}
+
+function validateExtensionForm(form, showErrors = false) {
+  const formData = new FormData(form);
+  const requestedReturnDate = fieldValue(formData, "requested_return_date");
+  const requestedReturnTime = fieldValue(formData, "requested_return_time");
+  const acknowledgement = Boolean(formData.get("extension_acknowledgement"));
+  const currentReturnDate = form.dataset.currentReturnDate || "";
+  const currentReturnTime = form.dataset.currentReturnTime || "";
+  let isValid = true;
+  let dateError = "";
+  let timeError = "";
+  let acknowledgementError = "";
+
+  if (!isDateOnlyString(requestedReturnDate)) {
+    dateError = "Choose a requested return date.";
+    isValid = false;
+  } else if (currentReturnDate && requestedReturnDate < currentReturnDate) {
+    dateError = "Choose a date on or after the current return date.";
+    isValid = false;
+  }
+
+  if (!isTimeString(requestedReturnTime)) {
+    timeError = "Choose a requested return time.";
+    isValid = false;
+  }
+
+  if (!dateError && !timeError && currentReturnDate) {
+    const currentReturn = dateTimeMinutes(currentReturnDate, currentReturnTime, "23:59");
+    const requestedReturn = dateTimeMinutes(requestedReturnDate, requestedReturnTime, "00:00");
+
+    if (currentReturn !== null && requestedReturn !== null && requestedReturn <= currentReturn) {
+      timeError = "Requested return must be later than the current return deadline.";
+      isValid = false;
+    }
+  }
+
+  if (!acknowledgement) {
+    acknowledgementError = "Confirm that MIR CARS must approve the extension first.";
+    isValid = false;
+  }
+
+  setExtensionFieldError(form, "requested_return_date", showErrors || extensionFieldWasTouched(form, "requested_return_date") ? dateError : "");
+  setExtensionFieldError(form, "requested_return_time", showErrors || extensionFieldWasTouched(form, "requested_return_time") ? timeError : "");
+  setExtensionFieldError(
+    form,
+    "extension_acknowledgement",
+    showErrors || extensionFieldWasTouched(form, "extension_acknowledgement") ? acknowledgementError : "",
+  );
+
+  form.querySelector("[data-extension-submit]").disabled = !isValid;
+  const helper = form.querySelector("[data-extension-helper]");
+  if (helper) helper.hidden = isValid;
+  return isValid;
+}
+
+function syncExtensionForm(form, showErrors = true) {
+  validateExtensionForm(form, showErrors);
+}
+
+function verifierLooksValid(value) {
+  const trimmed = String(value || "").trim();
+  const digits = trimmed.replace(/\D/g, "");
+
+  if (trimmed.includes("@")) return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+
+  return digits.length >= 4;
+}
+
+function validateTripLookup(showErrors = false) {
+  const tripId = normalizeTripId(lookupFieldValue("trip_id"));
+  const verifier = lookupFieldValue("verifier");
+  let tripError = "";
+  let verifierError = "";
+
+  if (!tripId) {
+    tripError = "Enter your Trip ID.";
+  } else if (!isAcceptedTripId(tripId)) {
+    tripError = "Enter a valid Trip ID.";
+  }
+
+  if (!verifier) {
+    verifierError = "Enter the email or phone used on your booking.";
+  } else if (!verifierLooksValid(verifier)) {
+    verifierError = "Enter the email or phone used on your booking.";
+  }
+
+  if (showErrors) {
+    setLookupFieldError("trip_id", tripError);
+    setLookupFieldError("verifier", verifierError);
+  }
+
+  syncLookupSubmit();
+  return !tripError && !verifierError;
+}
+
+function formatLookupError(error) {
+  const message = String(error?.message || "").toLowerCase();
+  if (/failed to fetch|network|timeout|server|temporar|something went wrong|load/i.test(message)) {
+    return "We could not load your booking right now. Please try again or contact support.";
+  }
+
+  return "Check your Trip ID and contact detail, then try again.";
+}
+
+function syncLookupSupportLinks() {
+  const emailHref = supportMailHref(
+    "Help finding my MIR CARS trip",
+    "Hello MIR CARS, I need help finding my MIR CARS trip.",
+  );
+
+  document.querySelectorAll("[data-lookup-support-email]").forEach((link) => {
+    link.setAttribute("href", emailHref);
+  });
+  document.querySelectorAll("[data-lookup-support-phone]").forEach((link) => {
+    link.setAttribute("href", supportContact.phoneHref);
+  });
+}
+
+function scrollToSection(hash) {
+  if (!hash || !hash.startsWith("#")) return false;
+
+  const target = document.getElementById(hash.slice(1));
+  if (!target) return false;
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+  if (!target.hasAttribute("tabindex")) target.setAttribute("tabindex", "-1");
+  target.focus({ preventScroll: true });
+  return true;
 }
 
 function bindLookupForm() {
   if (!lookupForm || !lookupStatus || !portalResult) return;
 
+  syncLookupSupportLinks();
   const params = new URLSearchParams(window.location.search);
   const tripParam = params.get("trip");
   if (tripParam) {
@@ -322,20 +1589,64 @@ function bindLookupForm() {
 
   lookupForm.elements.trip_id?.addEventListener("input", () => {
     normalizeTripIdInput(lookupForm.elements.trip_id);
+    if (lookupForm.elements.trip_id.getAttribute("aria-invalid") === "true") validateTripLookup(true);
+    else syncLookupSubmit();
+  });
+
+  lookupForm.elements.verifier?.addEventListener("input", () => {
+    if (lookupForm.elements.verifier.getAttribute("aria-invalid") === "true") validateTripLookup(true);
+    else syncLookupSubmit();
+  });
+
+  lookupForm.elements.trip_id?.addEventListener("blur", () => {
+    validateTripLookup(Boolean(lookupFieldValue("trip_id") || lookupErrorElement("trip_id")?.textContent));
+  });
+
+  lookupForm.elements.verifier?.addEventListener("blur", () => {
+    validateTripLookup(Boolean(lookupFieldValue("verifier") || lookupErrorElement("verifier")?.textContent));
+  });
+
+  syncLookupSubmit();
+
+  lookupToggle?.addEventListener("click", () => {
+    const shouldCollapse = !lookupCard.hidden;
+    setLookupCollapsed(shouldCollapse);
+    if (!shouldCollapse) {
+      lookupForm.elements.verifier.value = "";
+      lookupForm.elements.trip_id?.focus();
+      clearLookupErrors();
+      syncLookupSubmit();
+    }
   });
 
   lookupForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    if (!lookupForm.reportValidity()) return;
+    if (!validateTripLookup(true)) {
+      const firstInvalid = lookupForm.querySelector('[aria-invalid="true"]');
+      firstInvalid?.focus();
+      return;
+    }
 
     const formData = new FormData(lookupForm);
     const tripId = normalizeTripIdInput(lookupForm.elements.trip_id) || normalizeTripId(fieldValue(formData, "trip_id"));
     currentVerifier = fieldValue(formData, "verifier");
-    const submitButton = lookupForm.querySelector('button[type="submit"]');
+    const submitButton = lookupSubmitButton();
+    const defaultSubmitText = submitButton?.dataset.defaultLabel || submitButton?.textContent || "View booking";
+    if (submitButton) submitButton.dataset.defaultLabel = defaultSubmitText;
 
-    submitButton.disabled = true;
-    setFormStatus(lookupStatus, "loading", "Opening secure booking portal...");
+    lookupForm.dataset.loading = "true";
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.textContent = "Finding trip...";
+    }
+    currentBooking = null;
+    currentPortalToken = "";
+    extensionFormExpanded = false;
+    document.body.classList.remove("portal-has-booking");
+    setLookupCollapsed(false);
+    renderLoadingState(tripId);
+    setFormStatus(lookupStatus, "loading", "Finding trip...");
 
     try {
       const data = await postJson("/.netlify/functions/customer-booking-lookup", {
@@ -344,15 +1655,24 @@ function bindLookupForm() {
       });
 
       currentBooking = data.booking;
+      currentPortalToken = currentBooking?.portalToken || "";
+      if (currentPortalToken) currentVerifier = "";
+      lookupContactWasCleared = false;
+      extensionFormExpanded = false;
       setFormStatus(lookupStatus, "success", "Booking found.");
       renderBookingPortal(currentBooking);
     } catch (error) {
+      const message = formatLookupError(error);
       currentBooking = null;
-      portalResult.hidden = true;
-      portalResult.innerHTML = "";
-      setFormStatus(lookupStatus, "error", error.message || lookupForm.dataset.error);
+      currentPortalToken = "";
+      document.body.classList.remove("portal-has-booking");
+      setLookupCollapsed(false);
+      renderNoBookingState(message);
+      setFormStatus(lookupStatus, "error", message);
     } finally {
-      submitButton.disabled = false;
+      lookupForm.dataset.loading = "false";
+      if (submitButton) submitButton.textContent = defaultSubmitText;
+      syncLookupSubmit();
     }
   });
 }
@@ -360,42 +1680,104 @@ function bindLookupForm() {
 function bindPortalActions() {
   if (!portalResult) return;
 
+  portalResult.addEventListener("click", async (event) => {
+    const lookupOpenButton = event.target.closest("[data-lookup-open]");
+    if (lookupOpenButton) {
+      event.preventDefault();
+      setLookupCollapsed(false);
+      lookupForm.elements.trip_id.value = "";
+      lookupForm.elements.verifier.value = "";
+      lookupStatus.textContent = "";
+      lookupStatus.classList.remove("success", "error", "loading");
+      clearLookupErrors();
+      syncLookupSubmit();
+      lookupCard.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+      lookupForm.elements.trip_id?.focus({ preventScroll: true });
+      return;
+    }
+
+    const extensionExpandButton = event.target.closest("[data-expand-extension]");
+    if (extensionExpandButton && currentBooking) {
+      event.preventDefault();
+      extensionFormExpanded = true;
+      renderBookingPortal(currentBooking);
+      scrollToSection("#portalExtensionCard");
+      return;
+    }
+
+    const copyButton = event.target.closest("[data-copy-trip]");
+    if (copyButton) {
+      const tripId = copyButton.dataset.copyTrip;
+      const status = portalResult.querySelector("[data-copy-status]");
+      if (!tripId) return;
+
+      try {
+        await navigator.clipboard.writeText(tripId);
+        if (status) status.textContent = "Trip ID copied.";
+      } catch (_error) {
+        if (status) status.textContent = `Trip ID: ${tripId}`;
+      }
+      return;
+    }
+
+    const sectionLink = event.target.closest('a[href^="#portal"]');
+    if (sectionLink && scrollToSection(sectionLink.getAttribute("href"))) {
+      event.preventDefault();
+    }
+  });
+
+  portalResult.addEventListener("input", (event) => {
+    const extensionForm = event.target.closest("[data-extension-form]");
+    if (extensionForm) {
+      markExtensionFieldTouched(event.target);
+      syncExtensionForm(extensionForm, false);
+    }
+  });
+
+  portalResult.addEventListener("change", (event) => {
+    const extensionForm = event.target.closest("[data-extension-form]");
+    if (extensionForm) {
+      markExtensionFieldTouched(event.target);
+      syncExtensionForm(extensionForm, false);
+    }
+  });
+
   portalResult.addEventListener("submit", async (event) => {
     const extensionForm = event.target.closest("[data-extension-form]");
     if (!extensionForm || !currentBooking) return;
 
     event.preventDefault();
 
-    if (!extensionForm.reportValidity()) return;
+    extensionForm.dataset.submitAttempted = "true";
+    if (!validateExtensionForm(extensionForm, true)) return;
 
     const status = extensionForm.querySelector("[data-extension-status]");
     const submitButton = extensionForm.querySelector('button[type="submit"]');
     const formData = new FormData(extensionForm);
     const requestedReturnDate = fieldValue(formData, "requested_return_date");
-
-    if (!requestedReturnDate) {
-      setFormStatus(status, "error", "Requested return date is required.");
-      extensionForm.querySelector('[name="requested_return_date"]')?.closest("[data-date-picker]")?.querySelector("[data-date-trigger]")?.focus();
-      return;
-    }
+    const requestedReturnTime = fieldValue(formData, "requested_return_time");
 
     submitButton.disabled = true;
     setFormStatus(status, "loading", "Sending extension request...");
 
     try {
+      const verificationPayload = currentPortalToken ? { portalToken: currentPortalToken } : { emailOrPhone: currentVerifier };
       const data = await postJson("/.netlify/functions/customer-extension-request", {
         tripId: currentBooking.tripId,
-        emailOrPhone: currentVerifier,
+        ...verificationPayload,
         requestedReturnDate,
-        requestedReturnTime: fieldValue(formData, "requested_return_time"),
+        requestedReturnTime,
         message: fieldValue(formData, "message"),
       });
 
       currentBooking = data.booking || currentBooking;
+      currentPortalToken = currentBooking?.portalToken || currentPortalToken;
+      extensionFormExpanded = false;
       renderBookingPortal(currentBooking, data.message);
+      scrollToSection("#portalExtensionCard");
     } catch (error) {
       setFormStatus(status, "error", error.message || "We could not submit the extension request.");
-      submitButton.disabled = false;
+      syncExtensionForm(extensionForm, true);
     }
   });
 }

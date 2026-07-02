@@ -34,7 +34,7 @@ export async function handler(event) {
   const requestedReturnTime = cleanText(payload.requestedReturnTime || payload.requested_return_time, 20);
   const message = cleanText(payload.message, 1000);
 
-  if (!isValidDate(requestedReturnDate) || !isValidTime(requestedReturnTime)) {
+  if (!isValidDate(requestedReturnDate) || !requestedReturnTime || !isValidTime(requestedReturnTime)) {
     return jsonResponse(400, { error: "Choose a valid requested return date and time." });
   }
 

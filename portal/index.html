@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="../styles.css" />
     <script type="module" src="../portal.js"></script>
   </head>
-  <body id="top">
+  <body id="top" class="portal-body">
     <header class="site-header">
       <a class="brand" href="../index.html#top" aria-label="MIR CARS home">
         <span>
@@ -30,34 +30,87 @@
         <a href="../contact/">Contact</a>
       </nav>
 
-      <div class="header-actions"><a class="header-cta header-trip-cta" href="../portal/">My Trip</a><a class="header-cta" href="../booking.html">Book now</a></div>
+      <div class="header-actions"><a class="header-cta header-trip-cta" href="../portal/">My trip</a><a class="header-cta" href="../booking.html">Book now</a></div>
     </header>
 
     <main class="support-page-main portal-page-main">
-      <section class="support-hero portal-hero">
-        <p class="eyebrow">Customer booking portal</p>
-        <h1>View Your Trip</h1>
-        <p>Enter your Trip ID and the email or phone number used on the booking.</p>
+      <section class="portal-prelookup" aria-labelledby="portalPrelookupTitle">
+        <div class="portal-prelookup-copy">
+          <p class="eyebrow">BOOKING PORTAL</p>
+          <h1 id="portalPrelookupTitle">View Your Trip</h1>
+          <p>Enter your Trip ID and the email or phone number used on your booking.</p>
+          <p class="portal-trust-line">Secure lookup · Trip details, documents, payments, and extensions in one place</p>
+          <ul class="portal-prelookup-benefits" aria-label="Portal benefits">
+            <li>View pickup and return details</li>
+            <li>Check document status</li>
+            <li>Request more time</li>
+          </ul>
+        </div>
+
+        <section class="portal-lookup-card" id="portalLookupCard" aria-labelledby="portalLookupTitle">
+          <div class="portal-lookup-card-head">
+            <div>
+              <p class="eyebrow">LOOKUP YOUR BOOKING</p>
+              <h2 id="portalLookupTitle">Find your trip</h2>
+              <p class="portal-lookup-summary" data-lookup-summary>Use the Trip ID from your confirmation message.</p>
+            </div>
+            <button
+              class="button secondary portal-lookup-toggle"
+              type="button"
+              data-lookup-toggle
+              aria-controls="portalLookupForm"
+              aria-expanded="false"
+              hidden
+            >
+              Hide lookup form
+            </button>
+          </div>
+          <form
+            class="portal-lookup-form"
+            id="portalLookupForm"
+            data-error="We could not find a booking with those details."
+            novalidate
+          >
+            <label>
+              Trip ID
+              <input
+                name="trip_id"
+                autocomplete="off"
+                autocapitalize="characters"
+                placeholder="12AC1"
+                aria-describedby="portalTripIdHelp portalTripIdError"
+                required
+              />
+              <small id="portalTripIdHelp">Included in your booking confirmation.</small>
+              <small class="portal-field-error" id="portalTripIdError" data-lookup-error="trip_id" aria-live="polite"></small>
+            </label>
+            <label>
+              Email or phone
+              <input
+                name="verifier"
+                autocomplete="off"
+                placeholder="Email or phone used for booking"
+                aria-describedby="portalVerifierError"
+                required
+              />
+              <small class="portal-field-error" id="portalVerifierError" data-lookup-error="verifier" aria-live="polite"></small>
+            </label>
+            <button class="button primary" type="submit" disabled>View booking</button>
+            <p class="form-status" id="portalLookupStatus" role="status" aria-live="polite"></p>
+          </form>
+          <div class="portal-lookup-help">
+            <div>
+              <h3>Where is my Trip ID?</h3>
+              <p>Your Trip ID is included in your booking confirmation message.</p>
+            </div>
+            <div class="portal-lookup-support">
+              <a href="mailto:support@mircars.com?subject=Help%20finding%20my%20MIR%20CARS%20trip" data-lookup-support-email>Can’t find it? Contact support.</a>
+            </div>
+          </div>
+        </section>
       </section>
 
       <section class="portal-shell">
-        <form
-          class="contact-form portal-lookup-form"
-          id="portalLookupForm"
-          data-error="We could not find a booking with those details."
-        >
-          <label>
-            Trip ID
-            <input name="trip_id" autocomplete="off" autocapitalize="characters" placeholder="12AC1" required />
-          </label>
-          <label>
-            Email or phone
-            <input name="verifier" autocomplete="email tel" placeholder="Email or phone used for booking" required />
-          </label>
-          <button class="button primary" type="submit">View Booking</button>
-          <p class="form-status" id="portalLookupStatus" role="status" aria-live="polite"></p>
-        </form>
-
         <div class="portal-result" id="portalResult" aria-live="polite" hidden></div>
       </section>
     </main>

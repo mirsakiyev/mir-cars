@@ -207,7 +207,7 @@ export function renderPublicFooter() {
           </span>
           <small>LA Rentals</small>
         </a>
-        <p>Premium vehicle rentals and delivery service in Los Angeles.</p>
+        <p>Premium cars. Live availability. Instant booking.</p>
       </section>
 
       ${renderFooterLinks("Footer quick links", [
@@ -225,8 +225,8 @@ export function renderPublicFooter() {
       ])}
 
       ${renderFooterLinks("Footer booking links", [
-        ["My Trip", links.portal],
-        ["Book Now", links.booking],
+        ["My trip", links.portal],
+        ["Book now", links.booking],
       ])}
     </div>
     <div class="footer-legal">
