@@ -14,7 +14,7 @@ export const jsonHeaders = {
 };
 
 const lookupError = "We could not find a booking with those details.";
-const portalTokenTtlMs = 6 * 60 * 60 * 1000;
+const portalTokenTtlMs = 10 * 60 * 1000;
 
 function portalTokenSecret() {
   return (
@@ -875,7 +875,7 @@ function isCustomerSubmittedReview(review, booking) {
 }
 
 function statusAllowsReview(value) {
-  return ["confirmed", "active", "completed", "finalized"].includes(normalizedStatus(value));
+  return ["completed", "finalized"].includes(normalizedStatus(value));
 }
 
 function reviewEligibility(booking, submittedReview) {
@@ -890,7 +890,7 @@ function reviewEligibility(booking, submittedReview) {
   if (!statusAllowsReview(status)) {
     return {
       eligible: false,
-      message: "Reviews become available after MIR CARS confirms your trip.",
+      message: "You can review your rental after the trip is completed.",
     };
   }
 
@@ -913,6 +913,7 @@ export function sanitizeBooking(booking) {
   const agreementIsAvailable = ["ready", "signed"].includes(agreementStatus) && booking.rental_agreement_url;
 
   return {
+    bookingId: booking.id || null,
     tripId: booking.booking_number || null,
     portalToken: createPortalToken(booking),
     status: hasPendingExtension ? "extension_requested" : internalStatus,

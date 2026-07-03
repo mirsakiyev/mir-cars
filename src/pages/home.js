@@ -55,15 +55,14 @@ function formatReviewDate(value) {
   }).format(date);
 }
 
-function formatReviewDateRange(review) {
+function formatReviewDateLines(review) {
   const startDate = formatReviewDate(review.tripStartDate);
   const endDate = formatReviewDate(review.tripEndDate);
 
-  if (startDate && endDate && startDate !== endDate) return `${startDate} - ${endDate}`;
-  if (endDate) return endDate;
-  if (startDate) return startDate;
-
-  return "Completed rental";
+  return {
+    pickup: startDate || "Date pending",
+    returnDate: endDate || "Date pending",
+  };
 }
 
 function reviewerName(review) {
@@ -85,12 +84,16 @@ function renderStars(rating) {
 
 function renderReviewCard(review) {
   const note = review.note || `Rated this completed MIR CARS rental ${review.rating} out of 5.`;
+  const dateLines = formatReviewDateLines(review);
 
   return `
     <article class="review-card">
       <div class="review-card-top">
         ${renderStars(review.rating)}
-        <span>${escapeHtml(formatReviewDateRange(review))}</span>
+        <span class="review-date-lines" aria-label="${escapeHtml(`Pickup ${dateLines.pickup}; return ${dateLines.returnDate}`)}">
+          <span><strong>Pickup</strong> ${escapeHtml(dateLines.pickup)}</span>
+          <span><strong>Return</strong> ${escapeHtml(dateLines.returnDate)}</span>
+        </span>
       </div>
       <p>${escapeHtml(note)}</p>
       <div class="review-card-footer">

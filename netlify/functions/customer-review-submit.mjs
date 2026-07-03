@@ -18,7 +18,7 @@ function normalizedStatus(value) {
 }
 
 function statusAllowsReview(booking) {
-  return ["confirmed", "active", "completed", "finalized"].includes(normalizedStatus(booking.booking_status || booking.status));
+  return ["completed", "finalized"].includes(normalizedStatus(booking.booking_status || booking.status));
 }
 
 function sanitizeReviewNote(value) {
@@ -106,7 +106,7 @@ export async function handler(event) {
 
     if (!statusAllowsReview(booking)) {
       return jsonResponse(400, {
-        error: "Reviews are available after MIR CARS confirms your trip.",
+        error: "Reviews are available after the rental is completed.",
       });
     }
 

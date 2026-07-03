@@ -46,7 +46,7 @@
           data-success="Your lost item report has been submitted. MIR CARS will contact you if more information is needed."
           data-error="Something went wrong. Please try again or contact MIR CARS directly."
         >
-          <label class="support-wide-field">
+          <label>
             Trip ID
             <input
               name="trip_identifier"
@@ -54,6 +54,10 @@
               placeholder="12AC1"
               required
             />
+          </label>
+          <label>
+            Item lost
+            <input name="item_lost" placeholder="Wallet, AirPods, backpack, etc." required />
           </label>
           <label>
             Full name
@@ -91,13 +95,9 @@
                 aria-expanded="false"
                 aria-label="Choose rental date"
               >
-                <span data-date-display>dd/mm/yyyy</span>
+                <span data-date-display>Select date</span>
               </button>
             </span>
-          </label>
-          <label>
-            Item lost
-            <input name="item_lost" placeholder="Wallet, AirPods, backpack, etc." required />
           </label>
           <label class="support-wide-field">
             Description of lost item
@@ -116,7 +116,6 @@
             <input type="checkbox" name="acknowledgement" required />
             <span>I understand MIR CARS will review this request and contact me if the item is located.</span>
           </label>
-          <p class="support-note support-wide-field">Please do not include sensitive payment information in this form.</p>
           <button class="button primary support-wide-field" type="submit">Submit Lost Item Report</button>
           <p class="form-status support-wide-field" id="lostFoundStatus" role="status" aria-live="polite"></p>
         </form>

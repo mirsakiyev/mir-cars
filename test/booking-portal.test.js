@@ -27,6 +27,7 @@ test("booking portal sanitizer does not treat placeholder reviews as customer-su
     },
   });
 
+  assert.equal(booking.bookingId, "11111111-1111-4111-8111-111111111111");
   assert.equal(booking.tripId, "HXSV9");
   assert.equal(booking.review.submitted, false);
   assert.equal(booking.review.eligible, true);
@@ -66,12 +67,28 @@ test("booking portal sanitizer accepts a portal-submitted review object", () => 
   assert.equal(booking.review.statusLabel, "Published");
 });
 
-test("booking portal review opens once a trip is active", () => {
+test("booking portal review stays muted while a trip is active", () => {
   const booking = sanitizeBooking({
     id: "11111111-1111-4111-8111-111111111111",
     booking_number: "HXSV9",
     status: "active",
     booking_status: "active",
+    return_date: "2026-07-09",
+    customer_email: "guest@example.com",
+    customer_phone: "(747) 555-1212",
+  });
+
+  assert.equal(booking.review.submitted, false);
+  assert.equal(booking.review.eligible, false);
+  assert.equal(booking.review.message, "You can review your rental after the trip is completed.");
+});
+
+test("booking portal review opens once a trip is completed", () => {
+  const booking = sanitizeBooking({
+    id: "11111111-1111-4111-8111-111111111111",
+    booking_number: "HXSV9",
+    status: "completed",
+    booking_status: "completed",
     return_date: "2026-07-09",
     customer_email: "guest@example.com",
     customer_phone: "(747) 555-1212",
@@ -94,5 +111,5 @@ test("booking portal review stays visible but locked before confirmation", () =>
 
   assert.equal(booking.review.submitted, false);
   assert.equal(booking.review.eligible, false);
-  assert.equal(booking.review.message, "Reviews become available after MIR CARS confirms your trip.");
+  assert.equal(booking.review.message, "You can review your rental after the trip is completed.");
 });
