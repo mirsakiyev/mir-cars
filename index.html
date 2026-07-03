@@ -99,24 +99,23 @@
 
         <section class="fleet-grid" id="fleetGrid" aria-live="polite"></section>
 
-        <section class="section testimonials-section" id="testimonials">
-          <div>
-            <p class="eyebrow">TESTIMONIALS</p>
-            <h2>Guest notes from recent MIR CARS rentals.</h2>
+        <section class="section testimonials-section" id="reviews" aria-labelledby="reviewsTitle">
+          <div class="reviews-section-head">
+            <div>
+              <p class="eyebrow">VERIFIED TRIP REVIEWS</p>
+              <h2 id="reviewsTitle">Real Trips. Real Reviews.</h2>
+            </div>
           </div>
-          <div class="testimonial-grid">
-            <article>
-              <p>"Pickup was smooth, the car was spotless, and the team confirmed every detail before the trip."</p>
-              <span>Business rental / Glendale</span>
-            </article>
-            <article>
-              <p>"The booking process felt personal and easy. We knew exactly what to bring before we arrived."</p>
-              <span>Weekend rental / Los Angeles</span>
-            </article>
-            <article>
-              <p>"Great communication, clean vehicle, and flexible timing for our airport plans."</p>
-              <span>LAX delivery request</span>
-            </article>
+          <div class="reviews-shell" id="reviewsShell" data-review-state="loading">
+            <div class="review-carousel" aria-label="MIR CARS customer reviews">
+              <button class="review-nav-button" type="button" data-review-prev aria-label="Previous review">&lsaquo;</button>
+              <div class="review-viewport" data-review-viewport tabindex="0">
+                <div class="review-track" data-review-track></div>
+              </div>
+              <button class="review-nav-button" type="button" data-review-next aria-label="Next review">&rsaquo;</button>
+            </div>
+            <div class="review-dots" data-review-dots aria-label="Review pages"></div>
+            <p class="reviews-empty" data-review-empty hidden>Recent rental reviews will appear here after completed trips.</p>
           </div>
         </section>
 

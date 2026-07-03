@@ -208,7 +208,7 @@ function isRentalActive(booking = {}) {
 }
 
 function isTripCompleted(booking = {}) {
-  return /completed|returned|closed/.test(normalizedStatus(booking.status || booking.statusLabel));
+  return /completed|finalized|returned|closed/.test(normalizedStatus(booking.status || booking.statusLabel));
 }
 
 function bookingStatusToken(booking = {}) {
@@ -368,8 +368,9 @@ async function postJson(url, payload) {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    const reference = data.code ? ` Reference: ${data.code}.` : "";
-    throw new Error(`${data.error || "Something went wrong. Please try again."}${reference}`);
+    const error = new Error(data.error || "Something went wrong. Please try again.");
+    error.code = data.code || "";
+    throw error;
   }
 
   return data;
@@ -1238,6 +1239,86 @@ function renderHelpCard(booking) {
   );
 }
 
+function reviewStarsDisplay(rating) {
+  const safeRating = Math.min(5, Math.max(1, Number(rating) || 5));
+
+  return `
+    <div class="portal-review-stars" aria-label="${safeRating} out of 5 rating">
+      ${Array.from({ length: 5 }, (_, index) => `<span aria-hidden="true">${index < safeRating ? "&#9733;" : "&#9734;"}</span>`).join("")}
+    </div>
+  `;
+}
+
+function reviewStarsInput() {
+  return Array.from(
+    { length: 5 },
+    (_, index) => {
+      const value = index + 1;
+
+      return `
+        <label class="portal-review-star-option" data-review-star-value="${value}">
+          <input type="radio" name="rating" value="${value}" aria-label="${value} out of 5" required />
+          <span aria-hidden="true">&#9733;</span>
+        </label>
+      `;
+    },
+  ).join("");
+}
+
+function renderReviewCard(booking) {
+  const review = booking.review || {};
+
+  if (review.submitted) {
+    return portalCard(
+      "Rental Review",
+      `
+        <div class="portal-review-submitted">
+          ${reviewStarsDisplay(review.rating || 5)}
+          ${statusBadge(review.statusLabel || "Received", review.status === "visible" ? "success" : "neutral")}
+          <p>${escapeHtml(review.note || "Thanks for sharing feedback for this completed MIR CARS rental.")}</p>
+          ${review.createdAt ? `<span>Submitted ${escapeHtml(formatTimestamp(review.createdAt))}</span>` : ""}
+        </div>
+      `,
+      { id: "portalReviewCard", className: "portal-review-card" },
+    );
+  }
+
+  if (!review.eligible) {
+    return portalCard(
+      "Review Your Rental",
+      `
+        <div class="portal-review-unavailable">
+          <p>${escapeHtml(review.message || "Reviews become available after MIR CARS confirms your trip.")}</p>
+        </div>
+      `,
+      { id: "portalReviewCard", className: "portal-review-card" },
+    );
+  }
+
+  return portalCard(
+    "Review Your Rental",
+    `
+      <form class="portal-review-form" data-review-form novalidate>
+        <p class="portal-muted">Share a rating for your completed MIR CARS rental. Your first name, last initial, vehicle, rental date range, rating, and optional note may be shown publicly.</p>
+        <fieldset class="portal-review-fieldset">
+          <legend>Rating</legend>
+          <div class="portal-review-star-input" role="radiogroup" aria-describedby="portalReviewRatingError">
+            ${reviewStarsInput()}
+          </div>
+          <small class="portal-field-error" id="portalReviewRatingError" data-review-error="rating" aria-live="polite"></small>
+        </fieldset>
+        <label class="portal-review-note">
+          Note <small>Optional</small>
+          <textarea name="note" rows="4" maxlength="600" placeholder="Tell us what made the rental smooth, clean, or convenient."></textarea>
+        </label>
+        <button class="button primary" type="submit" data-review-submit disabled>Submit review</button>
+        <p class="form-status" data-review-status role="status" aria-live="polite"></p>
+      </form>
+    `,
+    { id: "portalReviewCard", className: "portal-review-card" },
+  );
+}
+
 function extensionRequestsList(requests = []) {
   if (!requests.length) return `<p class="portal-muted">No extension requests have been submitted for this trip.</p>`;
 
@@ -1374,11 +1455,18 @@ function renderExtensionCard(booking) {
 }
 
 function renderMobileActionBar(booking) {
+  const canReview = Boolean(booking.review?.eligible || booking.review?.submitted);
+  const canExtend = !isTripCompleted(booking);
+  const actions = [
+    `<a href="#portalSupportCard">Contact</a>`,
+    canExtend ? `<a href="#portalExtensionCard" data-expand-extension>Extend</a>` : "",
+    `<a href="#portalDocumentsCard">Docs</a>`,
+    canReview ? `<a href="#portalReviewCard">Review</a>` : "",
+  ].filter(Boolean);
+
   return `
     <nav class="portal-mobile-action-bar" aria-label="Quick trip actions">
-      <a href="#portalSupportCard">Contact</a>
-      <a href="#portalExtensionCard" data-expand-extension>Extend</a>
-      <a href="#portalDocumentsCard">Docs</a>
+      ${actions.join("")}
     </nav>
   `;
 }
@@ -1403,6 +1491,7 @@ function renderBookingPortal(booking, message = "") {
       ${renderDocumentsCard(booking)}
       ${renderPaymentCard(booking)}
       ${renderAgreementCard(booking)}
+      ${renderReviewCard(booking)}
       ${renderHelpCard(booking)}
       ${renderExtensionCard(booking)}
     </div>
@@ -1412,6 +1501,7 @@ function renderBookingPortal(booking, message = "") {
   initCustomDatePickers(portalResult);
   initCustomTimeSelects(portalResult);
   portalResult.querySelectorAll("[data-extension-form]").forEach((form) => syncExtensionForm(form, false));
+  portalResult.querySelectorAll("[data-review-form]").forEach((form) => syncReviewForm(form, false));
   setLookupCollapsed(true);
 }
 
@@ -1504,6 +1594,36 @@ function syncExtensionForm(form, showErrors = true) {
   validateExtensionForm(form, showErrors);
 }
 
+function setReviewFieldError(form, name, message) {
+  const error = form.querySelector(`[data-review-error="${name}"]`);
+
+  if (error) error.textContent = message || "";
+}
+
+function updateReviewStars(form, rating) {
+  form.querySelectorAll("[data-review-star-value]").forEach((label) => {
+    label.classList.toggle("is-active", Number(label.dataset.reviewStarValue) <= rating);
+  });
+}
+
+function validateReviewForm(form, showErrors = false) {
+  const formData = new FormData(form);
+  const rating = Number(formData.get("rating"));
+  const isValid = Number.isInteger(rating) && rating >= 1 && rating <= 5;
+  const error = isValid ? "" : "Choose a rating from 1 to 5.";
+  const submitButton = form.querySelector("[data-review-submit]");
+
+  updateReviewStars(form, isValid ? rating : 0);
+  setReviewFieldError(form, "rating", showErrors ? error : "");
+  if (submitButton) submitButton.disabled = !isValid;
+
+  return isValid;
+}
+
+function syncReviewForm(form, showErrors = true) {
+  validateReviewForm(form, showErrors);
+}
+
 function verifierLooksValid(value) {
   const trimmed = String(value || "").trim();
   const digits = trimmed.replace(/\D/g, "");
@@ -1542,11 +1662,13 @@ function validateTripLookup(showErrors = false) {
 
 function formatLookupError(error) {
   const message = String(error?.message || "").toLowerCase();
+  const reference = error?.code ? ` Reference: ${error.code}.` : "";
+
   if (/failed to fetch|network|timeout|server|temporar|something went wrong|load/i.test(message)) {
-    return "We could not load your booking right now. Please try again or contact support.";
+    return `We could not load your booking right now. Please try again or contact support.${reference}`;
   }
 
-  return "Check your Trip ID and contact detail, then try again.";
+  return `Check your Trip ID and contact detail, then try again.${reference}`;
 }
 
 function syncLookupSupportLinks() {
@@ -1732,6 +1854,11 @@ function bindPortalActions() {
       markExtensionFieldTouched(event.target);
       syncExtensionForm(extensionForm, false);
     }
+
+    const reviewForm = event.target.closest("[data-review-form]");
+    if (reviewForm) {
+      syncReviewForm(reviewForm, false);
+    }
   });
 
   portalResult.addEventListener("change", (event) => {
@@ -1740,9 +1867,48 @@ function bindPortalActions() {
       markExtensionFieldTouched(event.target);
       syncExtensionForm(extensionForm, false);
     }
+
+    const reviewForm = event.target.closest("[data-review-form]");
+    if (reviewForm) {
+      syncReviewForm(reviewForm, false);
+    }
   });
 
   portalResult.addEventListener("submit", async (event) => {
+    const reviewForm = event.target.closest("[data-review-form]");
+    if (reviewForm && currentBooking) {
+      event.preventDefault();
+
+      if (!validateReviewForm(reviewForm, true)) return;
+
+      const status = reviewForm.querySelector("[data-review-status]");
+      const submitButton = reviewForm.querySelector('button[type="submit"]');
+      const formData = new FormData(reviewForm);
+
+      submitButton.disabled = true;
+      setFormStatus(status, "loading", "Submitting review...");
+
+      try {
+        const verificationPayload = currentPortalToken ? { portalToken: currentPortalToken } : { emailOrPhone: currentVerifier };
+        const data = await postJson("/.netlify/functions/customer-review-submit", {
+          tripId: currentBooking.tripId,
+          ...verificationPayload,
+          rating: Number(formData.get("rating")),
+          note: fieldValue(formData, "note"),
+        });
+
+        currentBooking = data.booking || currentBooking;
+        currentPortalToken = currentBooking?.portalToken || currentPortalToken;
+        renderBookingPortal(currentBooking, data.message);
+        scrollToSection("#portalReviewCard");
+      } catch (error) {
+        setFormStatus(status, "error", error.message || "We could not submit your review.");
+        syncReviewForm(reviewForm, true);
+      }
+
+      return;
+    }
+
     const extensionForm = event.target.closest("[data-extension-form]");
     if (!extensionForm || !currentBooking) return;
 

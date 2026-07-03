@@ -7,7 +7,7 @@ function publicLinks() {
     home: window.MIR_CARS.homeUrl(),
     fleet: window.MIR_CARS.fleetUrl(),
     policies: window.MIR_CARS.policiesUrl(),
-    testimonials: window.MIR_CARS.homeUrl("#testimonials"),
+    reviews: window.MIR_CARS.homeUrl("#reviews"),
     contact: window.MIR_CARS.contactUrl(),
     terms: window.MIR_CARS.termsUrl(),
     faq: window.MIR_CARS.faqUrl(),
@@ -214,7 +214,7 @@ export function renderPublicFooter() {
         ["Home", links.home],
         ["Fleet", links.fleet],
         ["Policies", links.policies],
-        ["Testimonials", links.testimonials],
+        ["Reviews", links.reviews],
       ])}
 
       ${renderFooterLinks("Footer support links", [

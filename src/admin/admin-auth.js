@@ -5,6 +5,7 @@ export const adminLinks = [
   ["Vehicles", "/admin/vehicles/"],
   ["Contacts", "/admin/contacts/"],
   ["Payments", "/admin/payments/"],
+  ["Reviews", "/admin/reviews/"],
 ];
 
 export function adminShell(title) {

@@ -11,6 +11,7 @@ const titles = {
   vehicles: "Vehicles",
   contacts: "Contact requests",
   payments: "Payments",
+  reviews: "Customer reviews",
 };
 
 document.body.innerHTML = adminShell(titles[page] || "Dashboard");
@@ -43,6 +44,7 @@ const bookingActionGroups = [
       ["confirmed", "Confirmed"],
       ["active", "Active"],
       ["completed", "Completed"],
+      ["finalized", "Finalized"],
     ],
   },
 ];
@@ -1391,6 +1393,113 @@ async function renderPayments(client) {
   };
 }
 
+function formatAdminDate(value) {
+  if (!value) return "";
+
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function reviewCustomerName(review) {
+  const initial = review.customer_last_initial ? ` ${review.customer_last_initial}.` : "";
+
+  return `${review.customer_first_name || "Guest"}${initial}`;
+}
+
+function reviewDateRange(review) {
+  const start = formatAdminDate(review.trip_start_date);
+  const end = formatAdminDate(review.trip_end_date);
+
+  if (start && end && start !== end) return `${start} - ${end}`;
+  return end || start || "Date unavailable";
+}
+
+function reviewRatingLabel(rating) {
+  return `${Number(rating) || 0} / 5`;
+}
+
+async function renderReviews(client) {
+  const { data, error } = await client
+    .from("booking_reviews")
+    .select("*,booking_requests(booking_number,customer_email,customer_phone,customer_first_name,customer_last_name,status,booking_status)")
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  if (!data?.length) {
+    app.innerHTML = `<div class="admin-empty">No customer reviews yet.</div>`;
+    return;
+  }
+
+  app.innerHTML = `
+    <div class="admin-card-list">
+      ${data
+        .map((review) => {
+          const booking = review.booking_requests || {};
+          const status = review.status || "visible";
+
+          return `
+            <article class="admin-card admin-review-card" data-review-id="${escapeHtml(review.id)}">
+              <div class="admin-card-head">
+                <div>
+                  <span>Trip ID: ${escapeHtml(review.trip_id || booking.booking_number || "Not assigned")}</span>
+                  <h2>${escapeHtml(reviewCustomerName(review))}</h2>
+                </div>
+                ${statusBadge(status)}
+              </div>
+              <div class="admin-detail-grid">
+                <span><strong>Rating</strong>${escapeHtml(reviewRatingLabel(review.rating))}</span>
+                <span><strong>Vehicle</strong>${escapeHtml(review.vehicle_name || "MIR CARS rental")}</span>
+                <span><strong>Rental dates</strong>${escapeHtml(reviewDateRange(review))}</span>
+                <span><strong>Submitted</strong>${escapeHtml(review.created_at ? new Date(review.created_at).toLocaleString() : "")}</span>
+                <span><strong>Public name</strong>${escapeHtml(reviewCustomerName(review))}</span>
+                <span><strong>Booking status</strong>${escapeHtml(booking.booking_status || booking.status || "")}</span>
+                <span><strong>Email</strong>${escapeHtml(booking.customer_email || "")}</span>
+                <span><strong>Phone</strong>${escapeHtml(booking.customer_phone || "")}</span>
+              </div>
+              <p class="admin-message admin-review-note">${escapeHtml(review.note || "No written note.")}</p>
+              <div class="admin-actions admin-review-actions">
+                ${["visible", "hidden", "removed"]
+                  .map((nextStatus) => {
+                    const labels = {
+                      visible: "Show publicly",
+                      hidden: "Hide",
+                      removed: "Remove",
+                    };
+
+                    return `<button class="button secondary${status === nextStatus ? " active" : ""}" type="button" data-review-status="${nextStatus}"${status === nextStatus ? " disabled" : ""}>${labels[nextStatus]}</button>`;
+                  })
+                  .join("")}
+              </div>
+            </article>
+          `;
+        })
+        .join("")}
+    </div>
+  `;
+
+  app.onclick = async (event) => {
+    const statusButton = event.target.closest("[data-review-status]");
+    const card = event.target.closest("[data-review-id]");
+
+    if (!statusButton || !card) return;
+
+    try {
+      await updateRecord(client, "booking_reviews", card.dataset.reviewId, { status: statusButton.dataset.reviewStatus });
+      await renderReviews(client);
+    } catch (error) {
+      logClientWarning("Review moderation failed.", error);
+      renderError("Could not update this review. Check admin permissions and try again.");
+    }
+  };
+}
+
 async function initAdminPage() {
   const { client, error } = await requireAdmin();
 
@@ -1406,6 +1515,7 @@ async function initAdminPage() {
     if (page === "vehicles") await renderVehicles(client);
     if (page === "contacts") await renderContacts(client);
     if (page === "payments") await renderPayments(client);
+    if (page === "reviews") await renderReviews(client);
   } catch (error) {
     logClientWarning("Admin page failed to load.", error);
     renderError("Could not load this admin page. Check Supabase setup and admin permissions.");

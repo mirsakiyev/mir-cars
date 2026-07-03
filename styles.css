@@ -85,7 +85,7 @@ html {
 
 #top,
 #fleet,
-#testimonials,
+#reviews,
 #contact,
 #booking,
 #booking-policies {
@@ -5089,6 +5089,262 @@ address {
   z-index: 2;
 }
 
+.reviews-section-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.reviews-section-head > p {
+  max-width: 340px;
+  margin: 0;
+  color: rgba(226, 234, 242, 0.72);
+  line-height: 1.55;
+}
+
+.reviews-shell {
+  margin-top: 28px;
+}
+
+.review-carousel {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 12px;
+}
+
+.review-viewport {
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-padding-inline: 2px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.review-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.review-track {
+  display: flex;
+  gap: 14px;
+  padding: 2px;
+}
+
+.review-card {
+  position: relative;
+  display: grid;
+  flex: 0 0 min(360px, calc(100vw - 116px));
+  grid-template-rows: 36px minmax(118px, 1fr) 46px;
+  align-content: stretch;
+  gap: 18px;
+  min-height: 286px;
+  scroll-snap-align: start;
+  overflow: hidden;
+  border: 1px solid rgba(226, 234, 242, 0.12);
+  border-radius: var(--radius-card);
+  padding: 24px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.052), rgba(255, 255, 255, 0.018) 58%, rgba(142, 160, 176, 0.052)),
+    rgba(13, 15, 17, 0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 18px 46px rgba(0, 0, 0, 0.22);
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.review-card::before {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  width: 74px;
+  height: 18px;
+  border-bottom: 1px solid rgba(226, 234, 242, 0.24);
+  border-left: 1px solid rgba(226, 234, 242, 0.16);
+  border-radius: 0 0 0 18px;
+  content: "";
+  opacity: 0.7;
+}
+
+.review-card-top,
+.review-card-footer {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.review-card-top {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  align-items: start;
+}
+
+.review-card-top > span,
+.review-card-footer > span {
+  color: rgba(226, 234, 242, 0.62);
+  font-size: 0.76rem;
+  font-weight: 820;
+  letter-spacing: 0.055em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.review-card-top > span {
+  display: flex;
+  min-height: 32px;
+  align-items: flex-start;
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.review-stars {
+  display: inline-flex;
+  gap: 4px;
+  width: 86px;
+  color: var(--color-chrome-link);
+  font-size: 1.02rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.review-stars span {
+  display: inline-block;
+  background: linear-gradient(145deg, #ffffff 0%, #dce6ef 24%, #9eaab6 43%, #f8fbff 57%, #b8c4cf 74%, #ffffff 100%);
+  background-clip: text;
+  filter: drop-shadow(0 0 6px rgba(216, 226, 235, 0.16)) drop-shadow(0 1px 0 rgba(255, 255, 255, 0.18));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.review-card p {
+  position: relative;
+  z-index: 1;
+  align-self: start;
+  margin: 0;
+  color: var(--text);
+  font-size: 1.06rem;
+  line-height: 1.58;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+
+.review-card-footer {
+  display: grid;
+  grid-template-columns: minmax(92px, 0.45fr) minmax(0, 0.55fr);
+  align-items: start;
+  min-height: 46px;
+}
+
+.review-card-footer strong {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.review-card-footer span {
+  align-self: start;
+  text-align: right;
+}
+
+.review-nav-button {
+  display: inline-grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid rgba(226, 234, 242, 0.18);
+  border-radius: 999px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.024)),
+    rgba(5, 6, 7, 0.76);
+  color: var(--text);
+  font-size: 1.55rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    color 180ms ease,
+    opacity 180ms ease;
+}
+
+.review-nav-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.review-dots {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  min-height: 24px;
+  margin-top: 16px;
+}
+
+.review-dots button {
+  width: 8px;
+  height: 8px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0;
+  background: rgba(226, 234, 242, 0.28);
+  cursor: pointer;
+}
+
+.review-dots button[aria-current="true"] {
+  width: 22px;
+  background: var(--gold-strong);
+}
+
+.reviews-empty {
+  margin: 18px 0 0;
+  border: 1px solid rgba(226, 234, 242, 0.1);
+  border-radius: 8px;
+  padding: 18px;
+  background: rgba(5, 6, 7, 0.42);
+  color: rgba(226, 234, 242, 0.72);
+}
+
+.reviews-shell[data-review-state="empty"] .review-carousel,
+.reviews-shell[data-review-state="empty"] .review-dots {
+  display: none;
+}
+
+@media (hover: hover) {
+  .review-card:hover {
+    border-color: rgba(226, 234, 242, 0.22);
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.024) 58%, rgba(142, 160, 176, 0.07)),
+      rgba(13, 15, 17, 0.54);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      0 22px 54px rgba(0, 0, 0, 0.26);
+  }
+
+  .review-nav-button:not(:disabled):hover,
+  .review-nav-button:focus-visible {
+    border-color: rgba(226, 234, 242, 0.32);
+    color: var(--gold-strong);
+  }
+}
+
+@media (min-width: 900px) {
+  .review-card {
+    flex-basis: calc((100% - 28px) / 3);
+  }
+}
+
 .policy-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -6240,6 +6496,7 @@ address a:hover {
 #portalDocumentsCard,
 #portalPaymentCard,
 #portalAgreementCard,
+#portalReviewCard,
 #portalSupportCard,
 #portalExtensionCard {
   scroll-margin-top: 112px;
@@ -6345,6 +6602,7 @@ address a:hover {
 .portal-actions-card,
 .portal-timeline-card,
 .portal-help-card,
+.portal-review-card,
 .portal-extension-card {
   grid-column: 1 / -1;
 }
@@ -6416,7 +6674,8 @@ address a:hover {
 }
 
 .portal-action-control .button:disabled,
-.portal-extension-form .button:disabled {
+.portal-extension-form .button:disabled,
+.portal-review-form .button:disabled {
   cursor: not-allowed;
   opacity: 0.56;
   border-color: rgba(226, 234, 242, 0.1);
@@ -6758,6 +7017,139 @@ address a:hover {
   font-size: 0.8rem;
 }
 
+.portal-review-form,
+.portal-review-submitted {
+  display: grid;
+  gap: 14px;
+}
+
+.portal-review-fieldset {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  border: 1px solid rgba(226, 234, 242, 0.1);
+  border-radius: 8px;
+  padding: 14px;
+  background: rgba(5, 6, 7, 0.42);
+}
+
+.portal-review-fieldset legend {
+  padding: 0 6px;
+  color: rgba(238, 243, 247, 0.78);
+  font-size: 0.78rem;
+  font-weight: 840;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.portal-review-star-input,
+.portal-review-stars {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.portal-review-star-option {
+  position: relative;
+  display: inline-grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border: 1px solid rgba(226, 234, 242, 0.14);
+  border-radius: 999px;
+  background: rgba(226, 234, 242, 0.06);
+  color: rgba(226, 234, 242, 0.58);
+  cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    color 180ms ease;
+}
+
+.portal-review-star-option input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.portal-review-star-option span,
+.portal-review-stars span {
+  color: inherit;
+  font-size: 1.18rem;
+  line-height: 1;
+}
+
+.portal-review-star-option.is-active,
+.portal-review-star-option:has(input:focus-visible) {
+  border-color: rgba(237, 205, 139, 0.48);
+  background: rgba(237, 205, 139, 0.13);
+  color: var(--gold-strong);
+}
+
+.portal-review-note {
+  display: grid;
+  gap: 8px;
+  color: rgba(238, 243, 247, 0.78);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.portal-review-note small {
+  color: rgba(226, 234, 242, 0.62);
+  font-weight: 650;
+}
+
+.portal-review-note textarea {
+  width: 100%;
+  min-height: 104px;
+  border: 1px solid rgba(226, 234, 242, 0.18);
+  border-radius: 8px;
+  padding: 13px;
+  background: rgba(5, 6, 7, 0.72);
+  color: var(--text);
+  font: inherit;
+  font-weight: 720;
+  resize: vertical;
+}
+
+.portal-review-form .button {
+  min-height: 50px;
+  justify-self: start;
+}
+
+.portal-review-stars {
+  color: var(--gold-strong);
+}
+
+.portal-review-submitted {
+  border: 1px solid rgba(237, 205, 139, 0.22);
+  border-radius: 8px;
+  padding: 14px;
+  background: rgba(237, 205, 139, 0.07);
+}
+
+.portal-review-unavailable {
+  border: 1px solid rgba(226, 234, 242, 0.1);
+  border-radius: 8px;
+  padding: 14px;
+  background: rgba(226, 234, 242, 0.045);
+}
+
+.portal-review-unavailable p {
+  margin: 0;
+  color: rgba(226, 234, 242, 0.72);
+  font-size: 0.96rem;
+  line-height: 1.55;
+}
+
+.portal-review-submitted > span {
+  color: rgba(226, 234, 242, 0.66);
+  font-size: 0.82rem;
+  font-weight: 780;
+}
+
 .portal-action-stack {
   display: flex;
   flex-wrap: wrap;
@@ -6908,6 +7300,7 @@ address a:hover {
   #portalDocumentsCard,
   #portalPaymentCard,
   #portalAgreementCard,
+  #portalReviewCard,
   #portalSupportCard,
   #portalExtensionCard {
     scroll-margin-top: 92px;
@@ -7290,6 +7683,17 @@ address a:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.admin-review-note {
+  margin-bottom: 14px;
+}
+
+.admin-review-actions .button.active {
+  border-color: rgba(237, 205, 139, 0.4);
+  background: rgba(237, 205, 139, 0.12);
+  color: var(--gold-strong);
+  opacity: 1;
 }
 
 .admin-documents {
@@ -8271,7 +8675,7 @@ address a:hover {
 
   #top,
   #fleet,
-  #testimonials,
+  #reviews,
   #contact,
   #booking,
   #booking-policies {
@@ -8474,6 +8878,7 @@ address a:hover {
   .portal-secondary-actions,
   .portal-help-grid,
   .portal-timeline,
+  .portal-review-star-input,
   .portal-extension-fields,
   .portal-detail-grid.compact,
   .portal-summary-tiles {
@@ -8740,6 +9145,42 @@ address a:hover {
   .booking-requirements-grid,
   .policy-grid {
     grid-template-columns: 1fr;
+  }
+
+  .reviews-section-head,
+  .review-card-top,
+  .review-card-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .review-carousel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .review-nav-button {
+    display: none;
+  }
+
+  .review-card {
+    flex-basis: calc(100vw - 54px);
+    grid-template-rows: auto minmax(112px, 1fr) auto;
+    min-height: 278px;
+  }
+
+  .review-card-top,
+  .review-card-footer {
+    grid-template-columns: 1fr;
+  }
+
+  .review-card-top > span {
+    justify-content: flex-start;
+    min-height: 0;
+    text-align: left;
+  }
+
+  .review-card-footer span {
+    text-align: left;
   }
 
   .vehicle-image {

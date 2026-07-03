@@ -10,6 +10,7 @@ const localFunctionRoutes = new Map([
   ["create-checkout-session", "create-checkout-session.mjs"],
   ["customer-booking-lookup", "customer-booking-lookup.mjs"],
   ["customer-extension-request", "customer-extension-request.mjs"],
+  ["customer-review-submit", "customer-review-submit.mjs"],
   ["customer-lost-found", "customer-lost-found.mjs"],
 ]);
 const extensionlessRoutes = new Map([
@@ -20,6 +21,7 @@ const extensionlessRoutes = new Map([
   ["/admin/vehicles", "/admin/vehicles/index.html"],
   ["/admin/contacts", "/admin/contacts/index.html"],
   ["/admin/payments", "/admin/payments/index.html"],
+  ["/admin/reviews", "/admin/reviews/index.html"],
   ["/terms", "/terms/index.html"],
   ["/faq", "/faq/index.html"],
   ["/lost-and-found", "/lost-and-found/index.html"],
@@ -184,8 +186,11 @@ async function runLocalNetlifyFunction(request, response, next) {
 
   try {
     const body = await readRequestBody(request);
-    const functionUrl = pathToFileURL(resolve(root, "netlify/functions", functionFile)).href;
-    const { handler } = await import(functionUrl);
+    const functionPath = resolve(root, "netlify/functions", functionFile);
+    const functionUrl = pathToFileURL(functionPath);
+    functionUrl.searchParams.set("mtime", String(statSync(functionPath).mtimeMs));
+
+    const { handler } = await import(functionUrl.href);
     const result = await handler({
       body,
       headers: normalizeHeaders(request.headers),

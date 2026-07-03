@@ -1,12 +1,17 @@
-import {
-  findVerifiedBooking,
-  genericLookupError,
-  getSupabaseAdminClient,
-  jsonResponse,
-  methodNotAllowed,
-  parseJsonBody,
-  sanitizeBooking,
-} from "./_booking-portal.mjs";
+function shouldCacheBustLocalImports() {
+  return !(
+    process.env.NETLIFY ||
+    process.env.AWS_LAMBDA_FUNCTION_NAME ||
+    process.env.LAMBDA_TASK_ROOT ||
+    process.env.NODE_ENV === "production"
+  );
+}
+
+async function loadBookingPortal() {
+  const cacheKey = shouldCacheBustLocalImports() ? `?t=${Date.now()}` : "";
+
+  return import(`./_booking-portal.mjs${cacheKey}`);
+}
 
 function lookupFailureCode(error) {
   if (error?.portalCode) return error.portalCode;
@@ -21,6 +26,16 @@ function lookupFailureCode(error) {
 }
 
 export async function handler(event) {
+  const {
+    findVerifiedBooking,
+    genericLookupError,
+    getSupabaseAdminClient,
+    jsonResponse,
+    methodNotAllowed,
+    parseJsonBody,
+    sanitizeBooking,
+  } = await loadBookingPortal();
+
   if (event.httpMethod !== "POST") return methodNotAllowed();
 
   const payload = parseJsonBody(event);

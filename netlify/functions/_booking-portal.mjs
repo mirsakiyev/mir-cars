@@ -121,6 +121,20 @@ const portalBookingSelect = `
     message,
     status,
     created_at
+  ),
+  booking_reviews(
+    id,
+    review_id,
+    customer_id,
+    customer_first_name,
+    customer_last_initial,
+    vehicle_name,
+    trip_start_date,
+    trip_end_date,
+    rating,
+    note,
+    status,
+    created_at
   )
 `;
 
@@ -456,7 +470,7 @@ async function fetchMinimalBookingByTripIdRest(tripId) {
 }
 
 async function enrichMinimalBookingRest(booking) {
-  const [vehicles, documents, payments, extensionRequests] = await Promise.all([
+  const [vehicles, documents, payments, extensionRequests, reviews] = await Promise.all([
     booking.vehicle_id
       ? maybeSupabaseRestGet("vehicles", {
           id: `eq.${booking.vehicle_id}`,
@@ -477,6 +491,10 @@ async function enrichMinimalBookingRest(booking) {
       booking_request_id: `eq.${booking.id}`,
       select: "id,requested_return_date,requested_return_time,message,status,created_at",
     }),
+    maybeSupabaseRestGet("booking_reviews", {
+      booking_request_id: `eq.${booking.id}`,
+      select: "id,review_id,customer_id,customer_first_name,customer_last_initial,vehicle_name,trip_start_date,trip_end_date,rating,note,status,created_at",
+    }),
   ]);
 
   return {
@@ -484,6 +502,7 @@ async function enrichMinimalBookingRest(booking) {
     agreement_status: "not_ready",
     booking_documents: documents,
     booking_extension_requests: extensionRequests,
+    booking_reviews: reviews,
     payments,
     pickup_instructions: null,
     rental_agreement_url: null,
@@ -562,11 +581,17 @@ function supabaseRestError(status, body = {}) {
 }
 
 async function enrichMinimalBooking(client, booking) {
-  const [vehicle, documents, payments, extensionRequests] = await Promise.all([
+  const [vehicle, documents, payments, extensionRequests, reviews] = await Promise.all([
     maybeFetchVehicle(client, booking.vehicle_id),
     maybeFetchRows(client.from("booking_documents").select("id,document_type,created_at").eq("booking_request_id", booking.id)),
     maybeFetchRows(client.from("payments").select("*").eq("booking_request_id", booking.id).order("created_at", { ascending: false })),
     maybeFetchRows(client.from("booking_extension_requests").select("id,requested_return_date,requested_return_time,message,status,created_at").eq("booking_request_id", booking.id)),
+    maybeFetchRows(
+      client
+        .from("booking_reviews")
+        .select("id,review_id,customer_id,customer_first_name,customer_last_initial,vehicle_name,trip_start_date,trip_end_date,rating,note,status,created_at")
+        .eq("booking_request_id", booking.id),
+    ),
   ]);
 
   return {
@@ -574,6 +599,7 @@ async function enrichMinimalBooking(client, booking) {
     agreement_status: "not_ready",
     booking_documents: documents,
     booking_extension_requests: extensionRequests,
+    booking_reviews: reviews,
     payments,
     pickup_instructions: null,
     rental_agreement_url: null,
@@ -618,7 +644,7 @@ async function maybeFetchRows(query) {
 function shouldUseBaseBookingSelect(error) {
   const message = `${error?.code || ""} ${error?.message || ""} ${error?.details || ""}`;
 
-  return /booking_extension_requests|pickup_instructions|rental_agreement_url|agreement_status|relationship|schema cache|could not find|does not exist|PGRST200|PGRST204/i.test(
+  return /booking_reviews|booking_extension_requests|pickup_instructions|rental_agreement_url|agreement_status|relationship|schema cache|could not find|does not exist|PGRST200|PGRST204/i.test(
     message,
   );
 }
@@ -643,8 +669,19 @@ export async function findVerifiedBooking(client, payload) {
   return booking;
 }
 
+function asRows(value) {
+  if (Array.isArray(value)) return value;
+  if (!value) return [];
+
+  return [value];
+}
+
 function latestByCreatedAt(rows = []) {
-  return [...rows].sort((first, second) => new Date(second.created_at || 0).getTime() - new Date(first.created_at || 0).getTime())[0] || null;
+  return (
+    asRows(rows)
+      .slice()
+      .sort((first, second) => new Date(second.created_at || 0).getTime() - new Date(first.created_at || 0).getTime())[0] || null
+  );
 }
 
 function statusLabel(status) {
@@ -660,6 +697,7 @@ function statusLabel(status) {
     paid: "Payment received",
     active: "Active rental",
     completed: "Completed",
+    finalized: "Finalized",
     no_show: "Cancelled",
     refunded: "Refunded",
   };
@@ -789,7 +827,7 @@ function friendlyPaymentMethod(booking, payment) {
 }
 
 function sanitizedExtensionRequests(rows = []) {
-  return rows
+  return asRows(rows)
     .slice()
     .sort((first, second) => new Date(second.created_at || 0).getTime() - new Date(first.created_at || 0).getTime())
     .map((request) => ({
@@ -802,10 +840,73 @@ function sanitizedExtensionRequests(rows = []) {
     }));
 }
 
+function normalizedStatus(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, "_");
+}
+
+function sanitizedReviews(rows = []) {
+  return asRows(rows)
+    .slice()
+    .sort((first, second) => new Date(second.created_at || 0).getTime() - new Date(first.created_at || 0).getTime())
+    .map((review) => ({
+      reviewId: review.review_id || String(review.id || ""),
+      customerId: review.customer_id || "",
+      customerFirstName: review.customer_first_name || "MIR CARS guest",
+      customerLastInitial: review.customer_last_initial || "",
+      vehicleName: review.vehicle_name || "MIR CARS rental",
+      tripStartDate: review.trip_start_date || null,
+      tripEndDate: review.trip_end_date || null,
+      rating: Number(review.rating) || 0,
+      note: review.note || "",
+      status: review.status || "visible",
+      createdAt: review.created_at || null,
+    }));
+}
+
+function portalReviewCustomerId(booking) {
+  return booking?.id ? `portal:${booking.id}` : "";
+}
+
+function isCustomerSubmittedReview(review, booking) {
+  return Boolean(review?.customerId && String(review.customerId) === portalReviewCustomerId(booking));
+}
+
+function statusAllowsReview(value) {
+  return ["confirmed", "active", "completed", "finalized"].includes(normalizedStatus(value));
+}
+
+function reviewEligibility(booking, submittedReview) {
+  if (submittedReview) {
+    return {
+      eligible: false,
+      message: "Thanks for sharing feedback for this completed rental.",
+    };
+  }
+
+  const status = normalizedStatus(booking.booking_status || booking.status);
+  if (!statusAllowsReview(status)) {
+    return {
+      eligible: false,
+      message: "Reviews become available after MIR CARS confirms your trip.",
+    };
+  }
+
+  return {
+    eligible: true,
+    message: "Share how your MIR CARS rental went.",
+  };
+}
+
 export function sanitizeBooking(booking) {
   const vehicle = Array.isArray(booking.vehicles) ? booking.vehicles[0] : booking.vehicles;
   const payment = latestByCreatedAt(booking.payments || []);
   const extensionRequests = sanitizedExtensionRequests(booking.booking_extension_requests || []);
+  const reviews = sanitizedReviews(booking.booking_reviews || []);
+  const submittedReview = reviews.find((review) => isCustomerSubmittedReview(review, booking)) || null;
+  const eligibility = reviewEligibility(booking, submittedReview);
   const hasPendingExtension = extensionRequests.some((request) => request.status === "pending");
   const internalStatus = booking.booking_status || booking.status || "pending";
   const agreementStatus = booking.agreement_status || "not_ready";
@@ -872,6 +973,16 @@ export function sanitizeBooking(booking) {
     },
     support: supportContact,
     extensionRequests,
+    review: {
+      eligible: eligibility.eligible,
+      submitted: Boolean(submittedReview),
+      message: eligibility.message,
+      rating: submittedReview?.rating || null,
+      note: submittedReview?.note || "",
+      status: submittedReview?.status || null,
+      statusLabel: submittedReview ? (submittedReview.status === "visible" ? "Published" : "Received") : null,
+      createdAt: submittedReview?.createdAt || null,
+    },
   };
 }
 
