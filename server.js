@@ -68,7 +68,7 @@ function resolveRequestPath(urlPath) {
   return filePath;
 }
 
-const server = http.createServer((request, response) => {
+export const server = http.createServer((request, response) => {
   const filePath = resolveRequestPath(request.url || "/");
 
   if (!filePath) {
@@ -79,8 +79,18 @@ const server = http.createServer((request, response) => {
 
   fs.readFile(filePath, (error, data) => {
     if (error) {
-      response.writeHead(404, securityHeaders);
-      response.end("Not found");
+      const notFoundPath = path.join(root, "404.html");
+
+      fs.readFile(notFoundPath, (notFoundError, notFoundData) => {
+        if (notFoundError) {
+          response.writeHead(404, securityHeaders);
+          response.end("Not found");
+          return;
+        }
+
+        response.writeHead(404, { ...securityHeaders, "Content-Type": types[".html"] });
+        response.end(notFoundData);
+      });
       return;
     }
 

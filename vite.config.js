@@ -1,4 +1,4 @@
-import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, statSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { resolve, relative } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { defineConfig, loadEnv } from "vite";
@@ -55,6 +55,71 @@ function rewriteExtensionlessRoute(request, _response, next) {
   }
 
   next();
+}
+
+function decodeRequestPath(url) {
+  try {
+    return decodeURIComponent(new URL(url || "/", "http://127.0.0.1").pathname);
+  } catch (_error) {
+    return null;
+  }
+}
+
+function isLocalHtmlRequest(request) {
+  if (!["GET", "HEAD"].includes(request.method || "GET")) return false;
+
+  const pathname = decodeRequestPath(request.url);
+  if (!pathname || pathname.includes("\0")) return false;
+  if (pathname.startsWith("/@") || pathname.startsWith("/src/") || pathname.startsWith("/node_modules/")) return false;
+  if (pathname.startsWith("/.netlify/functions/")) return false;
+
+  const extension = pathname.match(/\/[^/]*\.([A-Za-z0-9]+)$/)?.[1]?.toLowerCase() || "";
+  if (extension && extension !== "html") return false;
+
+  const acceptHeader = String(request.headers.accept || "");
+  return !acceptHeader || acceptHeader.includes("text/html") || acceptHeader.includes("*/*");
+}
+
+function localFileExists(baseDir, pathname) {
+  const cleanPath = pathname.replace(/^\/+/, "");
+  const filePath = resolve(baseDir, cleanPath || "index.html");
+  const relativePath = relative(baseDir, filePath);
+
+  if (relativePath.startsWith("..") || relativePath === "" || relativePath.startsWith("../") || relativePath.startsWith("..\\")) {
+    return false;
+  }
+
+  if (existsSync(filePath) && statSync(filePath).isFile()) return true;
+  if (existsSync(resolve(filePath, "index.html"))) return true;
+  if (!/\.[^/]+$/.test(filePath) && existsSync(`${filePath}.html`)) return true;
+
+  return false;
+}
+
+function serveLocalNotFound(sourceDir, fallbackDir = sourceDir) {
+  return (request, response, next) => {
+    const pathname = decodeRequestPath(request.url);
+    if (!isLocalHtmlRequest(request) || !pathname || localFileExists(sourceDir, pathname)) {
+      next();
+      return;
+    }
+
+    const notFoundPath = resolve(fallbackDir, "404.html");
+    if (!existsSync(notFoundPath)) {
+      next();
+      return;
+    }
+
+    response.statusCode = 404;
+    response.setHeader("Content-Type", "text/html; charset=utf-8");
+
+    if (request.method === "HEAD") {
+      response.end();
+      return;
+    }
+
+    response.end(readFileSync(notFoundPath, "utf8"));
+  };
 }
 
 function applyLocalEnv(mode) {
@@ -166,10 +231,12 @@ export default defineConfig(({ mode }) => {
         configureServer(server) {
           server.middlewares.use(runLocalNetlifyFunction);
           server.middlewares.use(rewriteExtensionlessRoute);
+          server.middlewares.use(serveLocalNotFound(root));
         },
         configurePreviewServer(server) {
           server.middlewares.use(runLocalNetlifyFunction);
           server.middlewares.use(rewriteExtensionlessRoute);
+          server.middlewares.use(serveLocalNotFound(buildOutDir, buildOutDir));
         },
       },
       {

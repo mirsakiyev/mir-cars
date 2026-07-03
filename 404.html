@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="The page you are looking for could not be found. Browse the MIR CARS fleet, check rental availability, or contact MIR CARS."
+    />
+    <title>Page Not Found | MIR CARS</title>
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script type="module" src="/404.js"></script>
+  </head>
+  <body id="top" class="not-found-body">
+    <header class="site-header">
+      <a class="brand" href="/index.html#top" aria-label="MIR CARS home">
+        <span>
+          <strong class="mir-lockup brand-name" aria-label="MIR CARS">
+            <span class="mir-lockup-top">MIR</span>
+            <span class="mir-lockup-bottom">CARS</span>
+          </strong>
+          <small>LA Rentals</small>
+        </span>
+      </a>
+
+      <nav class="main-nav" aria-label="Primary navigation">
+        <a href="/index.html">Home</a>
+        <a href="/fleet.html">Fleet</a>
+        <a href="/policies/">Policies</a>
+        <a href="/index.html#testimonials">Testimonials</a>
+        <a href="/contact/">Contact</a>
+      </nav>
+
+      <div class="header-actions"><a class="header-cta header-trip-cta" href="/portal/">My trip</a><a class="header-cta" href="/booking.html">Book now</a></div>
+    </header>
+
+    <main class="not-found-main">
+      <section class="not-found-hero" aria-labelledby="notFoundTitle">
+        <div class="not-found-visual" aria-hidden="true">
+          <span class="not-found-code">404</span>
+          <span class="route-line route-line-primary"></span>
+          <span class="route-line route-line-secondary"></span>
+          <span class="route-marker route-marker-start"></span>
+          <span class="route-marker route-marker-end"></span>
+          <span class="road-dash road-dash-one"></span>
+          <span class="road-dash road-dash-two"></span>
+          <span class="road-dash road-dash-three"></span>
+        </div>
+
+        <div class="not-found-copy">
+          <p class="eyebrow">Page not found</p>
+          <h1 id="notFoundTitle">Looks like you took a wrong exit.</h1>
+          <p>
+            The page you&rsquo;re looking for may have moved or no longer be available. Let&rsquo;s get you back to finding the right rental for your trip.
+          </p>
+          <div class="not-found-actions" aria-label="Primary page actions">
+            <a class="button primary" href="/fleet.html">Browse Fleet</a>
+            <a class="button secondary" href="#availability">Check Availability</a>
+            <a class="button primary" href="/booking.html">Book Now</a>
+          </div>
+          <p class="not-found-reassurance">Need help with a booking? Contact MIR CARS and we&rsquo;ll help you get moving.</p>
+          <div class="not-found-secondary-actions" aria-label="Secondary page actions">
+            <a href="/portal/">View My Trip</a>
+            <a href="/policies/">Rental Policies</a>
+            <a href="/contact/">Contact MIR CARS</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="not-found-availability" id="availability" aria-labelledby="availabilityTitle">
+        <div>
+          <p class="eyebrow">Live availability</p>
+          <h2 id="availabilityTitle">Find an available rental</h2>
+        </div>
+        <form class="not-found-date-search fleet-date-filter" id="notFoundDateSearch" aria-describedby="notFoundDateMessage">
+          <label class="date-filter-field date-filter-combo">
+            <span>Start</span>
+            <span class="date-picker-shell" data-date-picker>
+              <input type="hidden" name="startDate" data-date-input data-date-default-min="today" />
+              <button class="date-picker-trigger" type="button" data-date-trigger aria-haspopup="dialog" aria-expanded="false" aria-label="Choose start date">
+                <span data-date-display>Start date</span>
+              </button>
+            </span>
+            <span class="time-select-shell" data-time-select>
+              <input type="hidden" name="startTime" data-time-input />
+              <button class="time-select-trigger" type="button" data-time-trigger aria-haspopup="dialog" aria-expanded="false" aria-label="Choose start time">
+                <span data-time-display>Start time</span>
+              </button>
+            </span>
+          </label>
+          <label class="date-filter-field date-filter-combo">
+            <span>End</span>
+            <span class="date-picker-shell" data-date-picker>
+              <input type="hidden" name="endDate" data-date-input data-date-default-min="today" />
+              <button class="date-picker-trigger" type="button" data-date-trigger aria-haspopup="dialog" aria-expanded="false" aria-label="Choose end date">
+                <span data-date-display>End date</span>
+              </button>
+            </span>
+            <span class="time-select-shell" data-time-select>
+              <input type="hidden" name="endTime" data-time-input />
+              <button class="time-select-trigger" type="button" data-time-trigger aria-haspopup="dialog" aria-expanded="false" aria-label="Choose end time">
+                <span data-time-display>End time</span>
+              </button>
+            </span>
+          </label>
+          <button class="button primary" type="submit" disabled>Show Available Cars</button>
+          <span class="date-search-message" id="notFoundDateMessage" aria-live="polite"></span>
+        </form>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-brand">
+        <span class="mir-lockup mir-lockup-inline" aria-label="MIR CARS"><span class="mir-lockup-top">MIR</span><span class="mir-lockup-bottom">CARS</span></span>
+        <span>Los Angeles, California</span>
+      </div>
+      <span class="footer-copyright">&copy; 2026 MIR CARS. All rights reserved.</span>
+    </footer>
+  </body>
+</html>
