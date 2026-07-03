@@ -11601,6 +11601,350 @@ body::before {
   }
 }
 
+.policies-page-main {
+  --policies-hero-image: url("assets/backgrounds/audi-rs-q8-platinum.webp");
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  background: #000000 !important;
+}
+
+.policies-page-main::before {
+  position: absolute;
+  inset: -92px 0 -78px;
+  z-index: -1;
+  background:
+    linear-gradient(90deg, #000000 0%, rgba(0, 0, 0, 0.88) 5%, rgba(0, 0, 0, 0) 16%),
+    radial-gradient(ellipse at 22% 42%, rgba(226, 234, 242, 0.14), transparent 42%),
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.88) 0%,
+      rgba(0, 0, 0, 0.6) 38%,
+      rgba(0, 0, 0, 0.82) 72%,
+      rgba(0, 0, 0, 0.96) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.58) 0%,
+      rgba(0, 0, 0, 0.24) 42%,
+      rgba(0, 0, 0, 0.92) 100%
+    ),
+    var(--policies-hero-image);
+  background-color: #000000;
+  background-position: 38% center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  content: "";
+  pointer-events: none;
+}
+
+.policies-page-main::after {
+  position: absolute;
+  inset: auto 0 -1px;
+  z-index: -1;
+  height: min(260px, 26vw);
+  background: linear-gradient(180deg, transparent, #000000 82%);
+  content: "";
+  pointer-events: none;
+}
+
+.policies-page-main .support-hero,
+.policies-page-main .policies-at-a-glance {
+  position: relative;
+  z-index: 1;
+}
+
+.policies-page-main .support-hero p:not(.eyebrow) {
+  color: rgba(238, 243, 247, 0.84);
+}
+
+.policies-page-main .policies-page-grid article {
+  border-color: rgba(226, 234, 242, 0.15);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.058), rgba(255, 255, 255, 0.02) 34%, rgba(74, 82, 92, 0.07) 68%, rgba(255, 255, 255, 0.026)),
+    rgba(13, 14, 16, 0.84) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 24px 72px rgba(0, 0, 0, 0.32);
+}
+
+@media (max-width: 980px) {
+  .policies-page-main::before {
+    background:
+      radial-gradient(ellipse at 42% 10%, rgba(226, 234, 242, 0.12), transparent 40%),
+      linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.9) 0%,
+        rgba(0, 0, 0, 0.7) 48%,
+        rgba(0, 0, 0, 0.94) 100%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.72) 0%,
+        rgba(0, 0, 0, 0.48) 42%,
+        rgba(0, 0, 0, 0.95) 100%
+      ),
+      var(--policies-hero-image);
+    background-position: 42% top;
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+}
+
+@media (max-width: 640px) {
+  .policies-page-main::before {
+    background:
+      linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.94) 0%,
+        rgba(0, 0, 0, 0.8) 46%,
+        rgba(0, 0, 0, 0.96) 100%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.78) 0%,
+        rgba(0, 0, 0, 0.58) 34%,
+        rgba(0, 0, 0, 0.97) 100%
+      ),
+      var(--policies-hero-image);
+    background-position: 44% top;
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+}
+
+.contact-page-main {
+  --contact-hero-image: url("assets/backgrounds/porsche-911-turbo-s-platinum.webp");
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  background: #000000 !important;
+}
+
+.contact-page-main::before {
+  position: absolute;
+  inset: -92px 0 -78px;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse at 22% 42%, rgba(226, 234, 242, 0.14), transparent 42%),
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.88) 0%,
+      rgba(0, 0, 0, 0.6) 38%,
+      rgba(0, 0, 0, 0.82) 72%,
+      rgba(0, 0, 0, 0.96) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.58) 0%,
+      rgba(0, 0, 0, 0.24) 42%,
+      rgba(0, 0, 0, 0.92) 100%
+    ),
+    var(--contact-hero-image);
+  background-color: #000000;
+  background-position: 38% center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  content: "";
+  pointer-events: none;
+}
+
+.contact-page-main::after {
+  position: absolute;
+  inset: auto 0 -1px;
+  z-index: -1;
+  height: min(260px, 26vw);
+  background: linear-gradient(180deg, transparent, #000000 82%);
+  content: "";
+  pointer-events: none;
+}
+
+.contact-page-main .support-hero,
+.contact-page-main .contact-page-layout {
+  position: relative;
+  z-index: 1;
+}
+
+.contact-page-main .support-hero p:not(.eyebrow) {
+  color: rgba(238, 243, 247, 0.84);
+}
+
+.contact-page-main .contact-info-card,
+.contact-page-main .contact-form {
+  border-color: rgba(226, 234, 242, 0.15);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.058), rgba(255, 255, 255, 0.02) 34%, rgba(74, 82, 92, 0.07) 68%, rgba(255, 255, 255, 0.026)),
+    rgba(13, 14, 16, 0.84) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 24px 72px rgba(0, 0, 0, 0.32);
+}
+
+.contact-page-main .support-mini-card {
+  border-color: rgba(226, 234, 242, 0.12);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.014) 40%, rgba(68, 76, 86, 0.052) 74%, rgba(255, 255, 255, 0.02)),
+    rgba(8, 9, 11, 0.62) !important;
+}
+
+@media (max-width: 980px) {
+  .contact-page-main::before {
+    background:
+      radial-gradient(ellipse at 42% 10%, rgba(226, 234, 242, 0.12), transparent 40%),
+      linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.9) 0%,
+        rgba(0, 0, 0, 0.7) 48%,
+        rgba(0, 0, 0, 0.94) 100%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.72) 0%,
+        rgba(0, 0, 0, 0.48) 42%,
+        rgba(0, 0, 0, 0.95) 100%
+      ),
+      var(--contact-hero-image);
+    background-position: 42% top;
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+}
+
+@media (max-width: 640px) {
+  .contact-page-main::before {
+    background:
+      linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.94) 0%,
+        rgba(0, 0, 0, 0.8) 46%,
+        rgba(0, 0, 0, 0.96) 100%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.78) 0%,
+        rgba(0, 0, 0, 0.58) 34%,
+        rgba(0, 0, 0, 0.97) 100%
+      ),
+      var(--contact-hero-image);
+    background-position: 44% top;
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+}
+
+.lost-found-page-main {
+  --lost-found-hero-image: url("assets/backgrounds/nissan-skyline-gtr-r34-platinum.webp");
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  background: #000000 !important;
+}
+
+.lost-found-page-main::before {
+  position: absolute;
+  inset: -92px 0 -78px;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse at 22% 42%, rgba(226, 234, 242, 0.14), transparent 42%),
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.88) 0%,
+      rgba(0, 0, 0, 0.6) 38%,
+      rgba(0, 0, 0, 0.82) 72%,
+      rgba(0, 0, 0, 0.96) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.58) 0%,
+      rgba(0, 0, 0, 0.24) 42%,
+      rgba(0, 0, 0, 0.92) 100%
+    ),
+    var(--lost-found-hero-image);
+  background-color: #000000;
+  background-position: 24% center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  content: "";
+  pointer-events: none;
+}
+
+.lost-found-page-main::after {
+  position: absolute;
+  inset: auto 0 -1px;
+  z-index: -1;
+  height: min(260px, 26vw);
+  background: linear-gradient(180deg, transparent, #000000 82%);
+  content: "";
+  pointer-events: none;
+}
+
+.lost-found-page-main .support-hero,
+.lost-found-page-main .support-form-shell {
+  position: relative;
+  z-index: 1;
+}
+
+.lost-found-page-main .support-hero p:not(.eyebrow) {
+  color: rgba(238, 243, 247, 0.84);
+}
+
+.lost-found-page-main .lost-found-form {
+  border-color: rgba(226, 234, 242, 0.15);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.058), rgba(255, 255, 255, 0.02) 34%, rgba(74, 82, 92, 0.07) 68%, rgba(255, 255, 255, 0.026)),
+    rgba(13, 14, 16, 0.84) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 24px 72px rgba(0, 0, 0, 0.32);
+}
+
+@media (max-width: 980px) {
+  .lost-found-page-main::before {
+    background:
+      linear-gradient(90deg, #000000 0%, rgba(0, 0, 0, 0.9) 7%, rgba(0, 0, 0, 0) 20%),
+      radial-gradient(ellipse at 42% 10%, rgba(226, 234, 242, 0.12), transparent 40%),
+      linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.9) 0%,
+        rgba(0, 0, 0, 0.7) 48%,
+        rgba(0, 0, 0, 0.94) 100%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.72) 0%,
+        rgba(0, 0, 0, 0.48) 42%,
+        rgba(0, 0, 0, 0.95) 100%
+      ),
+      var(--lost-found-hero-image);
+    background-position: 30% top;
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+}
+
+@media (max-width: 640px) {
+  .lost-found-page-main::before {
+    background:
+      linear-gradient(90deg, #000000 0%, rgba(0, 0, 0, 0.86) 10%, rgba(0, 0, 0, 0) 26%),
+      linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.94) 0%,
+        rgba(0, 0, 0, 0.8) 46%,
+        rgba(0, 0, 0, 0.96) 100%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.78) 0%,
+        rgba(0, 0, 0, 0.58) 34%,
+        rgba(0, 0, 0, 0.97) 100%
+      ),
+      var(--lost-found-hero-image);
+    background-position: 36% top;
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+}
+
 .booking-stepper {
   padding: 0 !important;
   border: 0 !important;
@@ -12243,6 +12587,7 @@ button.custom-select-trigger [data-custom-select-display],
     linear-gradient(180deg, #000000 0%, #070708 48%, #000000 100%),
     var(--surface-canvas);
   flex-direction: column;
+  --portal-lookup-hero-image: url("assets/backgrounds/bmw-m4-convertible-platinum.webp");
 }
 
 .portal-body .site-header,
@@ -12280,9 +12625,32 @@ button.custom-select-trigger [data-custom-select-display],
   inset: -92px calc(50% - 50vw) -46px;
   z-index: -1;
   background:
-    linear-gradient(180deg, #000000 0%, #070708 48%, #000000 100%);
+    radial-gradient(ellipse at 22% 46%, rgba(226, 234, 242, 0.16), transparent 42%),
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.88) 0%,
+      rgba(0, 0, 0, 0.6) 38%,
+      rgba(0, 0, 0, 0.82) 72%,
+      rgba(0, 0, 0, 0.96) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.58) 0%,
+      rgba(0, 0, 0, 0.2) 45%,
+      rgba(0, 0, 0, 0.9) 100%
+    ),
+    var(--portal-lookup-hero-image);
+  background-color: #000000;
+  background-position: 38% center;
+  background-repeat: no-repeat;
+  background-size: cover;
   content: "";
   pointer-events: none;
+}
+
+.portal-has-booking:not(.portal-lookup-open) .portal-page-main::before {
+  background:
+    linear-gradient(180deg, #000000 0%, #070708 48%, #000000 100%);
 }
 
 .portal-prelookup {
@@ -12523,6 +12891,32 @@ button.custom-select-trigger [data-custom-select-display],
     padding-top: clamp(26px, 5vw, 44px) !important;
   }
 
+  .portal-body .portal-page-main::before {
+    background:
+      radial-gradient(ellipse at 42% 10%, rgba(226, 234, 242, 0.12), transparent 40%),
+      linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.9) 0%,
+        rgba(0, 0, 0, 0.7) 48%,
+        rgba(0, 0, 0, 0.94) 100%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.72) 0%,
+        rgba(0, 0, 0, 0.46) 42%,
+        rgba(0, 0, 0, 0.95) 100%
+      ),
+      var(--portal-lookup-hero-image);
+    background-position: 42% top;
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+
+  .portal-has-booking:not(.portal-lookup-open) .portal-page-main::before {
+    background:
+      linear-gradient(180deg, #000000 0%, #070708 48%, #000000 100%);
+  }
+
   .portal-prelookup {
     grid-template-columns: 1fr;
     align-items: start;
@@ -12548,6 +12942,31 @@ button.custom-select-trigger [data-custom-select-display],
   .portal-body .portal-page-main {
     width: min(100% - 28px, 1180px) !important;
     padding-bottom: 42px !important;
+  }
+
+  .portal-body .portal-page-main::before {
+    background:
+      linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.94) 0%,
+        rgba(0, 0, 0, 0.78) 46%,
+        rgba(0, 0, 0, 0.96) 100%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.78) 0%,
+        rgba(0, 0, 0, 0.56) 34%,
+        rgba(0, 0, 0, 0.97) 100%
+      ),
+      var(--portal-lookup-hero-image);
+    background-position: 44% top;
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+
+  .portal-has-booking:not(.portal-lookup-open) .portal-page-main::before {
+    background:
+      linear-gradient(180deg, #000000 0%, #070708 48%, #000000 100%);
   }
 
   .portal-prelookup-copy > p:not(.eyebrow) {
