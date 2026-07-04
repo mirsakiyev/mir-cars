@@ -972,6 +972,10 @@ begin
       public.booking_reviews,
       public.contact_requests
     to service_role;
+
+    grant update on table
+      public.booking_reviews
+    to service_role;
   end if;
 end
 $$;

@@ -81,7 +81,7 @@ grant select, update, delete on public.booking_reviews to authenticated;
 do $$
 begin
   if exists (select 1 from pg_roles where rolname = 'service_role') then
-    grant select, insert on table public.booking_reviews to service_role;
+    grant select, insert, update on table public.booking_reviews to service_role;
   end if;
 end
 $$;

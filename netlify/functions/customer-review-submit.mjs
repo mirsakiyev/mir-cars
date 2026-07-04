@@ -48,7 +48,7 @@ function vehicleDisplayName(booking) {
   return label || "MIR CARS rental";
 }
 
-function isCustomerSubmittedReview(review, booking) {
+export function isCustomerSubmittedReview(review, booking) {
   return Boolean(review?.customer_id && String(review.customer_id) === portalReviewCustomerId(booking));
 }
 
@@ -69,7 +69,7 @@ async function findExistingReview(client, bookingId) {
   return data?.[0] || null;
 }
 
-function reviewPayload(booking, rating, note) {
+export function reviewPayload(booking, rating, note) {
   return {
     booking_request_id: booking.id,
     trip_id: booking.booking_number,
@@ -85,14 +85,45 @@ function reviewPayload(booking, rating, note) {
   };
 }
 
+export async function saveReviewForBooking(client, booking, rating, note) {
+  const existingReview = await findExistingReview(client, booking.id);
+
+  if (isCustomerSubmittedReview(existingReview, booking)) {
+    return {
+      ok: false,
+      statusCode: 409,
+      error: "A review has already been submitted for this trip.",
+    };
+  }
+
+  const customerReview = reviewPayload(booking, rating, note);
+  const { error } = existingReview
+    ? await client.from("booking_reviews").update(customerReview).eq("id", existingReview.id)
+    : await client.from("booking_reviews").insert(customerReview);
+
+  if (error) {
+    if (error.code === "23505") {
+      return {
+        ok: false,
+        statusCode: 409,
+        error: "A review has already been submitted for this trip.",
+      };
+    }
+
+    throw error;
+  }
+
+  return { ok: true };
+}
+
 export async function handler(event) {
   if (event.httpMethod !== "POST") return methodNotAllowed();
 
-  const payload = parseJsonBody(event);
-  if (!payload) return genericLookupError(400);
+  const requestPayload = parseJsonBody(event);
+  if (!requestPayload) return genericLookupError(400);
 
-  const rating = Number(payload.rating);
-  const note = sanitizeReviewNote(payload.note || payload.message || "");
+  const rating = Number(requestPayload.rating);
+  const note = sanitizeReviewNote(requestPayload.note || requestPayload.message || "");
 
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
     return jsonResponse(400, { error: "Choose a rating from 1 to 5." });
@@ -100,7 +131,7 @@ export async function handler(event) {
 
   try {
     const client = getSupabaseAdminClient();
-    const booking = await findVerifiedBooking(client, payload);
+    const booking = await findVerifiedBooking(client, requestPayload);
 
     if (!booking) return genericLookupError();
 
@@ -110,27 +141,9 @@ export async function handler(event) {
       });
     }
 
-    const existingReview = await findExistingReview(client, booking.id);
-
-    if (isCustomerSubmittedReview(existingReview, booking)) {
-      return jsonResponse(409, {
-        error: "A review has already been submitted for this trip.",
-      });
-    }
-
-    const payload = reviewPayload(booking, rating, note);
-    const { error } = existingReview
-      ? await client.from("booking_reviews").update(payload).eq("id", existingReview.id)
-      : await client.from("booking_reviews").insert(payload);
-
-    if (error) {
-      if (error.code === "23505") {
-        return jsonResponse(409, {
-          error: "A review has already been submitted for this trip.",
-        });
-      }
-
-      throw error;
+    const saveResult = await saveReviewForBooking(client, booking, rating, note);
+    if (!saveResult.ok) {
+      return jsonResponse(saveResult.statusCode, { error: saveResult.error });
     }
 
     const updatedBooking = await fetchBookingByTripId(client, booking.booking_number);
@@ -139,7 +152,12 @@ export async function handler(event) {
       message: "Thanks for sharing your MIR CARS rental review.",
       booking: sanitizeBooking(updatedBooking || booking),
     });
-  } catch (_error) {
+  } catch (error) {
+    console.warn("Customer review submit failed.", {
+      code: error?.code || error?.portalCode || "unknown",
+      message: error?.message || "unknown",
+    });
+
     return jsonResponse(500, {
       error: "We could not submit your review. Please contact MIR CARS for help.",
     });
