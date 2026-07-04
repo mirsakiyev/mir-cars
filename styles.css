@@ -11614,7 +11614,6 @@ body::before {
   inset: -92px 0 -78px;
   z-index: -1;
   background:
-    linear-gradient(90deg, #000000 0%, rgba(0, 0, 0, 0.88) 5%, rgba(0, 0, 0, 0) 16%),
     radial-gradient(ellipse at 22% 42%, rgba(226, 234, 242, 0.14), transparent 42%),
     linear-gradient(
       90deg,
