@@ -14,7 +14,7 @@ import { escapeHtml } from "../lib/dom-utils.js";
 import { refreshHashScroll } from "../lib/hash-scroll.js";
 import { initPublicSite } from "../lib/public-site.js";
 import { initCustomTimeSelects } from "../lib/time-select.js";
-import { bindCarouselControls, renderVehicleCard } from "../lib/vehicle-card.js";
+import { bindCarouselControls, renderVehicleCard, renderVehicleGridSkeleton } from "../lib/vehicle-card.js";
 import { loadAvailableVehicles, loadAvailableVehiclesForDates } from "../lib/vehicle-service.js";
 
 const fleetGrid = document.querySelector("#fleetGrid");
@@ -305,6 +305,8 @@ async function loadFleetData(dateRange) {
 
   if (isLoadingAvailability) {
     renderFleetLoading();
+  } else if (fleetGrid) {
+    fleetGrid.innerHTML = renderVehicleGridSkeleton(9);
   }
 
   if (dateRange?.isValid) {
@@ -434,6 +436,7 @@ async function initFleetPage() {
   initCustomTimeSelects();
   bindFleetControls();
   bindCarouselControls();
+  if (fleetGrid) fleetGrid.innerHTML = renderVehicleGridSkeleton(9);
   await loadFleetDataFromUrl();
 }
 

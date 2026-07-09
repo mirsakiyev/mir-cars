@@ -472,21 +472,6 @@ textarea {
   background-size: cover;
 }
 
-.hero-media::before {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: url("assets/backgrounds/mercedes-s-class-headlights-reverted.png");
-  background-position: var(--hero-bg-position);
-  background-repeat: no-repeat;
-  background-size: cover;
-  content: "";
-  filter: blur(0.07px) brightness(1.24);
-  mix-blend-mode: screen;
-  opacity: 0.96;
-  animation: headlight-twinkle 4.6s ease-in-out infinite;
-}
-
 .hero-media::after {
   position: absolute;
   top: 6%;
@@ -637,33 +622,9 @@ p {
   }
 }
 
-@keyframes headlight-twinkle {
-  0%,
-  100% {
-    opacity: 0.86;
-    filter: blur(0.07px) brightness(1.22) drop-shadow(0 0 5px rgba(226, 234, 242, 0.34));
-  }
-
-  30% {
-    opacity: 1;
-    filter: blur(0.05px) brightness(1.34) drop-shadow(0 0 10px rgba(238, 246, 252, 0.52));
-  }
-
-  56% {
-    opacity: 0.42;
-    filter: blur(0.1px) brightness(0.86) drop-shadow(0 0 1px rgba(226, 234, 242, 0.12));
-  }
-
-  82% {
-    opacity: 1;
-    filter: blur(0.04px) brightness(1.38) drop-shadow(0 0 12px rgba(244, 249, 253, 0.56));
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .header-cta:not(.header-trip-cta),
   .hero-booking-cta,
-  .hero-media::before,
   .hero-media::after {
     animation: none;
   }
@@ -2050,10 +2011,23 @@ textarea:focus {
   position: relative;
   aspect-ratio: 3 / 2;
   min-height: 0;
+  overflow: hidden;
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
   background-color: #101214;
+}
+
+.vehicle-media-img,
+.selected-vehicle-media-img,
+.detail-media-img,
+.vehicle-picker-thumb img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .vehicle-image::after {
@@ -3014,6 +2988,8 @@ address {
 }
 
 .selected-vehicle-image {
+  position: relative;
+  overflow: hidden;
   min-height: 230px;
   background-color: #101214;
   background-position: center;
@@ -4388,6 +4364,8 @@ address {
 }
 
 .vehicle-picker-thumb {
+  position: relative;
+  overflow: hidden;
   display: block;
   width: 100%;
   aspect-ratio: 16 / 10;
@@ -9144,7 +9122,6 @@ address a:hover {
     --hero-bg-position: 70% center;
   }
 
-  .hero-media::before,
   .hero-media::after {
     display: none;
   }
@@ -9661,17 +9638,6 @@ label,
   mask-image: none;
 }
 
-.hero-media::before {
-  display: block;
-  background-image: url("assets/backgrounds/mercedes-s-class-headlights-reverted.png");
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  filter: brightness(1.12);
-  opacity: 0.34;
-  animation: none;
-}
-
 .hero-media::after {
   display: none;
 }
@@ -10072,10 +10038,6 @@ textarea:focus,
 
   .hero-media {
     height: 100%;
-    background-size: cover;
-  }
-
-  .hero-media::before {
     background-size: cover;
   }
 
@@ -10695,6 +10657,12 @@ textarea:focus,
   }
 }
 
+@keyframes mir-button-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
 .hero-media {
   animation: mir-hero-stage var(--motion-section) var(--motion-ease-out) 40ms both;
   transform-origin: center;
@@ -10704,7 +10672,6 @@ textarea:focus,
 .hero-wordmark,
 .hero-date-search {
   animation: mir-fade-up var(--motion-section) var(--motion-ease-out) both;
-  will-change: opacity, transform;
 }
 
 .hero .eyebrow {
@@ -10773,26 +10740,26 @@ textarea:focus,
 }
 
 .vehicle-card {
-  animation: mir-card-in 260ms var(--motion-ease-out) both;
+  animation: mir-card-in 220ms var(--motion-ease-out) both;
   transition:
     transform var(--motion-popover) var(--motion-ease-out),
     border-color var(--motion-ui) ease;
 }
 
 .vehicle-card:nth-child(2) {
-  animation-delay: 40ms;
+  animation-delay: 28ms;
 }
 
 .vehicle-card:nth-child(3) {
-  animation-delay: 80ms;
+  animation-delay: 56ms;
 }
 
 .vehicle-card:nth-child(4) {
-  animation-delay: 120ms;
+  animation-delay: 84ms;
 }
 
 .vehicle-card:nth-child(n + 5) {
-  animation-delay: 140ms;
+  animation-delay: 96ms;
 }
 
 .vehicle-image,
@@ -10873,6 +10840,28 @@ textarea:focus,
   animation: mir-status-pulse 900ms linear infinite;
 }
 
+.button[aria-busy="true"],
+button[aria-busy="true"] {
+  cursor: progress;
+}
+
+.button[aria-busy="true"]::before,
+button[aria-busy="true"]::before {
+  display: inline-block;
+  width: 0.78em;
+  height: 0.78em;
+  flex: 0 0 auto;
+  margin-right: 0.55em;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 999px;
+  content: "";
+  opacity: 0.86;
+  transform: translateZ(0);
+  vertical-align: -0.08em;
+  animation: mir-button-spin 700ms linear infinite;
+}
+
 .fleet-empty-state-loading {
   position: relative;
   overflow: hidden;
@@ -10886,6 +10875,82 @@ textarea:focus,
   background: linear-gradient(105deg, transparent 0%, rgba(255, 255, 255, 0.08) 46%, transparent 62%);
   transform: translate3d(-115%, 0, 0);
   animation: mir-loading-sheen 1100ms linear infinite;
+}
+
+.vehicle-card-skeleton,
+.review-card-skeleton {
+  pointer-events: none;
+}
+
+.vehicle-card-skeleton {
+  animation: none;
+}
+
+.review-card-skeleton {
+  grid-template-rows: repeat(4, auto);
+  align-content: center;
+}
+
+.skeleton-line,
+.skeleton-button {
+  position: relative;
+  overflow: hidden;
+  display: block;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.skeleton-line {
+  width: 72%;
+  height: 10px;
+}
+
+.skeleton-line-short {
+  width: 36%;
+}
+
+.skeleton-line-title {
+  width: 66%;
+  height: 18px;
+  margin-top: 4px;
+}
+
+.skeleton-line-wide {
+  width: 88%;
+}
+
+.skeleton-line-price {
+  width: 92px;
+  height: 26px;
+}
+
+.skeleton-button {
+  width: 78px;
+  height: 38px;
+  border-radius: var(--radius-pill);
+}
+
+.loading-sheen::after,
+.skeleton-line::after,
+.skeleton-button::after,
+.portal-skeleton-grid span::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 0%, rgba(255, 255, 255, 0.095) 46%, transparent 62%);
+  transform: translate3d(-115%, 0, 0);
+  animation: mir-loading-sheen 1100ms linear infinite;
+}
+
+.portal-skeleton-grid span {
+  position: relative;
+  overflow: hidden;
+}
+
+.reviews-shell[data-review-state="loading"] .review-nav-button,
+.reviews-shell[data-review-state="loading"] .review-dots {
+  visibility: hidden;
 }
 
 .motion-ready [data-motion-reveal] {
@@ -10947,7 +11012,13 @@ textarea:focus,
   }
 
   .vehicle-image::before,
+  .loading-sheen::after,
+  .skeleton-line::after,
+  .skeleton-button::after,
+  .portal-skeleton-grid span::after,
   .fleet-empty-state-loading::after,
+  .button[aria-busy="true"]::before,
+  button[aria-busy="true"]::before,
   .form-status.loading::after {
     display: none !important;
   }
@@ -11320,11 +11391,11 @@ body {
 }
 
 body {
-  background: var(--mir-page-gradient) fixed !important;
+  background: var(--mir-page-gradient) !important;
 }
 
 body::before {
-  background: var(--mir-page-gradient) fixed !important;
+  background: var(--mir-page-gradient) !important;
 }
 
 .section,
@@ -11468,11 +11539,6 @@ body::before {
     linear-gradient(90deg, rgba(0, 0, 0, 0.86) 0%, rgba(0, 0, 0, 0.52) 46%, rgba(0, 0, 0, 0.24) 100%),
     linear-gradient(0deg, rgba(0, 0, 0, 0.96) 0%, rgba(0, 0, 0, 0.6) 12%, rgba(0, 0, 0, 0) 42%),
     url("assets/backgrounds/mercedes-s-class-hero.png") center bottom / cover no-repeat !important;
-}
-
-.hero-media::before {
-  background-position: center bottom !important;
-  background-size: cover !important;
 }
 
 .hero + .section {
@@ -11957,7 +12023,7 @@ body::before {
   isolation: isolate;
   overflow: hidden;
   margin-top: -1px;
-  background: var(--mir-page-gradient) fixed;
+  background: var(--mir-page-gradient);
 }
 
 .post-hero-background > * {
@@ -11979,6 +12045,31 @@ body::before {
 .post-hero-background .site-footer {
   border-top: 1px solid rgba(226, 234, 242, 0.07) !important;
   background: #000000 !important;
+}
+
+@supports (content-visibility: auto) {
+  .post-hero-background .section-intro,
+  .post-hero-background .fleet-grid,
+  .testimonials-section,
+  .fleet-page-main .fleet-page-controls,
+  .fleet-page-main .fleet-grid-full,
+  .vehicle-detail-grid,
+  .vehicle-story,
+  .detail-panels,
+  .related-vehicles,
+  .support-layout,
+  .support-grid,
+  .support-form-shell,
+  .faq-list,
+  .terms-layout {
+    content-visibility: auto;
+    contain-intrinsic-size: 720px;
+  }
+
+  .fleet-page-main .fleet-grid-full,
+  .post-hero-background .fleet-grid {
+    contain-intrinsic-size: 1040px;
+  }
 }
 
 .post-hero-background .section::before,

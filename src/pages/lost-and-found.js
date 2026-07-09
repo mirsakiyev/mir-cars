@@ -1,6 +1,6 @@
 import { normalizeTripId } from "../lib/booking-utils.js";
 import { initCustomDatePickers } from "../lib/date-picker.js";
-import { setFormStatus } from "../lib/dom-utils.js";
+import { setButtonLoading, setFormStatus } from "../lib/dom-utils.js";
 import { logClientWarning } from "../lib/logging.js";
 import { initPublicSite } from "../lib/public-site.js";
 
@@ -71,7 +71,7 @@ function bindLostFoundForm() {
 
     normalizeTripIdInput(form.elements.trip_identifier);
 
-    submitButton.disabled = true;
+    setButtonLoading(submitButton, true);
     setFormStatus(status, "loading", "Submitting lost item report...");
 
     try {
@@ -85,7 +85,7 @@ function bindLostFoundForm() {
       logClientWarning("Lost and found submission failed.", error);
       setFormStatus(status, "error", error.message || form.dataset.error);
     } finally {
-      submitButton.disabled = false;
+      setButtonLoading(submitButton, false);
     }
   });
 }

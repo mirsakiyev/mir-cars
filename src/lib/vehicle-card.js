@@ -7,16 +7,55 @@ function bookingHref(vehicle) {
   return window.MIR_CARS.bookingUrl(`?vehicle=${encodeURIComponent(value)}#booking`);
 }
 
+function renderCarouselImage(image, className = "vehicle-media-img") {
+  return `
+    <img
+      class="${className}"
+      data-carousel-img
+      src="${escapeHtml(image.src)}"
+      alt=""
+      width="900"
+      height="600"
+      loading="lazy"
+      decoding="async"
+    />
+  `;
+}
+
+export function renderVehicleGridSkeleton(count = 6) {
+  return Array.from(
+    { length: count },
+    () => `
+      <article class="vehicle-card vehicle-card-skeleton" aria-hidden="true">
+        <div class="vehicle-image loading-sheen"></div>
+        <div class="vehicle-body">
+          <span class="skeleton-line skeleton-line-short"></span>
+          <span class="skeleton-line skeleton-line-title"></span>
+          <span class="skeleton-line"></span>
+          <span class="skeleton-line skeleton-line-wide"></span>
+          <div class="card-actions">
+            <span class="skeleton-line skeleton-line-price"></span>
+            <span class="skeleton-button"></span>
+          </div>
+        </div>
+      </article>
+    `,
+  ).join("");
+}
+
 export function renderVehicleCard(vehicle, options = {}) {
   const actionLabel = options.actionLabel || "Book";
   const actionHref = options.actionHref || bookingHref(vehicle);
   const label = window.MIR_CARS.getVehicleRequestLabel(vehicle);
   const dailyRate = formatDailyRate(vehicle.rate, vehicle.currency);
+  const firstImage = vehicle.images[0];
+  const firstImageAlt = `${label}, ${firstImage.label}`;
 
   return `
     <article class="vehicle-card${options.className ? ` ${escapeHtml(options.className)}` : ""}">
       <div class="vehicle-carousel" data-carousel data-current="0" data-count="${vehicle.images.length}" data-vehicle="${escapeHtml(label)}">
-        <div class="vehicle-image" data-carousel-image role="img" style="background-image: url('${vehicle.images[0].src}')" aria-label="${escapeHtml(label)}, ${escapeHtml(vehicle.images[0].label)}">
+        <div class="vehicle-image" data-carousel-image role="img" aria-label="${escapeHtml(firstImageAlt)}">
+          ${renderCarouselImage(firstImage)}
           <a class="vehicle-detail-link" href="${escapeHtml(window.MIR_CARS.vehicleUrl(vehicle))}" aria-label="View ${escapeHtml(label)} details">View details</a>
           <button class="carousel-arrow carousel-arrow-left" type="button" data-carousel-step="-1" aria-label="Previous ${escapeHtml(vehicle.title)} image"></button>
           <button class="carousel-arrow carousel-arrow-right" type="button" data-carousel-step="1" aria-label="Next ${escapeHtml(vehicle.title)} image"></button>
@@ -61,13 +100,18 @@ export function renderVehicleCard(vehicle, options = {}) {
 
 export function updateCarousel(carousel, index) {
   const image = carousel.querySelector("[data-carousel-image]");
+  const imageElement = image?.querySelector("[data-carousel-img]");
   const dots = carousel.querySelectorAll("[data-carousel-go]");
   const activeDot = dots[index];
 
   if (!image || !activeDot) return;
 
   carousel.dataset.current = String(index);
-  image.style.backgroundImage = `url('${activeDot.dataset.image}')`;
+  if (imageElement) {
+    imageElement.src = activeDot.dataset.image;
+  } else {
+    image.style.backgroundImage = `url('${activeDot.dataset.image}')`;
+  }
   image.setAttribute("aria-label", `${carousel.dataset.vehicle}, ${activeDot.dataset.label}`);
 
   dots.forEach((dot) => dot.classList.remove("active"));

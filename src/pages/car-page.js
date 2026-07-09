@@ -24,6 +24,20 @@ function renderMissingVehicle() {
   `;
 }
 
+function renderVehiclePageLoading() {
+  vehiclePage.innerHTML = `
+    <section class="vehicle-detail-hero vehicle-detail-loading" aria-label="Loading vehicle details">
+      <div class="vehicle-detail-copy" aria-hidden="true">
+        <span class="skeleton-line skeleton-line-short"></span>
+        <span class="skeleton-line skeleton-line-title"></span>
+        <span class="skeleton-line skeleton-line-wide"></span>
+        <span class="skeleton-button"></span>
+      </div>
+      <div class="detail-image loading-sheen" aria-hidden="true"></div>
+    </section>
+  `;
+}
+
 function updateMetadata(vehicleData) {
   const label = window.MIR_CARS.getVehicleRequestLabel(vehicleData);
   const description = `${label} rental in Los Angeles from MIR CARS. ${vehicleData.detail.tagline}`;
@@ -37,9 +51,22 @@ function updateMetadata(vehicleData) {
 }
 
 function renderCarousel(vehicleData) {
+  const label = window.MIR_CARS.getVehicleRequestLabel(vehicleData);
+
   return `
-    <div class="detail-carousel" data-carousel data-current="0" data-count="${vehicleData.images.length}" data-vehicle="${escapeHtml(window.MIR_CARS.getVehicleRequestLabel(vehicleData))}">
-      <div class="detail-image" data-carousel-image role="img" style="background-image: url('${vehicleData.images[0].src}')" aria-label="${escapeHtml(window.MIR_CARS.getVehicleRequestLabel(vehicleData))}, ${escapeHtml(vehicleData.images[0].label)}">
+    <div class="detail-carousel" data-carousel data-current="0" data-count="${vehicleData.images.length}" data-vehicle="${escapeHtml(label)}">
+      <div class="detail-image" data-carousel-image role="img" aria-label="${escapeHtml(label)}, ${escapeHtml(vehicleData.images[0].label)}">
+        <img
+          class="detail-media-img"
+          data-carousel-img
+          src="${escapeHtml(vehicleData.images[0].src)}"
+          alt=""
+          width="1200"
+          height="800"
+          loading="eager"
+          decoding="async"
+          fetchpriority="high"
+        />
         <button class="carousel-arrow carousel-arrow-left" type="button" data-carousel-step="-1" aria-label="Previous ${escapeHtml(vehicleData.title)} image"></button>
         <button class="carousel-arrow carousel-arrow-right" type="button" data-carousel-step="1" aria-label="Next ${escapeHtml(vehicleData.title)} image"></button>
         <div class="carousel-dots detail-dots" aria-label="${escapeHtml(vehicleData.title)} image slides">
@@ -99,11 +126,22 @@ function renderRentalRates(vehicleData) {
 function renderRelatedVehicleCard(relatedVehicle) {
   const terms = window.MIR_CARS.getVehicleRentalTerms(relatedVehicle);
   const label = window.MIR_CARS.getVehicleRequestLabel(relatedVehicle);
+  const firstImage = relatedVehicle.images[0];
 
   return `
     <article class="vehicle-card related-vehicle-card">
       <div class="vehicle-carousel" data-carousel data-current="0" data-count="${relatedVehicle.images.length}" data-vehicle="${escapeHtml(label)}">
-        <div class="vehicle-image" data-carousel-image role="img" style="background-image: url('${relatedVehicle.images[0].src}')" aria-label="${escapeHtml(label)}, ${escapeHtml(relatedVehicle.images[0].label)}">
+        <div class="vehicle-image" data-carousel-image role="img" aria-label="${escapeHtml(label)}, ${escapeHtml(firstImage.label)}">
+          <img
+            class="vehicle-media-img"
+            data-carousel-img
+            src="${escapeHtml(firstImage.src)}"
+            alt=""
+            width="900"
+            height="600"
+            loading="lazy"
+            decoding="async"
+          />
           <a class="vehicle-detail-link" href="${escapeHtml(window.MIR_CARS.vehicleUrl(relatedVehicle))}" aria-label="View ${escapeHtml(label)} details">View details</a>
           <button class="carousel-arrow carousel-arrow-left" type="button" data-carousel-step="-1" aria-label="Previous ${escapeHtml(relatedVehicle.title)} image"></button>
           <button class="carousel-arrow carousel-arrow-right" type="button" data-carousel-step="1" aria-label="Next ${escapeHtml(relatedVehicle.title)} image"></button>
@@ -240,6 +278,7 @@ function renderVehiclePage(vehicleData) {
 
 async function initVehiclePage() {
   initPublicSite();
+  renderVehiclePageLoading();
   await loadAvailableVehicles();
   const vehicle = await loadVehicleBySlug(window.MIR_VEHICLE_SLUG);
 

@@ -1,6 +1,6 @@
 import { formatMoney, isAcceptedTripId, isDateOnlyString, isTimeString, normalizeTripId } from "../lib/booking-utils.js";
 import { initCustomDatePickers } from "../lib/date-picker.js";
-import { escapeHtml, setFormStatus } from "../lib/dom-utils.js";
+import { escapeHtml, setButtonLoading, setFormStatus } from "../lib/dom-utils.js";
 import { initPublicSite } from "../lib/public-site.js";
 import { uploadBookingDocuments } from "../lib/request-service.js";
 import { supportContact } from "../lib/site-config.js";
@@ -1002,7 +1002,7 @@ function renderVehicleCard(booking) {
       <div class="portal-vehicle-card">
         ${
           vehicle.imageUrl
-            ? `<img class="portal-vehicle-image" src="${escapeHtml(vehicle.imageUrl)}" alt="${escapeHtml(`${vehicle.name || "Rental vehicle"} reserved for this trip`)}" />`
+            ? `<img class="portal-vehicle-image" src="${escapeHtml(vehicle.imageUrl)}" alt="${escapeHtml(`${vehicle.name || "Rental vehicle"} reserved for this trip`)}" width="960" height="540" loading="lazy" decoding="async" />`
             : `<div class="portal-vehicle-image is-empty" role="img" aria-label="Vehicle image pending"></div>`
         }
         <div class="portal-vehicle-copy">
@@ -2483,14 +2483,8 @@ function bindLookupForm() {
     const tripId = normalizeTripIdInput(lookupForm.elements.trip_id) || normalizeTripId(fieldValue(formData, "trip_id"));
     currentVerifier = fieldValue(formData, "verifier");
     const submitButton = lookupSubmitButton();
-    const defaultSubmitText = submitButton?.dataset.defaultLabel || submitButton?.textContent || "View booking";
-    if (submitButton) submitButton.dataset.defaultLabel = defaultSubmitText;
-
     lookupForm.dataset.loading = "true";
-    if (submitButton) {
-      submitButton.disabled = true;
-      submitButton.textContent = "Finding trip...";
-    }
+    setButtonLoading(submitButton, true, "Finding trip...");
     clearPortalSession();
     currentBooking = null;
     currentPortalToken = "";
@@ -2525,7 +2519,7 @@ function bindLookupForm() {
       setFormStatus(lookupStatus, "error", message);
     } finally {
       lookupForm.dataset.loading = "false";
-      if (submitButton) submitButton.textContent = defaultSubmitText;
+      setButtonLoading(submitButton, false);
       syncLookupSubmit();
     }
   });
@@ -2544,6 +2538,7 @@ function bindPortalActions() {
       lookupForm.elements.verifier.value = "";
       lookupStatus.textContent = "";
       lookupStatus.classList.remove("success", "error", "loading");
+      lookupStatus.removeAttribute("aria-busy");
       clearLookupErrors();
       syncLookupSubmit();
       lookupCard.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
@@ -2640,7 +2635,7 @@ function bindPortalActions() {
       }
 
       documentUploadForm.dataset.loading = "true";
-      if (submitButton) submitButton.disabled = true;
+      setButtonLoading(submitButton, true, `Uploading ${documentLabel.toLowerCase()}...`);
       setFormStatus(status, "loading", `Uploading ${documentLabel.toLowerCase()}...`);
 
       try {
@@ -2656,6 +2651,7 @@ function bindPortalActions() {
       } finally {
         if (documentUploadForm.isConnected) {
           documentUploadForm.dataset.loading = "false";
+          setButtonLoading(submitButton, false);
           syncDocumentUploadForm(documentUploadForm);
         }
       }
@@ -2673,7 +2669,7 @@ function bindPortalActions() {
       const submitButton = reviewForm.querySelector('button[type="submit"]');
       const formData = new FormData(reviewForm);
 
-      submitButton.disabled = true;
+      setButtonLoading(submitButton, true, "Submitting review...");
       setFormStatus(status, "loading", "Submitting review...");
 
       try {
@@ -2692,6 +2688,7 @@ function bindPortalActions() {
         scrollToSection("#portalReviewCard");
       } catch (error) {
         setFormStatus(status, "error", error.message || "We could not submit your review.");
+        setButtonLoading(submitButton, false);
         syncReviewForm(reviewForm, true);
       }
 
@@ -2712,7 +2709,7 @@ function bindPortalActions() {
     const requestedReturnDate = fieldValue(formData, "requested_return_date");
     const requestedReturnTime = fieldValue(formData, "requested_return_time");
 
-    submitButton.disabled = true;
+    setButtonLoading(submitButton, true, "Sending request...");
     setFormStatus(status, "loading", "Sending extension request...");
 
     try {
@@ -2733,6 +2730,7 @@ function bindPortalActions() {
       scrollToSection("#portalExtensionCard");
     } catch (error) {
       setFormStatus(status, "error", error.message || "We could not submit the extension request.");
+      setButtonLoading(submitButton, false);
       syncExtensionForm(extensionForm, true);
     }
   });

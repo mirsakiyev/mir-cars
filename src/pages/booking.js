@@ -17,7 +17,7 @@ import {
   todayDateString,
 } from "../lib/booking-utils.js";
 import { initCustomDatePickers } from "../lib/date-picker.js";
-import { escapeHtml, setFormStatus, setFormStatusHtml } from "../lib/dom-utils.js";
+import { escapeHtml, setButtonLoading, setFormStatus, setFormStatusHtml } from "../lib/dom-utils.js";
 import { refreshHashScroll } from "../lib/hash-scroll.js";
 import { logClientWarning } from "../lib/logging.js";
 import { initPublicSite } from "../lib/public-site.js";
@@ -154,7 +154,13 @@ function renderVehiclePickerOptions() {
           data-vehicle-option
           data-vehicle-value="${escapeHtml(vehicle.slug)}"
         >
-          <span class="vehicle-picker-thumb" style="background-image: url('${escapeHtml(image?.src || "")}')" role="img" aria-label="${escapeHtml(label)}"></span>
+          <span class="vehicle-picker-thumb" role="img" aria-label="${escapeHtml(label)}">
+            ${
+              image?.src
+                ? `<img src="${escapeHtml(image.src)}" alt="" width="320" height="200" loading="lazy" decoding="async" />`
+                : ""
+            }
+          </span>
           <span class="vehicle-picker-option-copy">
             <strong>${escapeHtml(label)}</strong>
             <small>${escapeHtml(vehicle.type || "MIR CARS")} - ${formatDailyRate(vehicle.rate, vehicle.currency)}</small>
@@ -163,6 +169,20 @@ function renderVehiclePickerOptions() {
       `;
     })
     .join("");
+}
+
+function renderSelectedVehicleLoading() {
+  if (!selectedVehicleCard) return;
+
+  selectedVehicleCard.innerHTML = `
+    <div class="selected-vehicle-image loading-sheen" aria-hidden="true"></div>
+    <div class="selected-vehicle-copy" aria-hidden="true">
+      <span class="skeleton-line skeleton-line-short"></span>
+      <span class="skeleton-line skeleton-line-title"></span>
+      <span class="skeleton-line"></span>
+      <span class="skeleton-line skeleton-line-wide"></span>
+    </div>
+  `;
 }
 
 function setVehiclePickerOpen(isOpen) {
@@ -1077,7 +1097,17 @@ function renderSelectedVehicle() {
 
   selectedVehicleCard.innerHTML = `
     <div class="selected-vehicle-carousel" data-carousel data-current="0" data-count="${images.length}" data-vehicle="${escapeHtml(label)}">
-      <div class="selected-vehicle-image" data-carousel-image style="background-image: url('${escapeHtml(images[0].src)}')" role="img" aria-label="${escapeHtml(label)}, ${escapeHtml(images[0].label || "selected vehicle image")}">
+      <div class="selected-vehicle-image" data-carousel-image role="img" aria-label="${escapeHtml(label)}, ${escapeHtml(images[0].label || "selected vehicle image")}">
+        <img
+          class="selected-vehicle-media-img"
+          data-carousel-img
+          src="${escapeHtml(images[0].src)}"
+          alt=""
+          width="900"
+          height="600"
+          loading="eager"
+          decoding="async"
+        />
         ${carouselControls}
       </div>
     </div>
@@ -1273,6 +1303,7 @@ function renderFileName(input) {
 
 function clearFormStatus() {
   status.classList.remove("success", "error", "loading");
+  status.removeAttribute("aria-busy");
   status.textContent = "";
 }
 
@@ -1715,7 +1746,7 @@ function bindBookingForm() {
     const bookingId = generateId();
     const paymentAccessToken = generatePaymentAccessToken();
 
-    submitButton.disabled = true;
+    setButtonLoading(submitButton, true, "Preparing payment...");
     setFormStatus(status, "loading", "Creating booking and preparing payment...");
 
     let redirectingToPayment = false;
@@ -1750,7 +1781,7 @@ function bindBookingForm() {
       logClientWarning("Booking request submission failed.", error);
       setFormStatus(status, "error", form.dataset.error);
     } finally {
-      if (!redirectingToPayment) submitButton.disabled = false;
+      if (!redirectingToPayment) setButtonLoading(submitButton, false);
     }
   });
 }
@@ -1766,6 +1797,7 @@ async function initBookingPage() {
     link.href = window.MIR_CARS.homeUrl(link.dataset.homeLink);
   });
 
+  renderSelectedVehicleLoading();
   [vehicles, deliveryConfig] = await Promise.all([loadAvailableVehicles(), loadDeliveryPricingConfig()]);
   populateVehicleSelect();
   populateLocationSelects();

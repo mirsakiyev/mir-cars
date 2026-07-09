@@ -9,6 +9,7 @@ const timeOptions = Array.from({ length: 48 }, (_unused, index) => {
 
 let activeSelect = null;
 let selectId = 0;
+let placementFrame = 0;
 
 function selectParts(select) {
   const popoverId = select.dataset.timeSelectPopover;
@@ -42,6 +43,22 @@ function placePopover(select) {
   popover.style.setProperty("--time-select-top", `${top}px`);
   popover.style.setProperty("--time-select-width", `${width}px`);
   popover.style.setProperty("--time-select-max-height", `${maxHeight}px`);
+}
+
+function queuePopoverPlacement() {
+  if (!activeSelect || placementFrame) return;
+
+  placementFrame = window.requestAnimationFrame(() => {
+    placementFrame = 0;
+    placePopover(activeSelect);
+  });
+}
+
+function cancelQueuedPopoverPlacement() {
+  if (!placementFrame) return;
+
+  window.cancelAnimationFrame(placementFrame);
+  placementFrame = 0;
 }
 
 function updateDisplay(select) {
@@ -80,7 +97,10 @@ function closeSelect(select = activeSelect) {
   select.classList.remove("is-open");
   if (trigger) trigger.setAttribute("aria-expanded", "false");
   if (popover) popover.hidden = true;
-  if (activeSelect === select) activeSelect = null;
+  if (activeSelect === select) {
+    activeSelect = null;
+    cancelQueuedPopoverPlacement();
+  }
 }
 
 function openSelect(select) {
@@ -183,6 +203,6 @@ export function initCustomTimeSelects(root = document) {
     if (event.key === "Escape") closeSelect();
   });
 
-  window.addEventListener("resize", () => placePopover(activeSelect), { passive: true });
-  window.addEventListener("scroll", () => placePopover(activeSelect), { capture: true, passive: true });
+  window.addEventListener("resize", queuePopoverPlacement, { passive: true });
+  window.addEventListener("scroll", queuePopoverPlacement, { capture: true, passive: true });
 }

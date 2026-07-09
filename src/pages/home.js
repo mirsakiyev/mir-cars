@@ -13,7 +13,7 @@ import { refreshHashScroll } from "../lib/hash-scroll.js";
 import { initPublicSite } from "../lib/public-site.js";
 import { loadVisibleReviews } from "../lib/review-service.js";
 import { initCustomTimeSelects } from "../lib/time-select.js";
-import { bindCarouselControls, renderVehicleCard } from "../lib/vehicle-card.js";
+import { bindCarouselControls, renderVehicleCard, renderVehicleGridSkeleton } from "../lib/vehicle-card.js";
 import { loadAvailableVehicles } from "../lib/vehicle-service.js";
 
 const fleetGrid = document.querySelector("#fleetGrid");
@@ -40,6 +40,20 @@ function renderFleet(vehicles) {
   const featuredVehicles = getRandomVehicles(sortedVehicles, 6);
 
   fleetGrid.innerHTML = featuredVehicles.map((vehicle) => renderVehicleCard(vehicle)).join("");
+}
+
+function renderReviewSkeletons(count = 3) {
+  return Array.from(
+    { length: count },
+    () => `
+      <article class="review-card review-card-skeleton loading-sheen" aria-hidden="true">
+        <span class="skeleton-line skeleton-line-short"></span>
+        <span class="skeleton-line skeleton-line-title"></span>
+        <span class="skeleton-line"></span>
+        <span class="skeleton-line skeleton-line-wide"></span>
+      </article>
+    `,
+  ).join("");
 }
 
 function formatReviewDate(value) {
@@ -261,6 +275,8 @@ async function initHomePage() {
   initCustomTimeSelects();
   bindHeroDateSearch();
   bindReviewCarousel();
+  if (fleetGrid) fleetGrid.innerHTML = renderVehicleGridSkeleton(6);
+  if (reviewTrack) reviewTrack.innerHTML = renderReviewSkeletons();
 
   const vehiclesPromise = loadAvailableVehicles();
   const reviewsPromise = loadVisibleReviews();

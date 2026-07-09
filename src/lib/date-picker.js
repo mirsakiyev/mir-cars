@@ -4,6 +4,7 @@ const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const monthFormatter = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" });
 let activePicker = null;
 let pickerId = 0;
+let placementFrame = 0;
 
 function dateFromValue(value) {
   if (!isDateOnlyString(value)) return null;
@@ -95,6 +96,22 @@ function placePopover(picker) {
   popover.style.setProperty("--date-picker-max-height", `${maxHeight}px`);
 }
 
+function queuePopoverPlacement() {
+  if (!activePicker || placementFrame) return;
+
+  placementFrame = window.requestAnimationFrame(() => {
+    placementFrame = 0;
+    placePopover(activePicker);
+  });
+}
+
+function cancelQueuedPopoverPlacement() {
+  if (!placementFrame) return;
+
+  window.cancelAnimationFrame(placementFrame);
+  placementFrame = 0;
+}
+
 function updateDisplay(picker) {
   const { input, trigger, display } = pickerParts(picker);
   if (!input || !trigger || !display) return;
@@ -169,7 +186,10 @@ function closePicker(picker = activePicker) {
   picker.classList.remove("is-open");
   if (trigger) trigger.setAttribute("aria-expanded", "false");
   if (popover) popover.hidden = true;
-  if (activePicker === picker) activePicker = null;
+  if (activePicker === picker) {
+    activePicker = null;
+    cancelQueuedPopoverPlacement();
+  }
 }
 
 function openPicker(picker) {
@@ -307,6 +327,6 @@ export function initCustomDatePickers(root = document) {
     if (event.key === "Escape") closePicker();
   });
 
-  window.addEventListener("resize", () => placePopover(activePicker), { passive: true });
-  window.addEventListener("scroll", () => placePopover(activePicker), { capture: true, passive: true });
+  window.addEventListener("resize", queuePopoverPlacement, { passive: true });
+  window.addEventListener("scroll", queuePopoverPlacement, { capture: true, passive: true });
 }

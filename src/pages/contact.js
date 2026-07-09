@@ -1,4 +1,4 @@
-import { setFormStatus } from "../lib/dom-utils.js";
+import { setButtonLoading, setFormStatus } from "../lib/dom-utils.js";
 import { logClientWarning } from "../lib/logging.js";
 import { initPublicSite } from "../lib/public-site.js";
 import { createContactRequest } from "../lib/request-service.js";
@@ -34,7 +34,7 @@ function bindContactForm() {
 
     if (!form.reportValidity()) return;
 
-    submitButton.disabled = true;
+    setButtonLoading(submitButton, true);
     setFormStatus(status, "loading", "Sending message...");
 
     try {
@@ -45,7 +45,7 @@ function bindContactForm() {
       logClientWarning("Contact request submission failed.", error);
       setFormStatus(status, "error", form.dataset.error);
     } finally {
-      submitButton.disabled = false;
+      setButtonLoading(submitButton, false);
     }
   });
 }

@@ -1,5 +1,5 @@
 import { getSupabaseClient, getSupabaseConfigError } from "../lib/supabase-client.js";
-import { setFormStatus } from "../lib/dom-utils.js";
+import { setButtonLoading, setFormStatus } from "../lib/dom-utils.js";
 import { logClientWarning } from "../lib/logging.js";
 
 const form = document.querySelector("#adminLoginForm");
@@ -30,7 +30,7 @@ form.addEventListener("submit", async (event) => {
 
   const formData = new FormData(form);
 
-  submitButton.disabled = true;
+  setButtonLoading(submitButton, true, "Signing in...");
   setFormStatus(status, "loading", "Signing in...");
 
   try {
@@ -55,6 +55,6 @@ form.addEventListener("submit", async (event) => {
     logClientWarning("Admin login failed.", error);
     setFormStatus(status, "error", "Could not sign in. Check your email, password, and admin access.");
   } finally {
-    submitButton.disabled = false;
+    setButtonLoading(submitButton, false);
   }
 });

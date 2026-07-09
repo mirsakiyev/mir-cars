@@ -6,7 +6,7 @@ import {
   isTimeString,
   normalizeTripId,
 } from "../lib/booking-utils.js";
-import { escapeHtml, setFormStatus } from "../lib/dom-utils.js";
+import { escapeHtml, setButtonLoading, setFormStatus } from "../lib/dom-utils.js";
 import { logClientWarning } from "../lib/logging.js";
 import { initPublicSite } from "../lib/public-site.js";
 import {
@@ -163,7 +163,7 @@ async function handleContinueToPayment() {
     return;
   }
 
-  button.disabled = true;
+  setButtonLoading(button, true, "Preparing payment...");
   setFormStatus(status, "loading", "Preparing secure payment...");
 
   try {
@@ -185,7 +185,7 @@ async function handleContinueToPayment() {
     logClientWarning("Payment placeholder update failed.", error);
     setFormStatus(status, "error", "Could not save this booking as payment pending. Please contact MIR CARS for help.");
   } finally {
-    button.disabled = false;
+    setButtonLoading(button, false);
   }
 }
 

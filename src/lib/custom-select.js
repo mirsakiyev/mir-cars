@@ -2,6 +2,7 @@ const selectSelector = 'select:not(.native-vehicle-select):not([data-custom-sele
 
 let activeSelect = null;
 let selectId = 0;
+let placementFrame = 0;
 
 function labelForSelect(select) {
   const explicitLabel = select.getAttribute("aria-label");
@@ -54,6 +55,22 @@ function placePopover(select) {
   popover.style.setProperty("--custom-select-max-height", `${maxHeight}px`);
 }
 
+function queuePopoverPlacement() {
+  if (!activeSelect || placementFrame) return;
+
+  placementFrame = window.requestAnimationFrame(() => {
+    placementFrame = 0;
+    placePopover(activeSelect);
+  });
+}
+
+function cancelQueuedPopoverPlacement() {
+  if (!placementFrame) return;
+
+  window.cancelAnimationFrame(placementFrame);
+  placementFrame = 0;
+}
+
 function selectedOption(select) {
   return select.selectedOptions?.[0] || select.options[select.selectedIndex] || null;
 }
@@ -97,7 +114,10 @@ function closeSelect(select = activeSelect) {
   shell?.classList.remove("is-open");
   trigger?.setAttribute("aria-expanded", "false");
   if (popover) popover.hidden = true;
-  if (activeSelect === select) activeSelect = null;
+  if (activeSelect === select) {
+    activeSelect = null;
+    cancelQueuedPopoverPlacement();
+  }
 }
 
 function focusSelectedOption(select) {
@@ -288,6 +308,6 @@ export function initCustomSelects(root = document) {
     window.setTimeout(() => refreshCustomSelects(event.target), 0);
   });
 
-  window.addEventListener("resize", () => placePopover(activeSelect), { passive: true });
-  window.addEventListener("scroll", () => placePopover(activeSelect), { capture: true, passive: true });
+  window.addEventListener("resize", queuePopoverPlacement, { passive: true });
+  window.addEventListener("scroll", queuePopoverPlacement, { capture: true, passive: true });
 }
