@@ -3924,12 +3924,15 @@ address {
   grid-column: 1 / -1;
   gap: 8px;
   min-width: 0;
+  max-width: 100%;
 }
 
 .vehicle-picker-label {
+  min-width: 0;
   color: rgba(238, 243, 247, 0.76);
   font-size: 0.88rem;
   font-weight: 750;
+  overflow-wrap: anywhere;
 }
 
 .native-vehicle-select {
@@ -4238,6 +4241,7 @@ address {
   position: relative;
   display: grid;
   width: 100%;
+  min-width: 0;
   min-height: 58px;
   align-content: center;
   gap: 3px;
@@ -4277,16 +4281,20 @@ address {
 }
 
 .vehicle-picker-trigger span {
+  min-width: 0;
   color: var(--gold-strong);
   font-size: 0.98rem;
   font-weight: 800;
   line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 .vehicle-picker-trigger small {
+  min-width: 0;
   color: rgba(238, 243, 247, 0.58);
   font-size: 0.78rem;
   font-weight: 750;
+  overflow-wrap: anywhere;
 }
 
 .vehicle-picker-panel {
@@ -8681,9 +8689,9 @@ address a:hover {
   }
 }
 
-@media (max-width: 820px) {
+@media (max-width: 900px) {
   html {
-    scroll-padding-top: 92px;
+    scroll-padding-top: calc(92px + env(safe-area-inset-top, 0px));
   }
 
   #top,
@@ -8692,17 +8700,22 @@ address a:hover {
   #contact,
   #booking,
   #booking-policies {
-    scroll-margin-top: 92px;
+    scroll-margin-top: calc(92px + env(safe-area-inset-top, 0px));
+  }
+
+  html.has-mobile-menu-open,
+  html.has-mobile-menu-open body {
+    overflow: hidden;
   }
 
   body {
-    padding-top: 78px;
+    padding-top: calc(78px + env(safe-area-inset-top, 0px));
   }
 
   .site-header {
     position: fixed;
     width: 100%;
-    padding: 0 14px;
+    padding: env(safe-area-inset-top, 0px) max(14px, env(safe-area-inset-right, 0px)) 0 max(14px, env(safe-area-inset-left, 0px));
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.036), transparent 58%),
       rgba(10, 11, 13, 0.96);
@@ -8733,8 +8746,8 @@ address a:hover {
   .mobile-nav-toggle {
     grid-area: toggle;
     display: inline-grid;
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
     place-items: center;
     gap: 4px;
     border: 1px solid rgba(226, 234, 242, 0.2);
@@ -8778,7 +8791,7 @@ address a:hover {
 
   .header-cta {
     justify-self: end;
-    min-height: 40px;
+    min-height: 44px;
     padding: 0 12px;
     font-size: 0.68rem;
   }
@@ -8790,13 +8803,15 @@ address a:hover {
   .main-nav {
     position: absolute;
     top: calc(100% + 10px);
-    right: 14px;
-    left: 14px;
+    right: max(14px, env(safe-area-inset-right, 0px));
+    left: max(14px, env(safe-area-inset-left, 0px));
     z-index: 1;
     display: grid;
     grid-template-columns: 1fr;
     gap: 4px;
-    overflow: hidden;
+    max-height: min(440px, calc(100svh - 104px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)));
+    overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 8px;
     border: 1px solid rgba(226, 234, 242, 0.16);
     border-radius: var(--radius);
@@ -8834,7 +8849,7 @@ address a:hover {
   }
 
   .main-nav a {
-    min-height: 42px;
+    min-height: 44px;
     justify-content: flex-start;
     padding: 0 12px;
     border-radius: 6px;
@@ -11313,9 +11328,9 @@ button[aria-busy="true"]::before {
   }
 }
 
-@media (max-width: 820px) {
+@media (max-width: 900px) {
   .site-header:not([data-enhanced-header="true"]) {
-    grid-template-columns: minmax(0, 1fr) 42px auto;
+    grid-template-columns: minmax(0, 1fr) 44px auto;
     grid-template-areas: "brand toggle actions";
     min-height: 76px;
     gap: 10px;
@@ -12571,7 +12586,7 @@ button.custom-select-trigger [data-custom-select-display],
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 720px) {
   .fleet-page-controls {
     width: min(100% - 32px, var(--page-max-width)) !important;
   }
@@ -12665,6 +12680,110 @@ button.custom-select-trigger [data-custom-select-display],
   .payment-card,
   .payment-state {
     width: 100%;
+    max-width: 100%;
+  }
+}
+
+/* Mobile production polish: scroll-safe overlays and tap targets. */
+.back-link,
+.vehicle-detail-link,
+.contact-card a[href^="tel:"],
+.contact-card a[href^="mailto:"],
+.contact-info-card a[href^="tel:"],
+.contact-info-card a[href^="mailto:"] {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+}
+
+.booking-summary-panel,
+.booking-summary-panel .selected-vehicle-card,
+.booking-summary-panel .selected-vehicle-carousel,
+.booking-summary-panel .selected-vehicle-image {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.booking-summary-panel .selected-vehicle-card,
+.booking-summary-panel .selected-vehicle-carousel,
+.booking-summary-panel .selected-vehicle-image {
+  width: 100%;
+}
+
+.booking-summary-panel .selected-vehicle-image {
+  aspect-ratio: 16 / 9;
+  min-height: clamp(150px, 48vw, 212px) !important;
+}
+
+.carousel-arrow,
+.detail-carousel .carousel-arrow,
+.booking-summary-panel .carousel-arrow {
+  width: 44px;
+  height: 44px;
+}
+
+.carousel-arrow-left {
+  left: 8px;
+}
+
+.carousel-arrow-right {
+  right: 8px;
+}
+
+.carousel-dots {
+  right: 6px;
+  bottom: 6px;
+  gap: 0;
+}
+
+.detail-dots {
+  right: 10px;
+  bottom: 10px;
+}
+
+.carousel-dot {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  place-items: center;
+  border: 0;
+  background: transparent;
+}
+
+.carousel-dot::before {
+  width: 10px;
+  height: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.42);
+  content: "";
+}
+
+.carousel-dot.active::before {
+  border-color: var(--gold-strong);
+  background: var(--gold);
+}
+
+.carousel-dot:hover::before {
+  border-color: var(--gold-strong);
+  background: rgba(244, 248, 251, 0.5);
+}
+
+.portal-body .portal-page-main {
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+@media (max-width: 1080px) {
+  .support-layout,
+  .support-grid,
+  .support-form-shell,
+  .support-cta,
+  .faq-list,
+  .policy-grid,
+  .policies-page-grid {
+    width: min(100% - 32px, var(--page-max-width)) !important;
     max-width: 100%;
   }
 }

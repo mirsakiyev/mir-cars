@@ -80,15 +80,17 @@ function placePopover(picker) {
   if (!trigger || !popover || popover.hidden) return;
 
   const triggerRect = trigger.getBoundingClientRect();
-  const width = Math.min(310, window.innerWidth - 24);
-  const left = Math.min(Math.max(12, triggerRect.left), window.innerWidth - width - 12);
+  const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const width = Math.min(310, viewportWidth - 24);
+  const left = Math.min(Math.max(12, triggerRect.left), viewportWidth - width - 12);
   const popoverHeight = popover.offsetHeight || 330;
   const belowTop = triggerRect.bottom + 8;
   const aboveTop = triggerRect.top - popoverHeight - 8;
-  const roomBelow = window.innerHeight - belowTop - 12;
+  const roomBelow = viewportHeight - belowTop - 12;
   const roomAbove = triggerRect.top - 12;
   const top = roomBelow < Math.min(popoverHeight, 280) && roomAbove > roomBelow ? Math.max(12, aboveTop) : belowTop;
-  const maxHeight = Math.max(220, window.innerHeight - top - 12);
+  const maxHeight = Math.max(220, viewportHeight - top - 12);
 
   popover.style.setProperty("--date-picker-left", `${left}px`);
   popover.style.setProperty("--date-picker-top", `${top}px`);
