@@ -12751,6 +12751,11 @@ button.custom-select-trigger [data-custom-select-display],
   background: transparent;
 }
 
+.carousel-dot.active,
+.carousel-dot:hover {
+  background: transparent;
+}
+
 .carousel-dot::before {
   width: 10px;
   height: 10px;
@@ -12768,6 +12773,28 @@ button.custom-select-trigger [data-custom-select-display],
 .carousel-dot:hover::before {
   border-color: var(--gold-strong);
   background: rgba(244, 248, 251, 0.5);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-carousel] .carousel-arrow,
+  [data-carousel] .carousel-dots {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 140ms ease;
+  }
+
+  [data-carousel]:hover .carousel-arrow,
+  [data-carousel]:hover .carousel-dots,
+  [data-carousel]:focus-within .carousel-arrow,
+  [data-carousel]:focus-within .carousel-dots {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  [data-carousel]:focus-within .carousel-arrow,
+  [data-carousel]:focus-within .carousel-dots {
+    transition-duration: 0ms;
+  }
 }
 
 .portal-body .portal-page-main {
