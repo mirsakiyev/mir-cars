@@ -1,6 +1,6 @@
 import { getSupabaseClient, getSupabaseConfigError } from "./supabase-client.js";
 
-const allowedDocumentTypes = new Set(["driver_license", "supporting_document", "insurance", "identity", "other"]);
+const allowedDocumentTypes = new Set(["driver_license", "supporting_document", "identity", "other"]);
 const allowedMimeTypes = new Set(["image/jpeg", "image/png", "application/pdf"]);
 const maxDocumentSizeBytes = 10 * 1024 * 1024;
 

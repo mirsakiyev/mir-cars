@@ -405,20 +405,19 @@
                     <h2 id="bookingStepPaymentTitle">Documents &amp; Payment</h2>
                   </div>
 
-                  <div class="form-row">
-                    <label class="file-field">
-                      Driver license upload
-                      <input type="file" name="driver_license_file" accept=".jpg,.jpeg,.png,.pdf" required />
-                      <small>Upload a clear photo or PDF of the driver's license.</small>
-                      <span class="selected-file-name" data-file-name-for="driver_license_file">No file selected</span>
-                    </label>
-                    <label class="file-field">
-                      Supporting documents
-                      <input type="file" name="supporting_documents" accept=".jpg,.jpeg,.png,.pdf" multiple />
-                      <small>Optional insurance, ID, or other rental support files.</small>
-                      <span class="selected-file-name" data-file-name-for="supporting_documents">No files selected</span>
-                    </label>
-                  </div>
+                  <label class="file-field">
+                    Driver license upload
+                    <input type="file" name="driver_license_file" accept=".jpg,.jpeg,.png,.pdf" required />
+                    <small>Upload a clear photo or PDF of the driver's license.</small>
+                    <span class="selected-file-name" data-file-name-for="driver_license_file">No file selected</span>
+                  </label>
+
+                  <label class="file-field">
+                    Other supporting documents (optional)
+                    <input type="file" name="supporting_documents" accept=".jpg,.jpeg,.png,.pdf" multiple />
+                    <small>Use this only for additional documents requested by MIR CARS support.</small>
+                    <span class="selected-file-name" data-file-name-for="supporting_documents">No files selected</span>
+                  </label>
 
                   <label>
                     Notes
@@ -435,8 +434,44 @@
                     </label>
                   </div>
 
-                  <label class="checkbox-row">
-                    <input type="checkbox" name="approval_acknowledged" value="Yes" required />
+                  <section class="booking-insurance-notice" aria-labelledby="insuranceResponsibilityTitle">
+                    <p class="eyebrow">BEFORE PAYMENT</p>
+                    <h3 id="insuranceResponsibilityTitle" data-insurance-policy-heading>Insurance responsibility</h3>
+                    <p id="insuranceResponsibilityNotice" data-insurance-policy-body>
+                      Insurance is not included with your booking by default. You are responsible for arranging valid insurance coverage for the rental. You do not need to upload proof during booking; bring it to pickup, where it must be presented before the vehicle is released. MIR CARS can discuss a separately arranged insurance option through WhatsApp or Telegram.
+                    </p>
+                    <div class="booking-insurance-contacts" aria-label="Discuss an insurance option with MIR CARS support">
+                      <a href="https://wa.me/17477449777" target="_blank" rel="noopener noreferrer" data-insurance-contact="whatsapp">WhatsApp: +1 (747) 744-9777</a>
+                      <a href="https://t.me/MRR_07" target="_blank" rel="noopener noreferrer" data-insurance-contact="telegram">Telegram: @MRR_07</a>
+                    </div>
+                  </section>
+
+                  <label class="checkbox-row insurance-acknowledgement-row" for="insuranceResponsibilityAcknowledged">
+                    <input
+                      id="insuranceResponsibilityAcknowledged"
+                      type="checkbox"
+                      name="insuranceResponsibilityAcknowledged"
+                      value="true"
+                      required
+                      aria-describedby="insuranceResponsibilityNotice insuranceAcknowledgementError"
+                    />
+                    <span data-insurance-policy-acknowledgement>
+                      I understand that insurance is not included by default, that I am responsible for arranging valid coverage, and that I must present proof at pickup unless MIR CARS separately confirms an insurance option for this booking.
+                    </span>
+                  </label>
+                  <p class="booking-field-error" id="insuranceAcknowledgementError" role="alert" aria-live="polite" hidden>
+                    Please acknowledge your insurance responsibility before proceeding to payment.
+                  </p>
+
+                  <label class="checkbox-row" for="approvalAcknowledged">
+                    <input
+                      id="approvalAcknowledged"
+                      type="checkbox"
+                      name="approval_acknowledged"
+                      value="Yes"
+                      required
+                      aria-describedby="approvalAcknowledgementError"
+                    />
                     <span>
                       I confirm that all rental details and submitted documents are accurate, and I agree to the
                       <a href="/terms/#terms-of-service">MIR CARS Terms of Service</a>
@@ -444,6 +479,9 @@
                       <a href="/terms/#privacy-policy">Privacy Policy</a>.
                     </span>
                   </label>
+                  <p class="booking-field-error" id="approvalAcknowledgementError" role="alert" aria-live="polite" hidden>
+                    Please agree to the Terms of Service and Privacy Policy.
+                  </p>
 
                   <p class="checkout-helper">Secure checkout continues on the next step.</p>
 
@@ -462,7 +500,7 @@
             <div>
               <p class="eyebrow">BEFORE YOU BOOK</p>
               <h2 id="booking-resource-links-heading">Review rental policies.</h2>
-              <p>See the quick rental rules or read the full Terms of Use before completing your reservation.</p>
+              <p>See the quick rental rules or read the full Terms of Service before completing your reservation.</p>
             </div>
             <div class="booking-resource-link-grid" aria-label="Rental policy resources">
               <a class="booking-resource-link" href="policies/">
@@ -470,7 +508,7 @@
                 <strong>View rental standards, mileage, deposits, and vehicle care.</strong>
               </a>
               <a class="booking-resource-link" href="terms/">
-                <span>Full Terms of Use</span>
+                <span>Full Terms of Service</span>
                 <strong>Read the complete terms of service and privacy policy.</strong>
               </a>
             </div>

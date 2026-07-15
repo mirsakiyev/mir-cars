@@ -4806,6 +4806,86 @@ address {
   line-height: 1.35;
 }
 
+.booking-insurance-notice {
+  display: grid;
+  gap: 10px;
+  padding: clamp(16px, 2vw, 20px);
+  border: 1px solid rgba(226, 234, 242, 0.18);
+  border-left-color: rgba(226, 234, 242, 0.48);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.045), rgba(142, 160, 176, 0.025)),
+    rgba(5, 6, 7, 0.48);
+}
+
+.booking-insurance-notice .eyebrow,
+.booking-insurance-notice h3,
+.booking-insurance-notice p {
+  margin: 0;
+}
+
+.booking-insurance-notice .eyebrow {
+  font-size: 0.72rem;
+}
+
+.booking-insurance-notice h3 {
+  color: var(--text-primary-dark);
+  font-size: clamp(1.08rem, 1.5vw, 1.3rem);
+}
+
+.booking-insurance-notice > p:not(.eyebrow) {
+  color: rgba(238, 243, 247, 0.72);
+  font-size: 0.9rem;
+  line-height: 1.62;
+}
+
+.booking-insurance-contacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.booking-insurance-contacts a {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid rgba(226, 234, 242, 0.18);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--text-primary-dark);
+  font-size: 0.82rem;
+  font-weight: 850;
+  line-height: 1.25;
+  text-decoration: none;
+}
+
+.booking-insurance-contacts a:hover {
+  border-color: rgba(226, 234, 242, 0.34);
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.booking-insurance-contacts a:focus-visible {
+  outline: 2px solid rgba(244, 248, 251, 0.72);
+  outline-offset: 3px;
+}
+
+.booking-field-error {
+  margin: -8px 0 0;
+  color: var(--danger);
+  font-size: 0.84rem;
+  font-weight: 760;
+  line-height: 1.45;
+}
+
+.booking-field-error[hidden] {
+  display: none;
+}
+
+.booking-checkout-form .insurance-acknowledgement-row:has(input[aria-invalid="true"]) {
+  border-color: color-mix(in srgb, var(--danger) 58%, transparent);
+}
+
 .booking-checkout-form .booking-estimate {
   gap: 0;
   border-color: rgba(226, 234, 242, 0.12);
@@ -4909,6 +4989,38 @@ address {
   color: var(--link-color);
   outline: none;
   text-decoration-color: currentColor;
+}
+
+.policy-contact-link,
+.insurance-contact-link {
+  color: var(--gold-strong);
+  font-weight: 820;
+  text-decoration: underline;
+  text-decoration-color: rgba(244, 248, 251, 0.3);
+  text-underline-offset: 3px;
+}
+
+.policy-contact-link:hover,
+.insurance-contact-link:hover {
+  color: var(--link-color);
+}
+
+.policy-contact-link:focus-visible,
+.insurance-contact-link:focus-visible {
+  border-radius: 2px;
+  outline: 2px solid rgba(244, 248, 251, 0.72);
+  outline-offset: 3px;
+  color: var(--link-color);
+}
+
+@media (max-width: 560px) {
+  .booking-insurance-contacts {
+    display: grid;
+  }
+
+  .booking-insurance-contacts a {
+    width: 100%;
+  }
 }
 
 .booking-checkout-form .form-status {
@@ -5624,6 +5736,7 @@ address a:hover {
 
 .legal-subsection {
   padding-top: clamp(20px, 2.4vw, 28px);
+  scroll-margin-top: 112px;
 }
 
 .legal-subsection + .legal-subsection {
@@ -8451,6 +8564,16 @@ address a:hover {
   color: rgb(178, 249, 199);
 }
 
+.payment-insurance-note {
+  margin: -2px 0 0;
+  padding: 12px 14px;
+  border-left: 2px solid rgba(226, 234, 242, 0.34);
+  background: rgba(255, 255, 255, 0.028);
+  color: rgba(238, 243, 247, 0.68) !important;
+  font-size: 0.86rem;
+  line-height: 1.55 !important;
+}
+
 .payment-terms input {
   width: 18px;
   min-width: 18px;
@@ -8554,6 +8677,59 @@ address a:hover {
   max-width: 310px;
   margin: 0;
   line-height: 1.65;
+}
+
+.footer-social-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: fit-content;
+  margin-top: 2px;
+}
+
+.footer-social-link {
+  display: inline-grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid rgba(226, 234, 242, 0.12);
+  border-radius: 14px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.012) 58%, rgba(154, 170, 184, 0.06)),
+    rgba(8, 9, 10, 0.64);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition:
+    transform 160ms var(--motion-ease-out, cubic-bezier(0.23, 1, 0.32, 1)),
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.footer-social-icon {
+  display: block;
+  width: 24px;
+  height: 24px;
+  filter: drop-shadow(0 0 8px rgba(226, 234, 242, 0.14));
+}
+
+.footer-social-link:focus-visible {
+  outline: 2px solid rgba(226, 234, 242, 0.82);
+  outline-offset: 3px;
+}
+
+.footer-social-link:active {
+  transform: scale(0.96);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .footer-social-link:hover {
+    border-color: rgba(226, 234, 242, 0.34);
+    background-color: rgba(226, 234, 242, 0.055);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 8px 24px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+  }
 }
 
 .footer-link-group h2 {
@@ -12797,7 +12973,7 @@ button.custom-select-trigger [data-custom-select-display],
   }
 }
 
-.portal-body .portal-page-main {
+.portal-body {
   overflow-x: hidden;
   overflow-x: clip;
 }

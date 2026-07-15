@@ -604,7 +604,11 @@ function pickupDirectionsUrl(location) {
 }
 
 function documentsNeedAction(documents = []) {
-  return documents.some((document) => ["needed", "rejected", "missing"].includes(normalizedStatus(document.status)));
+  return documents.some(
+    (document) =>
+      normalizedStatus(document.type) !== "insurance" &&
+      ["needed", "rejected", "missing"].includes(normalizedStatus(document.status)),
+  );
 }
 
 function documentIsAccepted(document = {}) {
@@ -624,6 +628,11 @@ function documentIsRejected(document = {}) {
 }
 
 function documentPrimaryLabel(document = {}) {
+  if (normalizedStatus(document.type) === "insurance") {
+    if (documentIsAccepted(document)) return "Proof reviewed";
+    if (documentIsUploaded(document)) return "Previously uploaded";
+    return "Present at pickup";
+  }
   if (documentIsAccepted(document)) return "Approved";
   if (documentIsRejected(document)) return "Rejected";
   if (documentIsUploaded(document)) return "Under review";
@@ -634,11 +643,18 @@ function documentPrimaryLabel(document = {}) {
 }
 
 function documentsComplete(documents = []) {
-  return documents.length > 0 && documents.every((document) => documentIsAccepted(document) || normalizedStatus(document.status) === "not_required");
+  const onlineDocuments = documents.filter((document) => normalizedStatus(document.type) !== "insurance");
+
+  return (
+    onlineDocuments.length > 0 &&
+    onlineDocuments.every((document) => documentIsAccepted(document) || normalizedStatus(document.status) === "not_required")
+  );
 }
 
 function documentsPendingReview(documents = []) {
-  return documents.length > 0 && !documentsNeedAction(documents) && documents.some(documentIsUploaded);
+  const onlineDocuments = documents.filter((document) => normalizedStatus(document.type) !== "insurance");
+
+  return onlineDocuments.length > 0 && !documentsNeedAction(onlineDocuments) && onlineDocuments.some(documentIsUploaded);
 }
 
 function paymentRemainingBalance(payment = {}) {
@@ -711,16 +727,12 @@ function getNeedsAttentionItems(booking = {}) {
   const items = [];
 
   documents.forEach((document) => {
+    const type = normalizedStatus(document.type);
+    if (type === "insurance") return;
     if (!documentIsMissing(document) && !documentIsRejected(document)) return;
 
-    const type = normalizedStatus(document.type);
     const isRejected = documentIsRejected(document);
     const labels = {
-      insurance: {
-        title: isRejected ? "Insurance needs review" : "Insurance needed",
-        text: isRejected ? "Insurance was not accepted. Please send an updated copy." : "Insurance is required for this rental.",
-        action: "Upload insurance",
-      },
       supporting_document: {
         title: isRejected ? "Verification needs review" : "Verification needed",
         text: isRejected ? "Additional verification was not accepted. Please send an updated copy." : "Additional verification is still required.",
@@ -905,7 +917,7 @@ function getTimelineSteps(booking) {
     {
       label: "Documents",
       state: docsComplete ? "complete" : docsBlocked ? "needs_attention" : docsPending ? "pending" : "pending",
-      detail: docsComplete ? "Documents accepted." : docsBlocked ? "Insurance or verification needed." : "Documents are under review.",
+      detail: docsComplete ? "Documents accepted." : docsBlocked ? "Required documents or verification needed." : "Documents are under review.",
     },
     {
       label: "Payment",
@@ -1071,6 +1083,10 @@ function renderPickupReturnCard(booking) {
         <span>Return instructions</span>
         <p>${escapeHtml(returnInstructionsCopy(booking))}</p>
       </div>
+      <div class="portal-instructions">
+        <span>Insurance proof at pickup</span>
+        <p>Unless MIR CARS separately confirmed an insurance option for this booking, bring proof of valid insurance to pickup. Online upload is not required, and proof must be presented before the vehicle is released.</p>
+      </div>
       ${
         directionsReady
           ? `<a class="button secondary" href="${escapeHtml(pickupDirectionsUrl(trip.pickupLocation))}" target="_blank" rel="noopener">Get directions</a>`
@@ -1084,13 +1100,22 @@ function renderPickupReturnCard(booking) {
 function documentMicrocopy(document) {
   const type = normalizedStatus(document.type);
 
+  if (type === "insurance") {
+    if (documentIsAccepted(document)) {
+      return "Proof document was previously reviewed. Bring current proof to pickup; this status does not confirm or activate insurance coverage.";
+    }
+    if (documentIsUploaded(document)) {
+      return "Proof was previously received. Bring current proof to pickup; online upload is no longer required.";
+    }
+    return "Bring valid proof of insurance to pickup. Online upload is not required, and proof must be presented before the vehicle is released.";
+  }
+
   if (documentIsRejected(document)) return "Please send a clearer replacement before pickup.";
   if (documentIsUploaded(document)) return "Received by MIR CARS.";
   if (documentIsAccepted(document)) return "Approved for this trip.";
   if (type === "supporting_document" && documentIsMissing(document)) return "Additional verification is required before this rental is complete.";
   if (type === "supporting_document" && normalizedStatus(document.status) === "not_required") return "No additional verification is required at this time.";
   if (type === "supporting_document") return "Additional verification status is not available yet.";
-  if (type === "insurance") return "Insurance is required for this rental.";
   if (type === "driver_license") return "Driver's license is required before pickup.";
   if (normalizedStatus(document.status) === "not_required") return "Not required for this trip.";
 
@@ -1100,7 +1125,7 @@ function documentMicrocopy(document) {
 function documentSupportType(document) {
   const type = normalizedStatus(document.type);
 
-  if (type === "insurance") return "insurance";
+  if (type === "insurance") return "proof of insurance";
   if (type === "supporting_document") return "additional verification";
   if (type === "driver_license") return "driver's license";
 
@@ -1111,7 +1136,6 @@ function documentEmailActionLabel(document) {
   const type = normalizedStatus(document.type);
   const prefix = "Email";
 
-  if (type === "insurance") return `${prefix} insurance`;
   if (type === "supporting_document") return `${prefix} verification`;
   if (type === "driver_license") return `${prefix} license`;
 
@@ -1130,13 +1154,12 @@ function documentSupportHref(document, booking) {
 function documentCanUpload(document = {}) {
   const type = normalizedStatus(document.type);
 
-  return ["driver_license", "insurance", "supporting_document"].includes(type) && (documentIsRejected(document) || documentIsMissing(document));
+  return ["driver_license", "supporting_document"].includes(type) && (documentIsRejected(document) || documentIsMissing(document));
 }
 
 function documentUploadActionLabel(document = {}) {
   const type = normalizedStatus(document.type);
 
-  if (type === "insurance") return "Upload insurance";
   if (type === "supporting_document") return "Upload verification";
   if (type === "driver_license") return "Upload license";
 
@@ -1147,7 +1170,6 @@ function documentUploadPrompt(document = {}) {
   if (documentIsRejected(document)) return "Upload a replacement file for MIR CARS to review.";
 
   const type = normalizedStatus(document.type);
-  if (type === "insurance") return "Upload proof of insurance as a JPG, PNG, or PDF.";
   if (type === "driver_license") return "Upload your driver's license as a JPG, PNG, or PDF.";
 
   return "Upload the requested document as a JPG, PNG, or PDF.";
@@ -1176,6 +1198,8 @@ function documentUploadForm(document, booking) {
 }
 
 function documentUsesEmailFallback(document = {}) {
+  if (normalizedStatus(document.type) === "insurance") return false;
+
   return !document.url && !documentCanUpload(document) && (documentIsRejected(document) || documentIsMissing(document));
 }
 
@@ -2622,6 +2646,11 @@ function bindPortalActions() {
       const submitButton = documentUploadForm.querySelector("[data-document-upload-submit]");
       const documentType = documentUploadForm.dataset.documentType || "";
       const documentLabel = documentUploadForm.dataset.documentLabel || "Document";
+
+      if (normalizedStatus(documentType) === "insurance") {
+        setFormStatus(status, "error", "Insurance proof must be presented at pickup and cannot be uploaded online.");
+        return;
+      }
 
       if (!file) {
         setFormStatus(status, "error", "Choose a JPG, PNG, or PDF file to upload.");

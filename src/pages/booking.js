@@ -16,12 +16,20 @@ import {
   syncDateInputLimits,
   todayDateString,
 } from "../lib/booking-utils.js";
+import { createBookingDraftPersistenceController } from "../lib/booking-draft-persistence.js";
 import { initCustomDatePickers } from "../lib/date-picker.js";
 import { escapeHtml, setButtonLoading, setFormStatus, setFormStatusHtml } from "../lib/dom-utils.js";
 import { refreshHashScroll } from "../lib/hash-scroll.js";
 import { logClientWarning } from "../lib/logging.js";
 import { initPublicSite } from "../lib/public-site.js";
 import { createBookingRequest, isDuplicateBookingNumberError, uploadBookingDocuments } from "../lib/request-service.js";
+import {
+  BOOKING_APPROVAL_ACKNOWLEDGEMENT_REQUIRED_MESSAGE,
+  createInsuranceAcknowledgementRecord,
+  INSURANCE_ACKNOWLEDGEMENT_REQUIRED_MESSAGE,
+  insurancePolicy,
+  validateBookingAcknowledgements,
+} from "../lib/site-config.js";
 import {
   CUSTOM_PICKUP_VALUE,
   CUSTOM_RETURN_VALUE,
@@ -56,6 +64,13 @@ const dateOfBirthDisplay = document.querySelector("[data-dob-display]");
 const emailInput = document.querySelector("[data-email-suggestion-input]");
 const emailSuggestionList = document.querySelector("#emailDomainSuggestions");
 const phoneInput = document.querySelector("[data-phone-input]");
+const insuranceAcknowledgement = form.elements.insuranceResponsibilityAcknowledged;
+const insuranceAcknowledgementError = document.querySelector("#insuranceAcknowledgementError");
+const approvalAcknowledgement = form.elements.approval_acknowledged;
+const approvalAcknowledgementError = document.querySelector("#approvalAcknowledgementError");
+const insurancePolicyHeading = document.querySelector("[data-insurance-policy-heading]");
+const insurancePolicyBody = document.querySelector("[data-insurance-policy-body]");
+const insurancePolicyAcknowledgement = document.querySelector("[data-insurance-policy-acknowledgement]");
 
 let vehicles = [];
 let deliveryConfig = null;
@@ -64,7 +79,6 @@ let availabilityState = { status: "unknown", key: "" };
 let availabilityRequestId = 0;
 let currentStep = 0;
 let isDateOfBirthBound = false;
-let bookingDraftSaveTimer = null;
 let isRestoringBookingDraft = false;
 let activeEmailSuggestionIndex = -1;
 let visibleEmailDomains = [];
@@ -84,6 +98,14 @@ const EMAIL_DOMAIN_SUGGESTIONS = [
   "@live.com",
   "@msn.com",
 ];
+
+function renderBookingInsurancePolicy() {
+  if (insurancePolicyHeading) insurancePolicyHeading.textContent = insurancePolicy.booking.heading;
+  if (insurancePolicyBody) insurancePolicyBody.textContent = insurancePolicy.booking.body;
+  if (insurancePolicyAcknowledgement) {
+    insurancePolicyAcknowledgement.textContent = insurancePolicy.booking.acknowledgement;
+  }
+}
 
 function selectedVehicle() {
   return findVehicleByRequestValue(vehicles, vehicleSelect.value) || vehicles[0] || null;
@@ -631,7 +653,7 @@ function collectBookingDraftFields() {
   return fields;
 }
 
-function saveBookingDraft() {
+function writeBookingDraft() {
   if (isRestoringBookingDraft) return;
 
   const storage = bookingDraftStorage();
@@ -654,9 +676,19 @@ function saveBookingDraft() {
   }
 }
 
+const bookingDraftPersistence = createBookingDraftPersistenceController({
+  save: writeBookingDraft,
+  clear: clearBookingDraft,
+  setTimer: (callback, delay) => window.setTimeout(callback, delay),
+  clearTimer: (timer) => window.clearTimeout(timer),
+});
+
+function saveBookingDraft() {
+  bookingDraftPersistence.saveNow();
+}
+
 function queueBookingDraftSave() {
-  window.clearTimeout(bookingDraftSaveTimer);
-  bookingDraftSaveTimer = window.setTimeout(saveBookingDraft, 120);
+  bookingDraftPersistence.queueSave();
 }
 
 function readBookingDraft() {
@@ -1307,6 +1339,45 @@ function clearFormStatus() {
   status.textContent = "";
 }
 
+function setInsuranceAcknowledgementError(visible) {
+  if (!insuranceAcknowledgement || !insuranceAcknowledgementError) return;
+
+  insuranceAcknowledgement.setAttribute("aria-invalid", String(visible));
+  insuranceAcknowledgementError.hidden = !visible;
+}
+
+function setApprovalAcknowledgementError(visible) {
+  if (!approvalAcknowledgement || !approvalAcknowledgementError) return;
+
+  approvalAcknowledgement.setAttribute("aria-invalid", String(visible));
+  approvalAcknowledgementError.hidden = !visible;
+}
+
+function validateRequiredAcknowledgements({ focusFirst = false } = {}) {
+  const insuranceIsAcknowledged = Boolean(insuranceAcknowledgement?.checked);
+  const approvalIsAcknowledged = Boolean(approvalAcknowledgement?.checked);
+
+  setInsuranceAcknowledgementError(!insuranceIsAcknowledged);
+  setApprovalAcknowledgementError(!approvalIsAcknowledged);
+
+  if (focusFirst && !insuranceIsAcknowledged) {
+    insuranceAcknowledgement?.focus();
+  } else if (focusFirst && !approvalIsAcknowledged) {
+    approvalAcknowledgement?.focus();
+  }
+
+  return validateBookingAcknowledgements({
+    insuranceResponsibilityAcknowledged: insuranceIsAcknowledged,
+    approvalAcknowledged: approvalIsAcknowledged,
+  });
+}
+
+function handleAcknowledgementInvalid(event) {
+  event.preventDefault();
+  const message = validateRequiredAcknowledgements({ focusFirst: true });
+  if (message) setFormStatus(status, "error", message);
+}
+
 function showStep(stepIndex, options = {}) {
   currentStep = Math.max(0, Math.min(stepPanels.length - 1, stepIndex));
 
@@ -1505,6 +1576,12 @@ function validateBooking() {
   if (!String(data.get("driver_license_region") || "").trim()) return "Driver license state or region is required.";
   if (!form.elements.driver_license_file.files.length) return "Driver license upload is required.";
 
+  const acknowledgementError = validateBookingAcknowledgements({
+    insuranceResponsibilityAcknowledged: data.has("insuranceResponsibilityAcknowledged"),
+    approvalAcknowledged: data.has("approval_acknowledged"),
+  });
+  if (acknowledgementError) return acknowledgementError;
+
   return "";
 }
 
@@ -1525,14 +1602,10 @@ function generatePaymentAccessToken() {
 function documentUploads() {
   const licenseFile = form.elements.driver_license_file.files[0];
   const supportingFiles = [...form.elements.supporting_documents.files];
-  const documents = [];
+  const documents = licenseFile ? [{ type: "driver_license", file: licenseFile }] : [];
 
-  if (licenseFile) {
-    documents.push({ type: "driver_license", file: licenseFile });
-  }
-
-  supportingFiles.forEach((file, index) => {
-    documents.push({ type: index === 0 ? "supporting_document" : "supporting_document", file });
+  supportingFiles.forEach((file) => {
+    documents.push({ type: "supporting_document", file });
   });
 
   return documents;
@@ -1545,6 +1618,9 @@ function bookingPayload(bookingId, bookingNumber, paymentAccessToken) {
   const pickup = selectedLocation("pickup");
   const returnLocation = selectedLocation("return");
   const estimatedTotal = estimateTotalWithLocation(estimate);
+  const insuranceAcknowledgementRecord = createInsuranceAcknowledgementRecord({
+    insuranceResponsibilityAcknowledged: data.has("insuranceResponsibilityAcknowledged"),
+  });
 
   return {
     id: bookingId,
@@ -1592,6 +1668,7 @@ function bookingPayload(bookingId, bookingNumber, paymentAccessToken) {
     postal_code: String(data.get("postal_code") || "").trim() || null,
     country: String(data.get("country") || "US").trim() || "US",
     customer_notes: String(data.get("customer_notes") || "").trim() || null,
+    ...insuranceAcknowledgementRecord,
   };
 }
 
@@ -1616,6 +1693,23 @@ function bindBookingForm() {
   syncBookingDateControls();
   bindDateOfBirthInput();
   bindContactEnhancements();
+
+  insuranceAcknowledgement?.addEventListener("invalid", handleAcknowledgementInvalid);
+  approvalAcknowledgement?.addEventListener("invalid", handleAcknowledgementInvalid);
+
+  insuranceAcknowledgement?.addEventListener("change", () => {
+    if (!insuranceAcknowledgement.checked) return;
+
+    setInsuranceAcknowledgementError(false);
+    if (status.textContent === INSURANCE_ACKNOWLEDGEMENT_REQUIRED_MESSAGE) clearFormStatus();
+  });
+
+  approvalAcknowledgement?.addEventListener("change", () => {
+    if (!approvalAcknowledgement.checked) return;
+
+    setApprovalAcknowledgementError(false);
+    if (status.textContent === BOOKING_APPROVAL_ACKNOWLEDGEMENT_REQUIRED_MESSAGE) clearFormStatus();
+  });
 
   form.elements.pickup_date?.addEventListener("input", () => {
     syncBookingDateControls({ clearInvalidReturn: true });
@@ -1728,6 +1822,12 @@ function bindBookingForm() {
 
     const validationError = validateBooking();
     if (validationError) {
+      if (
+        validationError === INSURANCE_ACKNOWLEDGEMENT_REQUIRED_MESSAGE ||
+        validationError === BOOKING_APPROVAL_ACKNOWLEDGEMENT_REQUIRED_MESSAGE
+      ) {
+        validateRequiredAcknowledgements({ focusFirst: true });
+      }
       setFormStatus(status, "error", validationError);
       return;
     }
@@ -1766,7 +1866,7 @@ function bindBookingForm() {
         bookingNumber,
         documents: documentUploads(),
       });
-      clearBookingDraft();
+      bookingDraftPersistence.stopAndClear();
       const portalUrl = window.MIR_CARS.portalUrl(`?trip=${encodeURIComponent(bookingNumber)}`);
       redirectingToPayment = true;
       setFormStatusHtml(
@@ -1788,6 +1888,7 @@ function bindBookingForm() {
 
 async function initBookingPage() {
   initPublicSite();
+  renderBookingInsurancePolicy();
   initCustomDatePickers();
   initCustomTimeSelects();
   bindDateOfBirthInput();

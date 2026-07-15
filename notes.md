@@ -61,7 +61,7 @@ Backend/database
 
 Customer Documents & Approvals
 - License upload
-- Insurance upload
+- Insurance proof verification at pickup
 - Rental agreement e-signature
 - Rental agreement checkbox approval
 

@@ -134,6 +134,9 @@ create table if not exists public.booking_requests (
   pickup_instructions text,
   rental_agreement_url text,
   agreement_status text default 'not_ready',
+  insurance_responsibility_acknowledged boolean not null default false,
+  insurance_responsibility_acknowledged_at timestamptz,
+  insurance_policy_version text,
   created_at timestamptz default now(),
   updated_at timestamptz default now(),
   constraint booking_requests_status_check check (
@@ -143,7 +146,19 @@ create table if not exists public.booking_requests (
     booking_status is null
     or booking_status in ('pending', 'approved', 'declined', 'cancelled', 'awaiting_payment', 'payment_pending', 'paid_pending_approval', 'confirmed', 'paid', 'active', 'completed', 'finalized', 'no_show', 'refunded')
   ),
-  constraint booking_requests_dates_check check (return_date is null or pickup_date is null or return_date >= pickup_date)
+  constraint booking_requests_dates_check check (return_date is null or pickup_date is null or return_date >= pickup_date),
+  constraint booking_requests_insurance_acknowledgement_check check (
+    (
+      insurance_responsibility_acknowledged is false
+      and insurance_responsibility_acknowledged_at is null
+      and insurance_policy_version is null
+    )
+    or (
+      insurance_responsibility_acknowledged is true
+      and insurance_responsibility_acknowledged_at is not null
+      and nullif(trim(insurance_policy_version), '') is not null
+    )
+  )
 );
 
 alter table public.booking_requests
@@ -163,6 +178,32 @@ add column if not exists rental_agreement_url text;
 
 alter table public.booking_requests
 add column if not exists agreement_status text default 'not_ready';
+
+alter table public.booking_requests
+add column if not exists insurance_responsibility_acknowledged boolean not null default false;
+
+alter table public.booking_requests
+add column if not exists insurance_responsibility_acknowledged_at timestamptz;
+
+alter table public.booking_requests
+add column if not exists insurance_policy_version text;
+
+alter table public.booking_requests
+drop constraint if exists booking_requests_insurance_acknowledgement_check;
+
+alter table public.booking_requests
+add constraint booking_requests_insurance_acknowledgement_check check (
+  (
+    insurance_responsibility_acknowledged is false
+    and insurance_responsibility_acknowledged_at is null
+    and insurance_policy_version is null
+  )
+  or (
+    insurance_responsibility_acknowledged is true
+    and insurance_responsibility_acknowledged_at is not null
+    and nullif(trim(insurance_policy_version), '') is not null
+  )
+);
 
 alter table public.booking_requests
 drop constraint if exists booking_requests_agreement_status_check;
@@ -411,6 +452,33 @@ drop trigger if exists booking_requests_set_updated_at on public.booking_request
 create trigger booking_requests_set_updated_at
 before update on public.booking_requests
 for each row execute function public.set_updated_at();
+
+create or replace function public.stamp_insurance_responsibility_acknowledgement()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if new.insurance_responsibility_acknowledged is true then
+    if tg_op = 'INSERT' then
+      new.insurance_responsibility_acknowledged_at = now();
+    elsif old.insurance_responsibility_acknowledged is distinct from new.insurance_responsibility_acknowledged
+      or new.insurance_responsibility_acknowledged_at is null then
+      new.insurance_responsibility_acknowledged_at = now();
+    end if;
+  else
+    new.insurance_responsibility_acknowledged_at = null;
+    new.insurance_policy_version = null;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists booking_requests_stamp_insurance_acknowledgement on public.booking_requests;
+create trigger booking_requests_stamp_insurance_acknowledgement
+before insert or update of insurance_responsibility_acknowledged on public.booking_requests
+for each row execute function public.stamp_insurance_responsibility_acknowledgement();
 
 drop trigger if exists booking_requests_set_booking_number on public.booking_requests;
 create trigger booking_requests_set_booking_number
@@ -805,6 +873,9 @@ with check (
   and rental_days >= 1
   and nullif(trim(driver_license_number), '') is not null
   and nullif(trim(driver_license_region), '') is not null
+  and insurance_responsibility_acknowledged is true
+  and insurance_responsibility_acknowledged_at is not null
+  and insurance_policy_version = '2026-07-14'
 );
 
 drop policy if exists "Admins can read booking requests" on public.booking_requests;
@@ -826,7 +897,7 @@ on public.booking_documents for insert
 to anon, authenticated
 with check (
   booking_request_id is not null
-  and document_type in ('driver_license', 'supporting_document', 'insurance', 'identity', 'other')
+  and document_type in ('driver_license', 'supporting_document', 'identity', 'other')
   and file_path like 'bookings/' || booking_request_id::text || '/%'
   and mime_type in ('image/jpeg', 'image/png', 'application/pdf')
   and size_bytes is not null

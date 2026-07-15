@@ -757,12 +757,16 @@ function extensionStatusLabel(status) {
 
 function documentChecklist(documents = []) {
   const uploadedTypes = new Set(documents.map((document) => document.document_type).filter(Boolean));
-
-  return [
+  const checklist = [
     { type: "driver_license", label: "Driver's license", required: true },
-    { type: "insurance", label: "Insurance", required: true },
     { type: "supporting_document", label: "Additional verification", required: false },
-  ].map(({ type, label, required }) => {
+  ];
+
+  if (uploadedTypes.has("insurance")) {
+    checklist.push({ type: "insurance", label: "Previously uploaded insurance proof", required: false });
+  }
+
+  return checklist.map(({ type, label, required }) => {
     const uploaded = uploadedTypes.has(type);
     const status = uploaded ? "uploaded" : required ? "needed" : "not_required";
 

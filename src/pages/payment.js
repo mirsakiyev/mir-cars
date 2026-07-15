@@ -141,8 +141,10 @@ function renderCheckout(summary) {
 
         <label class="payment-terms">
           <input type="checkbox" id="paymentTerms" />
-          <span>I agree to the MIR CARS Terms and Conditions, Rental Policy, Cancellation Policy, and Security Deposit Policy.</span>
+          <span>I agree to the MIR CARS Terms of Service, Rental Policy, Cancellation Policy, and Security Deposit Policy.</span>
         </label>
+
+        <p class="payment-insurance-note">Displayed rental totals do not include insurance unless an insurance option is separately confirmed in writing for this booking.</p>
 
         <button class="button primary" type="button" id="continuePaymentButton">Continue to Secure Payment</button>
         <p class="form-status" id="paymentStatus" role="status" aria-live="polite"></p>
